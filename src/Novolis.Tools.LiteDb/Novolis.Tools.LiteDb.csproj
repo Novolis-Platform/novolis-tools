@@ -1,0 +1,16 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <PackageId>Novolis.Tools.LiteDb</PackageId>
+    <Description>LiteDB session helpers for CLI REPLs and scripting, aligned with Novolis.Storage.LiteDb.</Description>
+    <IsPackable>true</IsPackable>
+    <RootNamespace>Novolis.Tools.LiteDb</RootNamespace>
+    <PackageTags>novolis;litedb;cli;database;storage;document</PackageTags>
+  </PropertyGroup>
+  <ItemGroup>
+    <PackageReference Include="LiteDB" />
+    <PackageReference Include="Novolis.Storage.LiteDb" />
+  </ItemGroup>
+  <ItemGroup>
+    <InternalsVisibleTo Include="Novolis.Tools.LiteDb.Unit" />
+  </ItemGroup>
+</Project>

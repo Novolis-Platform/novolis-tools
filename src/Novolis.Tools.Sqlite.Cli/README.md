@@ -1,6 +1,8 @@
 # Novolis.Tools.Sqlite.Cli
 
-`novolis-sqlite` — interactive SQLite REPL over `Microsoft.Data.Sqlite`.
+`novolis-sqlite` — interactive SQLite REPL over the same engine as `Novolis.Storage.Sqlite`.
+
+Dot-commands mirror the familiar `sqlite3` surface (`.tables`, `.schema`, `.mode`) without shipping the native binary. The library behind the tool is `Novolis.Tools.Sqlite`.
 
 ## Install
 
@@ -31,3 +33,11 @@ novolis-sqlite d:\temp\app.db -c ".tables"
 ```powershell
 dotnet run --project d:\novolis\novolis-tools\src\Novolis.Tools.Sqlite.Cli -- :memory: -c "SELECT 1 AS n;"
 ```
+
+## Related
+
+| Package | Role |
+|---------|------|
+| `Novolis.Tools.Sqlite` | Session helpers used by this tool |
+| `Novolis.Tools.LiteDb.Cli` | `novolis-litedb` for LiteDB shell SQL |
+| `Novolis.Storage.Sqlite` | Application repository provider |

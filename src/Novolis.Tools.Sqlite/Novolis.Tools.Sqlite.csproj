@@ -1,13 +1,14 @@
 <Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
     <PackageId>Novolis.Tools.Sqlite</PackageId>
-    <Description>SQLite session helpers for CLI REPLs and scripting (Microsoft.Data.Sqlite).</Description>
+    <Description>SQLite session helpers for CLI REPLs and scripting, aligned with Novolis.Storage.Sqlite.</Description>
     <IsPackable>true</IsPackable>
     <RootNamespace>Novolis.Tools.Sqlite</RootNamespace>
-    <PackageTags>novolis;sqlite;cli;database</PackageTags>
+    <PackageTags>novolis;sqlite;cli;database;storage</PackageTags>
   </PropertyGroup>
   <ItemGroup>
     <PackageReference Include="Microsoft.Data.Sqlite" />
+    <PackageReference Include="Novolis.Storage.Sqlite" />
     <!-- Override transitive 2.1.11 (NU1903 / GHSA-2m69-gcr7-jv3q). -->
     <PackageReference Include="SQLitePCLRaw.bundle_e_sqlite3" />
   </ItemGroup>

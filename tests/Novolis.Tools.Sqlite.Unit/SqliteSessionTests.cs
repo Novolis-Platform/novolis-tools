@@ -1,3 +1,4 @@
+using Novolis.Storage.Sqlite;
 using Novolis.Tools.Sqlite;
 
 namespace Novolis.Tools.Sqlite.Unit;
@@ -21,5 +22,17 @@ public sealed class SqliteSessionTests
 
         var schema = await session.GetSchemaAsync("items");
         await Assert.That(schema).Contains("CREATE TABLE");
+    }
+
+    [Test]
+    public async Task Open_Accepts_Storage_SqliteOptions()
+    {
+        await using var session = SqliteSession.Open(new SqliteOptions
+        {
+            ConnectionString = "Data Source=:memory:",
+        });
+
+        var result = await session.ExecuteAsync("SELECT 7 AS n;");
+        await Assert.That(result.Rows[0][0]).IsEqualTo("7");
     }
 }

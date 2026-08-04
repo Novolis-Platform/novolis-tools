@@ -1,14 +1,14 @@
 <Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
     <OutputType>Exe</OutputType>
-    <RootNamespace>Novolis.Tools.Sqlite.Unit</RootNamespace>
+    <RootNamespace>Novolis.Tools.LiteDb.Unit</RootNamespace>
     <IsPackable>false</IsPackable>
     <IsTestProject>true</IsTestProject>
     <GenerateDocumentationFile>false</GenerateDocumentationFile>
   </PropertyGroup>
   <ItemGroup>
-    <PackageReference Include="Novolis.Storage.Sqlite" />
+    <PackageReference Include="Novolis.Storage.LiteDb" />
     <PackageReference Include="TUnit" />
-    <ProjectReference Include="..\..\src\Novolis.Tools.Sqlite\Novolis.Tools.Sqlite.csproj" />
+    <ProjectReference Include="..\..\src\Novolis.Tools.LiteDb\Novolis.Tools.LiteDb.csproj" />
   </ItemGroup>
 </Project>

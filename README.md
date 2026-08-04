@@ -7,7 +7,7 @@
 
 <p align="center">
   <strong>Developer CLI tools</strong><br/>
-  Markdown + Mermaid documentation packs, relationship graphs, SQLite REPL, and more.
+  Markdown + Mermaid documentation packs, relationship graphs, SQLite and LiteDB REPLs.
 </p>
 
 <p align="center">
@@ -38,11 +38,13 @@
 | `Novolis.Tools.Docs.Cli` | `dotnet tool install -g Novolis.Tools.Docs.Cli` | [README](https://github.com/Novolis-Platform/novolis-tools/blob/main/src/Novolis.Tools.Docs.Cli/README.md) |
 | `Novolis.Tools.Sqlite` | `dotnet add package Novolis.Tools.Sqlite` | [README](https://github.com/Novolis-Platform/novolis-tools/blob/main/src/Novolis.Tools.Sqlite/README.md) |
 | `Novolis.Tools.Sqlite.Cli` | `dotnet tool install -g Novolis.Tools.Sqlite.Cli` | [README](https://github.com/Novolis-Platform/novolis-tools/blob/main/src/Novolis.Tools.Sqlite.Cli/README.md) |
+| `Novolis.Tools.LiteDb` | `dotnet add package Novolis.Tools.LiteDb` | [README](https://github.com/Novolis-Platform/novolis-tools/blob/main/src/Novolis.Tools.LiteDb/README.md) |
+| `Novolis.Tools.LiteDb.Cli` | `dotnet tool install -g Novolis.Tools.LiteDb.Cli` | [README](https://github.com/Novolis-Platform/novolis-tools/blob/main/src/Novolis.Tools.LiteDb.Cli/README.md) |
 
 <!-- novolis-package-index:end -->
 # novolis-tools
 
-Developer tools for Novolis workspaces. Prefer **Markdown with Mermaid** for documentation and relationship graphs; keep CLIs small and packable.
+Developer tools for Novolis workspaces. Prefer **Markdown with Mermaid** for documentation and relationship graphs. Database CLIs sit on the matching **Storage** packages so engine versions stay aligned with application hosts.
 
 ```mermaid
 flowchart TB
@@ -51,13 +53,16 @@ flowchart TB
     graphScan["graph scan"]
     md["Markdown + Mermaid"]
   end
-  subgraph sqlite [SQLite]
-    repl["novolis-sqlite REPL"]
-    helpers["SqliteSession"]
+  subgraph data [Data files]
+    sqliteRepl["novolis-sqlite"]
+    liteRepl["novolis-litedb"]
+    sqliteLib["SqliteSession"]
+    liteLib["LiteDbSession"]
   end
   scaffold --> md
   graphScan --> md
-  repl --> helpers
+  sqliteRepl --> sqliteLib
+  liteRepl --> liteLib
 ```
 
 ## Packages
@@ -66,8 +71,10 @@ flowchart TB
 |---------|------|
 | `Novolis.Tools.Docs` | Markdown / Mermaid / `.csproj` relationship graphs |
 | `Novolis.Tools.Docs.Cli` | `novolis-docs` tool |
-| `Novolis.Tools.Sqlite` | SQLite session helpers |
+| `Novolis.Tools.Sqlite` | SQLite session helpers (`Novolis.Storage.Sqlite`) |
 | `Novolis.Tools.Sqlite.Cli` | `novolis-sqlite` tool |
+| `Novolis.Tools.LiteDb` | LiteDB session helpers (`Novolis.Storage.LiteDb`) |
+| `Novolis.Tools.LiteDb.Cli` | `novolis-litedb` tool |
 
 ## Quick start
 
@@ -75,6 +82,7 @@ flowchart TB
 dotnet run --project d:\novolis\novolis-tools\src\Novolis.Tools.Docs.Cli -- scaffold --title "Demo" --out d:\temp\demo-docs
 dotnet run --project d:\novolis\novolis-tools\src\Novolis.Tools.Docs.Cli -- graph --root d:\novolis\novolis-tools --out d:\temp\tools-graph
 dotnet run --project d:\novolis\novolis-tools\src\Novolis.Tools.Sqlite.Cli -- :memory: -c "SELECT 'ok' AS status;"
+dotnet run --project d:\novolis\novolis-tools\src\Novolis.Tools.LiteDb.Cli -- :memory: -c "INSERT INTO t VALUES {_id: 1, status: \"ok\"}; SELECT $ FROM t;"
 ```
 
 ## Build

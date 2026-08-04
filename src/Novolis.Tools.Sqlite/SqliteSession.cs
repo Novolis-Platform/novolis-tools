@@ -1,21 +1,31 @@
 using System.Text;
 using Microsoft.Data.Sqlite;
+using Novolis.Storage.Sqlite;
 
 namespace Novolis.Tools.Sqlite;
 
-/// <summary>Result of a SQL statement that returns a grid.</summary>
+/// <summary>
+/// Tabular result of a SQL statement: column names, stringified cells, and optional
+/// <see cref="RecordsAffected"/> for non-query work.
+/// </summary>
+/// <remarks>
+/// Formatters are intentionally small and allocation-friendly for REPL output — not a
+/// full reporting layer. Prefer <see cref="ToTable"/> interactively and <see cref="ToCsv"/>
+/// when piping into other tools.
+/// </remarks>
 public sealed class SqliteQueryResult
 {
-    /// <summary>Column names.</summary>
+    /// <summary>Column names in display order.</summary>
     public required IReadOnlyList<string> Columns { get; init; }
 
-    /// <summary>Row values aligned to <see cref="Columns"/>.</summary>
+    /// <summary>Row values aligned to <see cref="Columns"/>; null database values become <c>NULL</c>.</summary>
     public required IReadOnlyList<IReadOnlyList<string>> Rows { get; init; }
 
-    /// <summary>Rows affected for non-query statements; null for result sets.</summary>
+    /// <summary>Rows affected for non-query statements; <see langword="null"/> when a result set was returned.</summary>
     public int? RecordsAffected { get; init; }
 
-    /// <summary>Formats as a fixed-ish text table.</summary>
+    /// <summary>Formats a fixed-width text table suitable for a terminal.</summary>
+    /// <returns>A multi-line table, or a short “rows affected” message when there are no columns.</returns>
     public string ToTable()
     {
         if (Columns.Count == 0)
@@ -38,7 +48,8 @@ public sealed class SqliteQueryResult
         return sb.ToString();
     }
 
-    /// <summary>Formats as CSV (RFC4180-ish quoting).</summary>
+    /// <summary>Formats as CSV with RFC4180-ish quoting for commas, quotes, and newlines.</summary>
+    /// <returns>CSV text without a trailing blank line.</returns>
     public string ToCsv()
     {
         var sb = new StringBuilder();
@@ -73,7 +84,14 @@ public sealed class SqliteQueryResult
     }
 }
 
-/// <summary>Opened SQLite connection with helper queries for CLI use.</summary>
+/// <summary>
+/// Opened SQLite connection with helpers aimed at CLI REPLs and short scripts.
+/// </summary>
+/// <remarks>
+/// Depends on <c>Novolis.Storage.Sqlite</c> so engine versions stay aligned with repository
+/// hosts that use <see cref="SqliteOptions"/> / <c>AddSqliteProvider</c>. This type is not an
+/// <c>IRepository{T}</c> — it is for ad-hoc SQL inspection of the same files those providers write.
+/// </remarks>
 public sealed class SqliteSession : IAsyncDisposable, IDisposable
 {
     private readonly SqliteConnection _connection;
@@ -84,7 +102,13 @@ public sealed class SqliteSession : IAsyncDisposable, IDisposable
         _connection = connection;
     }
 
-    /// <summary>Opens a database file (created if missing) or <c>:memory:</c>.</summary>
+    /// <summary>
+    /// Opens a database file (created if missing) or an in-memory database when
+    /// <paramref name="dataSource"/> is <c>:memory:</c>.
+    /// </summary>
+    /// <param name="dataSource">File path or <c>:memory:</c>.</param>
+    /// <returns>An open session; dispose when finished.</returns>
+    /// <exception cref="ArgumentException">Thrown when <paramref name="dataSource"/> is null or whitespace.</exception>
     public static SqliteSession Open(string dataSource)
     {
         ArgumentException.ThrowIfNullOrWhiteSpace(dataSource);
@@ -97,7 +121,26 @@ public sealed class SqliteSession : IAsyncDisposable, IDisposable
         return new SqliteSession(connection);
     }
 
-    /// <summary>Lists user table names.</summary>
+    /// <summary>
+    /// Opens using the same <see cref="SqliteOptions"/> shape as <c>Novolis.Storage.Sqlite</c>
+    /// (<c>Data Source=…</c> connection strings).
+    /// </summary>
+    /// <param name="options">Storage SQLite options; <see cref="SqliteOptions.ConnectionString"/> is required.</param>
+    /// <returns>An open session; dispose when finished.</returns>
+    /// <exception cref="ArgumentNullException">Thrown when <paramref name="options"/> is null.</exception>
+    /// <exception cref="ArgumentException">Thrown when the connection string is missing.</exception>
+    public static SqliteSession Open(SqliteOptions options)
+    {
+        ArgumentNullException.ThrowIfNull(options);
+        ArgumentException.ThrowIfNullOrWhiteSpace(options.ConnectionString);
+        var connection = new SqliteConnection(options.ConnectionString);
+        connection.Open();
+        return new SqliteSession(connection);
+    }
+
+    /// <summary>Lists user table names (excludes <c>sqlite_%</c> internals).</summary>
+    /// <param name="cancellationToken">Cancellation token.</param>
+    /// <returns>Sorted table names.</returns>
     public async Task<IReadOnlyList<string>> ListTablesAsync(CancellationToken cancellationToken = default)
     {
         await using var command = _connection.CreateCommand();
@@ -118,7 +161,10 @@ public sealed class SqliteSession : IAsyncDisposable, IDisposable
         return names;
     }
 
-    /// <summary>Returns <c>sqlite_master.sql</c> for one table or all user tables.</summary>
+    /// <summary>Returns <c>sqlite_master.sql</c> for one table or all user objects with DDL.</summary>
+    /// <param name="tableName">Optional table or object name; omit to list all user DDL.</param>
+    /// <param name="cancellationToken">Cancellation token.</param>
+    /// <returns>CREATE statements separated by blank lines, each ending with <c>;</c>.</returns>
     public async Task<string> GetSchemaAsync(string? tableName = null, CancellationToken cancellationToken = default)
     {
         await using var command = _connection.CreateCommand();
@@ -157,6 +203,10 @@ public sealed class SqliteSession : IAsyncDisposable, IDisposable
     }
 
     /// <summary>Executes SQL; returns a grid when the statement yields rows.</summary>
+    /// <param name="sql">One SQL statement.</param>
+    /// <param name="cancellationToken">Cancellation token.</param>
+    /// <returns>A result set or an affected-row count.</returns>
+    /// <exception cref="ArgumentException">Thrown when <paramref name="sql"/> is null or whitespace.</exception>
     public async Task<SqliteQueryResult> ExecuteAsync(string sql, CancellationToken cancellationToken = default)
     {
         ArgumentException.ThrowIfNullOrWhiteSpace(sql);

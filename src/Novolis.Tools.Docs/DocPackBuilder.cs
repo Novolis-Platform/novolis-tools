@@ -125,14 +125,18 @@ public static class DocPackBuilder
                 .Node("docs", "Tools.Docs")
                 .Node("sqliteCli", "Sqlite.Cli", "stadium")
                 .Node("sqlite", "Tools.Sqlite")
+                .Node("liteCli", "LiteDb.Cli", "stadium")
+                .Node("lite", "Tools.LiteDb")
                 .Depends("cli", "docs", "ProjectReference")
-                .Depends("sqliteCli", "sqlite", "ProjectReference")))
+                .Depends("sqliteCli", "sqlite", "ProjectReference")
+                .Depends("liteCli", "lite", "ProjectReference")))
             .H2("Edge table")
             .Table(
                 ["From", "To", "Kind"],
                 [
                     ["Novolis.Tools.Docs.Cli", "Novolis.Tools.Docs", "ProjectReference"],
                     ["Novolis.Tools.Sqlite.Cli", "Novolis.Tools.Sqlite", "ProjectReference"],
+                    ["Novolis.Tools.LiteDb.Cli", "Novolis.Tools.LiteDb", "ProjectReference"],
                 ]));
 
         pack.Add(new MarkdownDocument("Glossary")
@@ -143,6 +147,7 @@ public static class DocPackBuilder
                     ["Doc pack", "A folder of Markdown files generated together"],
                     ["Relationship graph", "Nodes + directed edges rendered as Mermaid"],
                     ["Mermaid", "Diagram source embedded in fenced ```mermaid blocks"],
+                    ["Storage-aligned tool", "A Tools package that depends on the matching Novolis.Storage.* engine"],
                 ])
             .Quote("Prefer a Mermaid diagram over an ASCII sketch whenever structure matters."));
 
