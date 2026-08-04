@@ -1,1 +1,20 @@
-{"packages":{}}
+{
+  "packages": {
+    "Novolis.Tools.Docs": {
+      "path": "src/Novolis.Tools.Docs",
+      "description": "Markdown + Mermaid documentation and relationship graph builders"
+    },
+    "Novolis.Tools.Docs.Cli": {
+      "path": "src/Novolis.Tools.Docs.Cli",
+      "description": "dotnet tool novolis-docs — scaffold docs and emit project relationship graphs"
+    },
+    "Novolis.Tools.Sqlite": {
+      "path": "src/Novolis.Tools.Sqlite",
+      "description": "SQLite session helpers for CLI and scripting"
+    },
+    "Novolis.Tools.Sqlite.Cli": {
+      "path": "src/Novolis.Tools.Sqlite.Cli",
+      "description": "dotnet tool novolis-sqlite — interactive SQLite REPL"
+    }
+  }
+}

@@ -6,17 +6,13 @@
 </p>
 
 <p align="center">
-  <img src="https://raw.githubusercontent.com/Novolis-Platform/.github/main/brand/banners/novolis-template-dotnet.svg" width="100%" alt="novolis-template-dotnet"/>
+  <strong>Developer CLI tools</strong><br/>
+  Markdown + Mermaid documentation packs, relationship graphs, SQLite REPL, and more.
 </p>
 
 <p align="center">
-  <strong>Canonical package repo template</strong><br/>
-  Template for new Novolis .NET package repositories.
-</p>
-
-<p align="center">
-  <a href="https://github.com/Novolis-Platform/novolis-template-dotnet/actions"><img src="https://img.shields.io/github/actions/workflow/status/Novolis-Platform/novolis-template-dotnet/merge.yml?branch=main&label=merge&logo=github" alt="merge"/></a>
-  <a href="https://github.com/orgs/Novolis-Platform/packages?repo_name=novolis-template-dotnet"><img src="https://img.shields.io/badge/packages-GitHub%20Packages-0a7ea3?logo=nuget" alt="packages"/></a>
+  <a href="https://github.com/Novolis-Platform/novolis-tools/actions"><img src="https://img.shields.io/github/actions/workflow/status/Novolis-Platform/novolis-tools/merge.yml?branch=main&label=merge&logo=github" alt="merge"/></a>
+  <a href="https://github.com/orgs/Novolis-Platform/packages?repo_name=novolis-tools"><img src="https://img.shields.io/badge/packages-GitHub%20Packages-0a7ea3?logo=nuget" alt="packages"/></a>
   <a href="https://github.com/Novolis-Platform"><img src="https://img.shields.io/badge/org-Novolis--Platform-111827" alt="org"/></a>
 </p>
 
@@ -30,62 +26,66 @@
 
 ---
 <!-- novolis-marketing:end -->
-# novolis-template-dotnet
+<!-- novolis-package-index:start -->
+> **GitHub Packages shows this repository README on every package page** (upstream limitation).
+> Open the **package README** for install and quick start — embedded in each .nupkg and linked below.
 
-Canonical GitHub **repository template** for new Novolis package, tool, analyzer, app, and template repos.
+## Published packages
 
-Use **[Use this template](https://github.com/Novolis-Platform/novolis-template-dotnet/generate)** on GitHub to create a new repository, then rename and add projects.
+| Package | Install | Package README |
+|---------|---------|----------------|
+| `Novolis.Tools.Docs` | `dotnet add package Novolis.Tools.Docs` | [README](https://github.com/Novolis-Platform/novolis-tools/blob/main/src/Novolis.Tools.Docs/README.md) |
+| `Novolis.Tools.Docs.Cli` | `dotnet tool install -g Novolis.Tools.Docs.Cli` | [README](https://github.com/Novolis-Platform/novolis-tools/blob/main/src/Novolis.Tools.Docs.Cli/README.md) |
+| `Novolis.Tools.Sqlite` | `dotnet add package Novolis.Tools.Sqlite` | [README](https://github.com/Novolis-Platform/novolis-tools/blob/main/src/Novolis.Tools.Sqlite/README.md) |
+| `Novolis.Tools.Sqlite.Cli` | `dotnet tool install -g Novolis.Tools.Sqlite.Cli` | [README](https://github.com/Novolis-Platform/novolis-tools/blob/main/src/Novolis.Tools.Sqlite.Cli/README.md) |
 
-Supports: library, CLI tool, analyzer, game/app, and template repos without over-specializing.
+<!-- novolis-package-index:end -->
+# novolis-tools
 
-## What you get
+Developer tools for Novolis workspaces. Prefer **Markdown with Mermaid** for documentation and relationship graphs; keep CLIs small and packable.
 
-| Item | Purpose |
-|------|---------|
-| `Directory.Build.props` / `.targets` | `net10.0`, packable defaults, artifacts layout |
-| `Directory.Packages.props` | Central package management (optional baseline) |
-| `build/version.json` + `version.props` | CalVer versioning |
-| `build/Novolis.Documentation.props` | README + XML doc policy for packable projects |
-| `nuget.config` | nuget.org + GitHub Packages (`Novolis.*` at `2026.1.*`) |
-| `.github/workflows/` | PR, merge, and release CI |
-| `docs/getting-started.md` | Documentation defaults checklist |
+```mermaid
+flowchart TB
+  subgraph docs [Docs]
+    scaffold["scaffold pack"]
+    graphScan["graph scan"]
+    md["Markdown + Mermaid"]
+  end
+  subgraph sqlite [SQLite]
+    repl["novolis-sqlite REPL"]
+    helpers["SqliteSession"]
+  end
+  scaffold --> md
+  graphScan --> md
+  repl --> helpers
+```
+
+## Packages
+
+| Package | Role |
+|---------|------|
+| `Novolis.Tools.Docs` | Markdown / Mermaid / `.csproj` relationship graphs |
+| `Novolis.Tools.Docs.Cli` | `novolis-docs` tool |
+| `Novolis.Tools.Sqlite` | SQLite session helpers |
+| `Novolis.Tools.Sqlite.Cli` | `novolis-sqlite` tool |
 
 ## Quick start
 
 ```powershell
-# After generating your repo from the template:
-dotnet restore
-dotnet build
+dotnet run --project d:\novolis\novolis-tools\src\Novolis.Tools.Docs.Cli -- scaffold --title "Demo" --out d:\temp\demo-docs
+dotnet run --project d:\novolis\novolis-tools\src\Novolis.Tools.Docs.Cli -- graph --root d:\novolis\novolis-tools --out d:\temp\tools-graph
+dotnet run --project d:\novolis\novolis-tools\src\Novolis.Tools.Sqlite.Cli -- :memory: -c "SELECT 'ok' AS status;"
 ```
 
-Add your first project:
+## Build
 
 ```powershell
-dotnet new classlib -n Acme.Widgets.Core -o src/Acme.Widgets.Core
-dotnet sln add src/Acme.Widgets.Core/Acme.Widgets.Core.csproj
+dotnet build d:\novolis\novolis-tools\Novolis.Tools.slnx
+dotnet test d:\novolis\novolis-tools\Novolis.Tools.slnx
 ```
 
-## Documentation defaults
-
-New packable projects should:
-
-1. Import `build/Novolis.Documentation.props` (included via root `Directory.Build.props`).
-2. Add `README.md` next to each packable `.csproj` with Install/API sections.
-3. Document public API with XML comments before removing transitional `CS1591` suppressions.
-
-See [documentation-policy.md](https://github.com/Novolis-Platform/novolis-governance/blob/main/docs/documentation-policy.md).
-
-## Package sources
-
-**Only** nuget.org and GitHub Packages. No local folder feeds. Cross-repo iteration on platform libraries: open **`Novolis.Platform.slnx`** (ProjectReference mode) — see [platform-project-ref-mode](https://github.com/Novolis-Platform/novolis-governance/blob/main/docs/platform-project-ref-mode.md).
-
-## Related templates
-
-For `dotnet new` scaffolds (microservice, Avalonia, MonoGame), use the **[novolis-templates](https://github.com/Novolis-Platform/novolis-templates)** package instead.
-
-## More documentation
+## Docs
 
 - [Getting started](docs/getting-started.md)
 - [Design](docs/design.md)
 - [Release](docs/release.md)
-

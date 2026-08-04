@@ -1,0 +1,16 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+    <PackageId>Novolis.Tools.Sqlite.Cli</PackageId>
+    <Description>dotnet tool novolis-sqlite — interactive SQLite REPL.</Description>
+    <IsPackable>true</IsPackable>
+    <PackAsTool>true</PackAsTool>
+    <ToolCommandName>novolis-sqlite</ToolCommandName>
+    <RootNamespace>Novolis.Tools.Sqlite.Cli</RootNamespace>
+    <PackageTags>novolis;sqlite;cli;dotnet-tool;repl</PackageTags>
+  </PropertyGroup>
+  <ItemGroup>
+    <PackageReference Include="System.CommandLine" />
+    <ProjectReference Include="..\Novolis.Tools.Sqlite\Novolis.Tools.Sqlite.csproj" />
+  </ItemGroup>
+</Project>

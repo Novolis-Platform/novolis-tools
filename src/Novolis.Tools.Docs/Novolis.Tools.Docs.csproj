@@ -1,0 +1,9 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <PackageId>Novolis.Tools.Docs</PackageId>
+    <Description>Markdown and Mermaid builders for documentation packs and relationship graphs.</Description>
+    <IsPackable>true</IsPackable>
+    <RootNamespace>Novolis.Tools.Docs</RootNamespace>
+    <PackageTags>novolis;markdown;mermaid;documentation;graph;docs</PackageTags>
+  </PropertyGroup>
+</Project>

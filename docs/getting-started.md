@@ -1,14 +1,53 @@
 # Getting started
 
-Repository scaffold from [novolis-template-dotnet](https://github.com/Novolis-Platform/novolis-template-dotnet).
+## Prerequisites
 
-## Documentation defaults
+- .NET SDK **10.0.100+** (`d:\novolis\novolis-tools\global.json`)
+- NuGet sources: nuget.org + GitHub Packages for `Novolis.*`
 
-New packable projects should:
+## Build and test
 
-1. Import `build/Novolis.Documentation.props` (or a repo-specific `build/*.Documentation.props` that imports [Novolis.Documentation.props](https://github.com/Novolis-Platform/novolis-governance/blob/main/build/Novolis.Documentation.props)).
-2. Add `README.md` next to each packable `.csproj` and set `PackageReadmeFile`.
-3. Document all public API with XML comments before removing transitional `CS1591` suppressions.
+```powershell
+dotnet restore d:\novolis\novolis-tools\Novolis.Tools.slnx
+dotnet build d:\novolis\novolis-tools\Novolis.Tools.slnx
+dotnet test d:\novolis\novolis-tools\Novolis.Tools.slnx
+```
 
-See [documentation-policy.md](https://github.com/Novolis-Platform/novolis-governance/blob/main/docs/documentation-policy.md).
+## Tools
 
+### novolis-docs
+
+```powershell
+dotnet run --project d:\novolis\novolis-tools\src\Novolis.Tools.Docs.Cli -- scaffold --title "My Feature" --out d:\temp\my-docs
+dotnet run --project d:\novolis\novolis-tools\src\Novolis.Tools.Docs.Cli -- graph --root d:\novolis\novolis-tools --out d:\temp\tools-graph
+```
+
+After publish to GitHub Packages:
+
+```powershell
+dotnet tool install --global Novolis.Tools.Docs.Cli --version 2026.1.*
+novolis-docs scaffold --title "My Feature" --out d:\temp\my-docs
+```
+
+### novolis-sqlite
+
+```powershell
+dotnet run --project d:\novolis\novolis-tools\src\Novolis.Tools.Sqlite.Cli -- :memory: -c "SELECT 1 AS n;"
+```
+
+```powershell
+dotnet tool install --global Novolis.Tools.Sqlite.Cli --version 2026.1.*
+novolis-sqlite d:\temp\app.db
+```
+
+## Libraries
+
+| Package | Use |
+|---------|-----|
+| `Novolis.Tools.Docs` | Markdown / Mermaid / relationship graphs in code |
+| `Novolis.Tools.Sqlite` | SQLite session helpers |
+
+```powershell
+dotnet add package Novolis.Tools.Docs --version 2026.1.*
+dotnet add package Novolis.Tools.Sqlite --version 2026.1.*
+```
