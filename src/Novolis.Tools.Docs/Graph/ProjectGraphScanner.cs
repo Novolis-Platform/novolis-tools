@@ -62,7 +62,10 @@ public static partial class ProjectGraphScanner
                     continue;
                 }
 
-                var targetPath = Path.GetFullPath(Path.Combine(projectDir, include));
+                var normalizedInclude = include
+                    .Replace('\\', Path.DirectorySeparatorChar)
+                    .Replace('/', Path.DirectorySeparatorChar);
+                var targetPath = Path.GetFullPath(Path.Combine(projectDir, normalizedInclude));
                 var toName = byPath.TryGetValue(targetPath, out var known)
                     ? known
                     : Path.GetFileNameWithoutExtension(targetPath);
