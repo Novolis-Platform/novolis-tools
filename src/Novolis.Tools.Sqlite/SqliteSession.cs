@@ -1,6 +1,7 @@
 using System.Text;
 using Microsoft.Data.Sqlite;
 using Novolis.Storage.Sqlite;
+using MsSqliteConnection = Microsoft.Data.Sqlite.SqliteConnection;
 
 namespace Novolis.Tools.Sqlite;
 
@@ -94,10 +95,10 @@ public sealed class SqliteQueryResult
 /// </remarks>
 public sealed class SqliteSession : IAsyncDisposable, IDisposable
 {
-    private readonly SqliteConnection _connection;
+    private readonly MsSqliteConnection _connection;
     private bool _disposed;
 
-    private SqliteSession(SqliteConnection connection)
+    private SqliteSession(MsSqliteConnection connection)
     {
         _connection = connection;
     }
@@ -112,7 +113,7 @@ public sealed class SqliteSession : IAsyncDisposable, IDisposable
     public static SqliteSession Open(string dataSource)
     {
         ArgumentException.ThrowIfNullOrWhiteSpace(dataSource);
-        var connection = new SqliteConnection(new SqliteConnectionStringBuilder
+        var connection = new MsSqliteConnection(new SqliteConnectionStringBuilder
         {
             DataSource = dataSource,
             Mode = dataSource == ":memory:" ? SqliteOpenMode.Memory : SqliteOpenMode.ReadWriteCreate,
@@ -122,10 +123,10 @@ public sealed class SqliteSession : IAsyncDisposable, IDisposable
     }
 
     /// <summary>
-    /// Opens using the same <see cref="SqliteOptions"/> shape as <c>Novolis.Storage.Sqlite</c>
+    /// Opens using the same options shape as <c>Novolis.Storage.Sqlite</c>
     /// (<c>Data Source=…</c> connection strings).
     /// </summary>
-    /// <param name="options">Storage SQLite options; <see cref="SqliteOptions.ConnectionString"/> is required.</param>
+    /// <param name="options">Storage SQLite options; connection string is required.</param>
     /// <returns>An open session; dispose when finished.</returns>
     /// <exception cref="ArgumentNullException">Thrown when <paramref name="options"/> is null.</exception>
     /// <exception cref="ArgumentException">Thrown when the connection string is missing.</exception>
@@ -133,7 +134,7 @@ public sealed class SqliteSession : IAsyncDisposable, IDisposable
     {
         ArgumentNullException.ThrowIfNull(options);
         ArgumentException.ThrowIfNullOrWhiteSpace(options.ConnectionString);
-        var connection = new SqliteConnection(options.ConnectionString);
+        var connection = new MsSqliteConnection(options.ConnectionString);
         connection.Open();
         return new SqliteSession(connection);
     }
