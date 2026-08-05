@@ -197,8 +197,12 @@ static int ExecuteLine(
         var sw = Stopwatch.StartNew();
         var raw = session.Execute(line);
         sw.Stop();
+        var full = raw.Columns.Count == 0
+            ? TabularResult.Affected(raw.RecordsAffected ?? 0, "document", sw.Elapsed)
+            : TabularResult.Grid(raw.Columns, raw.Rows, "document", truncated: false, sw.Elapsed);
+        LastResult.Full = full;
         var shaped = ResultShaping.Shape(raw.Columns, raw.Rows, raw.RecordsAffected, "document", prefs, sw.Elapsed);
-        LastResult.Current = shaped;
+        LastResult.Display = shaped;
         ResultPrinter.Write(console, shaped, prefs.Mode, prefs);
         return ExitCodes.Ok;
     }
@@ -253,7 +257,8 @@ static int RunDot(
             var raw = session.ListIndexes(arg);
             var shaped = ResultShaping.Shape(raw.Columns, raw.Rows, raw.RecordsAffected, "document", prefs, TimeSpan.Zero);
             ResultPrinter.Write(console, shaped, prefs.Mode, prefs);
-            LastResult.Current = shaped;
+            LastResult.Full = TabularResult.Grid(raw.Columns, raw.Rows, "document");
+            LastResult.Display = shaped;
             return ExitCodes.Ok;
         }
         case ".info":
@@ -316,7 +321,7 @@ static int RunDot(
                 return ExitCodes.Failure;
             }
 
-            if (LastResult.Current is null)
+            if (LastResult.Full is null)
             {
                 ReplChrome.Error(console, "No result to export yet.");
                 return ExitCodes.Failure;
@@ -324,8 +329,8 @@ static int RunDot(
 
             try
             {
-                ResultPrinter.Export(arg, LastResult.Current);
-                ReplChrome.Ok(console, $"wrote {Path.GetFullPath(arg)}");
+                ResultPrinter.Export(arg, LastResult.Full);
+                ReplChrome.Ok(console, $"wrote {Path.GetFullPath(arg)} ({LastResult.Full.Rows.Count} documents)");
                 return ExitCodes.Ok;
             }
             catch (Exception ex)
@@ -382,5 +387,6 @@ static string SummarizeSql(string sql)
 
 static class LastResult
 {
-    public static TabularResult? Current { get; set; }
+    public static TabularResult? Full { get; set; }
+    public static TabularResult? Display { get; set; }
 }

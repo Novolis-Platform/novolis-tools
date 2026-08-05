@@ -213,21 +213,44 @@ public static class ReplChrome
     {
         var t = sql.TrimStart();
         if (t.StartsWith("select", StringComparison.OrdinalIgnoreCase)
-            || t.StartsWith("with", StringComparison.OrdinalIgnoreCase)
-            || t.StartsWith("pragma", StringComparison.OrdinalIgnoreCase)
             || t.StartsWith("explain", StringComparison.OrdinalIgnoreCase)
             || t.StartsWith("show", StringComparison.OrdinalIgnoreCase))
         {
-            // PRAGMA can still write (journal_mode=WAL etc.) — treat assignment as write.
-            if (t.StartsWith("pragma", StringComparison.OrdinalIgnoreCase) && t.Contains('=', StringComparison.Ordinal))
-            {
-                return true;
-            }
-
             return false;
         }
 
+        if (t.StartsWith("pragma", StringComparison.OrdinalIgnoreCase))
+        {
+            // PRAGMA can still write (journal_mode=WAL etc.) — treat assignment as write.
+            return t.Contains('=', StringComparison.Ordinal);
+        }
+
+        if (t.StartsWith("with", StringComparison.OrdinalIgnoreCase))
+        {
+            // CTE may lead into DELETE/UPDATE/INSERT — scan the whole statement.
+            return ContainsWriteKeyword(t);
+        }
+
         return true;
+    }
+
+    private static bool ContainsWriteKeyword(string sql)
+    {
+        // Rough token scan; good enough for REPL read-only gating.
+        var upper = " " + sql.ToUpperInvariant().Replace('\n', ' ').Replace('\r', ' ') + " ";
+        foreach (var keyword in new[]
+                 {
+                     " INSERT ", " UPDATE ", " DELETE ", " REPLACE ", " DROP ", " ALTER ",
+                     " CREATE ", " TRUNCATE ", " VACUUM ", " REINDEX ", " ATTACH ", " DETACH ",
+                 })
+        {
+            if (upper.Contains(keyword, StringComparison.Ordinal))
+            {
+                return true;
+            }
+        }
+
+        return false;
     }
 
     private static int Levenshtein(string a, string b)

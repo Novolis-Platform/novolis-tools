@@ -188,16 +188,23 @@ static async Task<int> ExecuteLineAsync(
         return ExitCodes.Ok;
     }
 
-    try
-    {
-        var sw = Stopwatch.StartNew();
-        var raw = await session.ExecuteAsync(line, cancellationToken);
-        sw.Stop();
-        var shaped = ResultShaping.Shape(raw.Columns, raw.Rows, raw.RecordsAffected, "row", prefs, sw.Elapsed);
-        LastResult.Current = shaped;
-        ResultPrinter.Write(console, shaped, prefs.Mode, prefs);
-        return ExitCodes.Ok;
-    }
+        try
+        {
+            var sw = Stopwatch.StartNew();
+            var raw = await session.ExecuteAsync(line, cancellationToken);
+            sw.Stop();
+            var full = TabularResult.Grid(raw.Columns, raw.Rows, "row", truncated: false, sw.Elapsed);
+            if (raw.Columns.Count == 0)
+            {
+                full = TabularResult.Affected(raw.RecordsAffected ?? 0, "row", sw.Elapsed);
+            }
+
+            LastResult.Full = full;
+            var shaped = ResultShaping.Shape(raw.Columns, raw.Rows, raw.RecordsAffected, "row", prefs, sw.Elapsed);
+            LastResult.Display = shaped;
+            ResultPrinter.Write(console, shaped, prefs.Mode, prefs);
+            return ExitCodes.Ok;
+        }
     catch (Exception ex)
     {
         ReplChrome.Error(console, ex.Message);
@@ -266,7 +273,8 @@ static async Task<int> RunDotAsync(
             var raw = await session.ListIndexesAsync(arg, cancellationToken);
             var shaped = ResultShaping.Shape(raw.Columns, raw.Rows, raw.RecordsAffected, "row", prefs, TimeSpan.Zero);
             ResultPrinter.Write(console, shaped, prefs.Mode, prefs);
-            LastResult.Current = shaped;
+            LastResult.Full = TabularResult.Grid(raw.Columns, raw.Rows, "row");
+            LastResult.Display = shaped;
             return ExitCodes.Ok;
         }
         case ".info":
@@ -329,7 +337,7 @@ static async Task<int> RunDotAsync(
                 return ExitCodes.Failure;
             }
 
-            if (LastResult.Current is null)
+            if (LastResult.Full is null)
             {
                 ReplChrome.Error(console, "No result to export yet.");
                 return ExitCodes.Failure;
@@ -337,8 +345,8 @@ static async Task<int> RunDotAsync(
 
             try
             {
-                ResultPrinter.Export(arg, LastResult.Current);
-                ReplChrome.Ok(console, $"wrote {Path.GetFullPath(arg)}");
+                ResultPrinter.Export(arg, LastResult.Full);
+                ReplChrome.Ok(console, $"wrote {Path.GetFullPath(arg)} ({LastResult.Full.Rows.Count} rows)");
                 return ExitCodes.Ok;
             }
             catch (Exception ex)
@@ -395,5 +403,6 @@ static string SummarizeSql(string sql)
 
 static class LastResult
 {
-    public static TabularResult? Current { get; set; }
+    public static TabularResult? Full { get; set; }
+    public static TabularResult? Display { get; set; }
 }

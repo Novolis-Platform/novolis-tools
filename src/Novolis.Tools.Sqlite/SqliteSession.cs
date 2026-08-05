@@ -101,18 +101,40 @@ public sealed class SqliteSession : IAsyncDisposable, IDisposable
         ArgumentNullException.ThrowIfNull(settings);
         ArgumentException.ThrowIfNullOrWhiteSpace(settings.DataSource);
         var source = settings.DataSource;
-        var mode = string.Equals(source, ":memory:", StringComparison.OrdinalIgnoreCase)
-            ? SqliteOpenMode.Memory
-            : settings.ReadOnly
-                ? SqliteOpenMode.ReadOnly
-                : SqliteOpenMode.ReadWriteCreate;
 
-        var connection = new MsSqliteConnection(new SqliteConnectionStringBuilder
+        MsSqliteConnection connection;
+        string dataSourceLabel;
+        if (source.Contains('=', StringComparison.Ordinal)
+            && !string.Equals(source, ":memory:", StringComparison.OrdinalIgnoreCase))
         {
-            DataSource = source,
-            Mode = mode,
-            Pooling = false,
-        }.ToString());
+            // Full connection string (Data Source=…;Mode=…).
+            var builder = new SqliteConnectionStringBuilder(source);
+            if (settings.ReadOnly)
+            {
+                builder.Mode = SqliteOpenMode.ReadOnly;
+            }
+
+            builder.Pooling = false;
+            dataSourceLabel = builder.DataSource;
+            connection = new MsSqliteConnection(builder.ToString());
+        }
+        else
+        {
+            var mode = string.Equals(source, ":memory:", StringComparison.OrdinalIgnoreCase)
+                ? SqliteOpenMode.Memory
+                : settings.ReadOnly
+                    ? SqliteOpenMode.ReadOnly
+                    : SqliteOpenMode.ReadWriteCreate;
+
+            connection = new MsSqliteConnection(new SqliteConnectionStringBuilder
+            {
+                DataSource = source,
+                Mode = mode,
+                Pooling = false,
+            }.ToString());
+            dataSourceLabel = source;
+        }
+
         connection.Open();
 
         if (!settings.ReadOnly)
@@ -122,7 +144,7 @@ public sealed class SqliteSession : IAsyncDisposable, IDisposable
             pragma.ExecuteNonQuery();
         }
 
-        return new SqliteSession(connection, settings.ReadOnly, source);
+        return new SqliteSession(connection, settings.ReadOnly, dataSourceLabel);
     }
 
     /// <summary>Opens using <see cref="SqliteOptions"/> (storage connection string).</summary>
