@@ -137,9 +137,9 @@ public sealed class SqliteSession : IAsyncDisposable, IDisposable
 
         connection.Open();
 
-        if (!settings.ReadOnly)
+        // foreign_keys is a per-connection setting (works in read-only too).
+        using (var pragma = connection.CreateCommand())
         {
-            using var pragma = connection.CreateCommand();
             pragma.CommandText = "PRAGMA foreign_keys = ON;";
             pragma.ExecuteNonQuery();
         }

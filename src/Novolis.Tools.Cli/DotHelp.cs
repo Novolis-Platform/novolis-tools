@@ -62,6 +62,13 @@ public static class OpenGuards
         {
             var filePath = TryExtractFilePath(database);
             if (filePath is not null
+                && string.Equals(filePath, ":memory:", StringComparison.OrdinalIgnoreCase)
+                && readOnly)
+            {
+                throw new InvalidOperationException(":memory: cannot be opened read-only (nothing durable to inspect).");
+            }
+
+            if (filePath is not null
                 && !string.Equals(filePath, ":memory:", StringComparison.OrdinalIgnoreCase))
             {
                 EnsureFileOpenAllowed(filePath, create, readOnly);
