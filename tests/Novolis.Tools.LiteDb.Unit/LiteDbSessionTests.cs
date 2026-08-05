@@ -62,5 +62,19 @@ public sealed class LiteDbSessionTests
         var locked = LiteDbSession.BuildConnectionString("secret.db", "pw");
         await Assert.That(locked).Contains("Password=pw");
         await Assert.That(locked).Contains("Connection=shared");
+
+        var ro = LiteDbSession.BuildConnectionString("app.db", null, readOnly: true);
+        await Assert.That(ro).Contains("ReadOnly=true");
+    }
+
+    [Test]
+    public async Task ListCollectionInfos_Includes_Counts()
+    {
+        using var session = LiteDbSession.Open(":memory:");
+        session.Execute("INSERT INTO items VALUES {_id: 1, name: \"a\"}");
+        session.Execute("INSERT INTO items VALUES {_id: 2, name: \"b\"}");
+        var infos = session.ListCollectionInfos();
+        await Assert.That(infos.Count).IsEqualTo(1);
+        await Assert.That(infos[0].DocumentCount).IsEqualTo(2);
     }
 }

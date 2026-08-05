@@ -9,6 +9,7 @@
     <PackageVersion Include="Microsoft.SourceLink.GitHub" Version="10.0.203" />
     <PackageVersion Include="Novolis.Storage.LiteDb" Version="2026.1.*" />
     <PackageVersion Include="Novolis.Storage.Sqlite" Version="2026.1.*" />
+    <PackageVersion Include="Spectre.Console" Version="0.54.0" />
     <PackageVersion Include="SQLitePCLRaw.bundle_e_sqlite3" Version="3.0.5" />
     <PackageVersion Include="System.CommandLine" Version="2.0.10" />
     <PackageVersion Include="TUnit" Version="1.44.39" />

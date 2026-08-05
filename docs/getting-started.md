@@ -38,34 +38,38 @@ novolis-docs scaffold --title "My Feature" --out d:\temp\my-docs
 
 ### novolis-sqlite
 
-Inspect SQLite files with the same engine stack as `Novolis.Storage.Sqlite`:
+Spectre REPL over `Novolis.Storage.Sqlite`. Missing files are refused unless `--create`; prefer `--read-only` when inspecting.
 
 ```powershell
 dotnet run --project d:\novolis\novolis-tools\src\Novolis.Tools.Sqlite.Cli -- :memory: -c "SELECT 1 AS n;"
+dotnet run --project d:\novolis\novolis-tools\src\Novolis.Tools.Sqlite.Cli -- d:\temp\app.db --read-only -c ".tables"
+dotnet run --project d:\novolis\novolis-tools\src\Novolis.Tools.Sqlite.Cli -- d:\temp\new.db --create
 ```
 
 ```powershell
 dotnet tool install --global Novolis.Tools.Sqlite.Cli --version 2026.1.*
-novolis-sqlite d:\temp\app.db
+novolis-sqlite d:\temp\app.db --read-only
 ```
 
 ### novolis-litedb
 
-Inspect LiteDB files with the same engine and connection-string conventions as `Novolis.Storage.LiteDb`:
+Spectre LiteDB shell with the same pit-of-success defaults (`--create`, `--read-only`, row limits, destructive confirms):
 
 ```powershell
-dotnet run --project d:\novolis\novolis-tools\src\Novolis.Tools.LiteDb.Cli -- :memory: -c "INSERT INTO t VALUES {_id: 1, name: \"ok\"}; SELECT $ FROM t;"
+dotnet run --project d:\novolis\novolis-tools\src\Novolis.Tools.LiteDb.Cli -- :memory: -c ".collections"
+dotnet run --project d:\novolis\novolis-tools\src\Novolis.Tools.LiteDb.Cli -- d:\temp\app.db --create
 ```
 
 ```powershell
 dotnet tool install --global Novolis.Tools.LiteDb.Cli --version 2026.1.*
-novolis-litedb d:\temp\app.db
+novolis-litedb d:\temp\app.db --read-only
 ```
 
 ## Libraries
 
 | Package | Use |
 |---------|-----|
+| `Novolis.Tools.Cli` | Spectre helpers for building more tools |
 | `Novolis.Tools.Docs` | Markdown / Mermaid / relationship graphs in code |
 | `Novolis.Tools.Sqlite` | SQLite session helpers (depends on `Novolis.Storage.Sqlite`) |
 | `Novolis.Tools.LiteDb` | LiteDB session helpers (depends on `Novolis.Storage.LiteDb`) |

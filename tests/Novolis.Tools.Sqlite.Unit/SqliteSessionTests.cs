@@ -35,4 +35,43 @@ public sealed class SqliteSessionTests
         var result = await session.ExecuteAsync("SELECT 7 AS n;");
         await Assert.That(result.Rows[0][0]).IsEqualTo("7");
     }
+
+    [Test]
+    public async Task ListTableInfos_Includes_Counts()
+    {
+        await using var session = SqliteSession.Open(":memory:");
+        await session.ExecuteAsync("CREATE TABLE items (id INTEGER PRIMARY KEY);");
+        await session.ExecuteAsync("INSERT INTO items DEFAULT VALUES;");
+        await session.ExecuteAsync("INSERT INTO items DEFAULT VALUES;");
+
+        var infos = await session.ListTableInfosAsync();
+        await Assert.That(infos.Count).IsEqualTo(1);
+        await Assert.That(infos[0].Name).IsEqualTo("items");
+        await Assert.That(infos[0].RowCount).IsEqualTo(2);
+    }
+
+    [Test]
+    public async Task Open_ReadOnly_Rejects_Writes()
+    {
+        var path = Path.Combine(Path.GetTempPath(), "novolis-sqlite-ro-" + Guid.NewGuid().ToString("N") + ".db");
+        try
+        {
+            await using (var setup = SqliteSession.Open(path))
+            {
+                await setup.ExecuteAsync("CREATE TABLE t (id INTEGER);");
+            }
+
+            await using var session = SqliteSession.Open(path, readOnly: true);
+            await Assert.That(session.IsReadOnly).IsTrue();
+            await Assert.That(async () => await session.ExecuteAsync("INSERT INTO t VALUES (1);"))
+                .Throws<Exception>();
+        }
+        finally
+        {
+            if (File.Exists(path))
+            {
+                File.Delete(path);
+            }
+        }
+    }
 }

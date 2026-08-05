@@ -13,6 +13,8 @@ flowchart LR
   docsCli["novolis-docs"] --> docsLib["Novolis.Tools.Docs"]
   sqliteCli["novolis-sqlite"] --> sqliteLib["Novolis.Tools.Sqlite"]
   liteCli["novolis-litedb"] --> liteLib["Novolis.Tools.LiteDb"]
+  sqliteCli --> cliLib["Novolis.Tools.Cli"]
+  liteCli --> cliLib
   docsLib --> md["MarkdownDocument"]
   docsLib --> mermaid["MermaidDiagram"]
   docsLib --> graph["RelationshipGraph"]
@@ -84,13 +86,23 @@ erDiagram
 |---------|--------|--------|
 | Library | `Novolis.Tools.Sqlite` | `Novolis.Tools.LiteDb` |
 | Tool | `novolis-sqlite` | `novolis-litedb` |
+| Shared chrome | `Novolis.Tools.Cli` (Spectre tables, help, open guards) | same |
 | Storage dep | `Novolis.Storage.Sqlite` | `Novolis.Storage.LiteDb` |
 | Open shapes | path, `:memory:`, `SqliteOptions` | path, `:memory:`, `LiteDbOptions`, wrap `ILiteDatabase` |
-| Structure | `.tables` / `ListTablesAsync` | `.collections` / `ListCollections` |
-| Catalog | `.schema` via `sqlite_master` | `.indexes` via `$indexes` |
-| Output | table, csv | table, csv, json lines |
+| Structure | `.tables` + counts | `.collections` + counts |
+| Catalog | `.schema` / `.indexes` / `.info` | `.indexes` / `.info` |
+| Output | table (Spectre), csv, json | table (Spectre), csv, json |
 
-Dot-commands stay deliberately small: enough to explore a file without becoming a second GUI.
+### Pit of success (both DB CLIs)
+
+- Missing files are refused unless `--create` (no accidental empty DBs).
+- `--read-only` for inspection; write heuristics blocked in the shell.
+- Default display limit **200** (`.limit 0` for all) with truncation notice.
+- Destructive statements confirm unless `--no-confirm` / `.confirm off`.
+- Rich `.help` / `.help <topic>` panels; unknown commands suggest close matches.
+- Multi-line SQL until `;`; timings on by default; `.export` last result.
+
+Dot-commands stay exploratory — enough to inspect a file without becoming a second GUI.
 
 ## Non-goals (v0)
 
