@@ -1,5 +1,6 @@
 <Solution>
   <Folder Name="/src/">
+    <Project Path="src/Novolis.Tools.Cli/Novolis.Tools.Cli.csproj" />
     <Project Path="src/Novolis.Tools.Docs.Cli/Novolis.Tools.Docs.Cli.csproj" />
     <Project Path="src/Novolis.Tools.Docs/Novolis.Tools.Docs.csproj" />
     <Project Path="src/Novolis.Tools.LiteDb.Cli/Novolis.Tools.LiteDb.Cli.csproj" />
@@ -8,6 +9,7 @@
     <Project Path="src/Novolis.Tools.Sqlite/Novolis.Tools.Sqlite.csproj" />
   </Folder>
   <Folder Name="/tests/">
+    <Project Path="tests/Novolis.Tools.Cli.Unit/Novolis.Tools.Cli.Unit.csproj" />
     <Project Path="tests/Novolis.Tools.Docs.Unit/Novolis.Tools.Docs.Unit.csproj" />
     <Project Path="tests/Novolis.Tools.LiteDb.Unit/Novolis.Tools.LiteDb.Unit.csproj" />
     <Project Path="tests/Novolis.Tools.Sqlite.Unit/Novolis.Tools.Sqlite.Unit.csproj" />

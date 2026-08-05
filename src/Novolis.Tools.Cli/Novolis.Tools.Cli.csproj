@@ -1,0 +1,12 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <PackageId>Novolis.Tools.Cli</PackageId>
+    <Description>Shared Spectre.Console helpers for Novolis developer CLIs (REPL chrome, tables, help).</Description>
+    <IsPackable>true</IsPackable>
+    <RootNamespace>Novolis.Tools.Cli</RootNamespace>
+    <PackageTags>novolis;cli;spectre;repl;tools</PackageTags>
+  </PropertyGroup>
+  <ItemGroup>
+    <PackageReference Include="Spectre.Console" />
+  </ItemGroup>
+</Project>

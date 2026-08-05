@@ -34,6 +34,7 @@
 
 | Package | Install | Package README |
 |---------|---------|----------------|
+| `Novolis.Tools.Cli` | `dotnet add package Novolis.Tools.Cli` | [README](https://github.com/Novolis-Platform/novolis-tools/blob/main/src/Novolis.Tools.Cli/README.md) |
 | `Novolis.Tools.Docs` | `dotnet add package Novolis.Tools.Docs` | [README](https://github.com/Novolis-Platform/novolis-tools/blob/main/src/Novolis.Tools.Docs/README.md) |
 | `Novolis.Tools.Docs.Cli` | `dotnet tool install -g Novolis.Tools.Docs.Cli` | [README](https://github.com/Novolis-Platform/novolis-tools/blob/main/src/Novolis.Tools.Docs.Cli/README.md) |
 | `Novolis.Tools.Sqlite` | `dotnet add package Novolis.Tools.Sqlite` | [README](https://github.com/Novolis-Platform/novolis-tools/blob/main/src/Novolis.Tools.Sqlite/README.md) |
@@ -69,12 +70,13 @@ flowchart TB
 
 | Package | Role |
 |---------|------|
+| `Novolis.Tools.Cli` | Shared Spectre chrome (tables, help, open guards) |
 | `Novolis.Tools.Docs` | Markdown / Mermaid / `.csproj` relationship graphs |
 | `Novolis.Tools.Docs.Cli` | `novolis-docs` tool |
 | `Novolis.Tools.Sqlite` | SQLite session helpers (`Novolis.Storage.Sqlite`) |
-| `Novolis.Tools.Sqlite.Cli` | `novolis-sqlite` tool |
+| `Novolis.Tools.Sqlite.Cli` | `novolis-sqlite` Spectre REPL |
 | `Novolis.Tools.LiteDb` | LiteDB session helpers (`Novolis.Storage.LiteDb`) |
-| `Novolis.Tools.LiteDb.Cli` | `novolis-litedb` tool |
+| `Novolis.Tools.LiteDb.Cli` | `novolis-litedb` Spectre REPL |
 
 ## Quick start
 
