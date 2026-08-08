@@ -43,6 +43,8 @@
 | `Novolis.Tools.Sqlite.Cli` | `dotnet tool install -g Novolis.Tools.Sqlite.Cli` | [README](https://github.com/Novolis-Platform/novolis-tools/blob/main/src/Novolis.Tools.Sqlite.Cli/README.md) |
 | `Novolis.Tools.LiteDb` | `dotnet add package Novolis.Tools.LiteDb` | [README](https://github.com/Novolis-Platform/novolis-tools/blob/main/src/Novolis.Tools.LiteDb/README.md) |
 | `Novolis.Tools.LiteDb.Cli` | `dotnet tool install -g Novolis.Tools.LiteDb.Cli` | [README](https://github.com/Novolis-Platform/novolis-tools/blob/main/src/Novolis.Tools.LiteDb.Cli/README.md) |
+| `Novolis.Tools.MarkdownPdf` | `dotnet add package Novolis.Tools.MarkdownPdf` | [README](https://github.com/Novolis-Platform/novolis-tools/blob/main/src/Novolis.Tools.MarkdownPdf/README.md) |
+| `Novolis.Tools.MarkdownPdf.Cli` | `dotnet tool install -g Novolis.Tools.MarkdownPdf.Cli` | [README](https://github.com/Novolis-Platform/novolis-tools/blob/main/src/Novolis.Tools.MarkdownPdf.Cli/README.md) |
 
 <!-- novolis-package-index:end -->
 # novolis-tools
@@ -81,12 +83,16 @@ flowchart TB
 | `Novolis.Tools.Sqlite.Cli` | `novolis-sqlite` Spectre REPL |
 | `Novolis.Tools.LiteDb` | LiteDB session helpers (`Novolis.Storage.LiteDb`) |
 | `Novolis.Tools.LiteDb.Cli` | `novolis-litedb` Spectre REPL |
+| `Novolis.Tools.MarkdownPdf` | Markdown → PDF themes over Documents.Skia |
+| `Novolis.Tools.MarkdownPdf.Cli` | `novolis-mdpdf` tool (`themes` / `convert`) |
 
 ## Quick start
 
 ```powershell
 dotnet run --project d:\novolis\novolis-tools\src\Novolis.Tools.Docs.Cli -- scaffold --title "Demo" --out d:\temp\demo-docs
 dotnet run --project d:\novolis\novolis-tools\src\Novolis.Tools.Docs.Cli -- graph --root d:\novolis\novolis-tools --out d:\temp\tools-graph
+dotnet run --project d:\novolis\novolis-tools\src\Novolis.Tools.MarkdownPdf.Cli -- themes
+dotnet run --project d:\novolis\novolis-tools\src\Novolis.Tools.MarkdownPdf.Cli -- convert --in D:\path\file.md --theme trade
 dotnet run --project d:\novolis\novolis-tools\src\Novolis.Tools.Coverage.Cli -- collect --platform --skip-build --fail-below -1 --out d:\novolis\coverage
 dotnet run --project d:\novolis\novolis-tools\src\Novolis.Tools.Sqlite.Cli -- :memory: -c "SELECT 'ok' AS status;"
 dotnet run --project d:\novolis\novolis-tools\src\Novolis.Tools.LiteDb.Cli -- :memory: -c "INSERT INTO t VALUES {_id: 1, status: \"ok\"}; SELECT $ FROM t;"

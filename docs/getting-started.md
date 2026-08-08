@@ -86,11 +86,13 @@ novolis-litedb d:\temp\app.db --read-only
 | `Novolis.Tools.Cli` | Spectre helpers for building more tools |
 | `Novolis.Tools.Coverage` | Coverage collect / merge APIs |
 | `Novolis.Tools.Docs` | Markdown / Mermaid / relationship graphs in code |
+| `Novolis.Tools.MarkdownPdf` | Markdown → PDF with named themes |
 | `Novolis.Tools.Sqlite` | SQLite session helpers (depends on `Novolis.Storage.Sqlite`) |
 | `Novolis.Tools.LiteDb` | LiteDB session helpers (depends on `Novolis.Storage.LiteDb`) |
 
 ```powershell
 dotnet add package Novolis.Tools.Docs --version 2026.1.*
+dotnet add package Novolis.Tools.MarkdownPdf --version 2026.1.*
 dotnet add package Novolis.Tools.Coverage --version 2026.1.*
 dotnet add package Novolis.Tools.Sqlite --version 2026.1.*
 dotnet add package Novolis.Tools.LiteDb --version 2026.1.*
