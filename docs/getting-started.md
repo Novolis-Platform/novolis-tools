@@ -36,6 +36,20 @@ dotnet tool install --global Novolis.Tools.Docs.Cli --version 2026.1.*
 novolis-docs scaffold --title "My Feature" --out d:\temp\my-docs
 ```
 
+### novolis-coverage
+
+Platform / org Cobertura collection + HTML merge (ReportGenerator). Prefer this over the governance PowerShell script for local/agent runs.
+
+```powershell
+dotnet run --project d:\novolis\novolis-tools\src\Novolis.Tools.Coverage.Cli -- list --platform
+dotnet run --project d:\novolis\novolis-tools\src\Novolis.Tools.Coverage.Cli -- collect --platform --skip-build --fail-below -1 --out d:\novolis\coverage
+```
+
+```powershell
+dotnet tool install --global Novolis.Tools.Coverage.Cli --version 2026.1.*
+novolis-coverage collect --platform --skip-build --fail-below -1 --out d:\novolis\coverage
+```
+
 ### novolis-sqlite
 
 Spectre REPL over `Novolis.Storage.Sqlite`. Missing files are refused unless `--create`; prefer `--read-only` when inspecting.
@@ -70,12 +84,14 @@ novolis-litedb d:\temp\app.db --read-only
 | Package | Use |
 |---------|-----|
 | `Novolis.Tools.Cli` | Spectre helpers for building more tools |
+| `Novolis.Tools.Coverage` | Coverage collect / merge APIs |
 | `Novolis.Tools.Docs` | Markdown / Mermaid / relationship graphs in code |
 | `Novolis.Tools.Sqlite` | SQLite session helpers (depends on `Novolis.Storage.Sqlite`) |
 | `Novolis.Tools.LiteDb` | LiteDB session helpers (depends on `Novolis.Storage.LiteDb`) |
 
 ```powershell
 dotnet add package Novolis.Tools.Docs --version 2026.1.*
+dotnet add package Novolis.Tools.Coverage --version 2026.1.*
 dotnet add package Novolis.Tools.Sqlite --version 2026.1.*
 dotnet add package Novolis.Tools.LiteDb --version 2026.1.*
 ```

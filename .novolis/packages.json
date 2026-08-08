@@ -4,6 +4,14 @@
       "path": "src/Novolis.Tools.Cli",
       "description": "Shared Spectre.Console helpers for Novolis developer CLIs"
     },
+    "Novolis.Tools.Coverage": {
+      "path": "src/Novolis.Tools.Coverage",
+      "description": "MTP Cobertura collection and ReportGenerator merge helpers"
+    },
+    "Novolis.Tools.Coverage.Cli": {
+      "path": "src/Novolis.Tools.Coverage.Cli",
+      "description": "dotnet tool novolis-coverage — Platform / org coverage HTML reports"
+    },
     "Novolis.Tools.Docs": {
       "path": "src/Novolis.Tools.Docs",
       "description": "Markdown + Mermaid documentation and relationship graph builders"

@@ -5,12 +5,14 @@
 `novolis-tools` hosts small, packable developer CLIs and the libraries behind them. Current surface:
 
 1. **Docs** — Markdown documentation packs that use Mermaid for every structural claim (layers, edges, ER, mindmaps).
-2. **SQLite** — a lightweight REPL over the same engine as `Novolis.Storage.Sqlite`, for local inspection and scripting.
-3. **LiteDB** — the document-store twin: shell SQL over the same engine as `Novolis.Storage.LiteDb`.
+2. **Coverage** — MTP Cobertura collection across Platform.slnx / `novolis-*` hosts with ReportGenerator HTML merge.
+3. **SQLite** — a lightweight REPL over the same engine as `Novolis.Storage.Sqlite`, for local inspection and scripting.
+4. **LiteDB** — the document-store twin: shell SQL over the same engine as `Novolis.Storage.LiteDb`.
 
 ```mermaid
 flowchart LR
   docsCli["novolis-docs"] --> docsLib["Novolis.Tools.Docs"]
+  covCli["novolis-coverage"] --> covLib["Novolis.Tools.Coverage"]
   sqliteCli["novolis-sqlite"] --> sqliteLib["Novolis.Tools.Sqlite"]
   liteCli["novolis-litedb"] --> liteLib["Novolis.Tools.LiteDb"]
   sqliteCli --> cliLib["Novolis.Tools.Cli"]
@@ -18,6 +20,8 @@ flowchart LR
   docsLib --> md["MarkdownDocument"]
   docsLib --> mermaid["MermaidDiagram"]
   docsLib --> graph["RelationshipGraph"]
+  covLib --> mtp["dotnet test --coverage"]
+  covLib --> rg["ReportGenerator"]
   sqliteLib --> sqliteSession["SqliteSession"]
   liteLib --> liteSession["LiteDbSession"]
   sqliteLib -.-> storageSqlite["Novolis.Storage.Sqlite"]

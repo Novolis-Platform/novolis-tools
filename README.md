@@ -35,6 +35,8 @@
 | Package | Install | Package README |
 |---------|---------|----------------|
 | `Novolis.Tools.Cli` | `dotnet add package Novolis.Tools.Cli` | [README](https://github.com/Novolis-Platform/novolis-tools/blob/main/src/Novolis.Tools.Cli/README.md) |
+| `Novolis.Tools.Coverage` | `dotnet add package Novolis.Tools.Coverage` | [README](https://github.com/Novolis-Platform/novolis-tools/blob/main/src/Novolis.Tools.Coverage/README.md) |
+| `Novolis.Tools.Coverage.Cli` | `dotnet tool install -g Novolis.Tools.Coverage.Cli` | [README](https://github.com/Novolis-Platform/novolis-tools/blob/main/src/Novolis.Tools.Coverage.Cli/README.md) |
 | `Novolis.Tools.Docs` | `dotnet add package Novolis.Tools.Docs` | [README](https://github.com/Novolis-Platform/novolis-tools/blob/main/src/Novolis.Tools.Docs/README.md) |
 | `Novolis.Tools.Docs.Cli` | `dotnet tool install -g Novolis.Tools.Docs.Cli` | [README](https://github.com/Novolis-Platform/novolis-tools/blob/main/src/Novolis.Tools.Docs.Cli/README.md) |
 | `Novolis.Tools.Sqlite` | `dotnet add package Novolis.Tools.Sqlite` | [README](https://github.com/Novolis-Platform/novolis-tools/blob/main/src/Novolis.Tools.Sqlite/README.md) |
@@ -71,6 +73,8 @@ flowchart TB
 | Package | Role |
 |---------|------|
 | `Novolis.Tools.Cli` | Shared Spectre chrome (tables, help, open guards) |
+| `Novolis.Tools.Coverage` | MTP Cobertura collection + ReportGenerator merge |
+| `Novolis.Tools.Coverage.Cli` | `novolis-coverage` tool |
 | `Novolis.Tools.Docs` | Markdown / Mermaid / `.csproj` relationship graphs |
 | `Novolis.Tools.Docs.Cli` | `novolis-docs` tool |
 | `Novolis.Tools.Sqlite` | SQLite session helpers (`Novolis.Storage.Sqlite`) |
@@ -83,6 +87,7 @@ flowchart TB
 ```powershell
 dotnet run --project d:\novolis\novolis-tools\src\Novolis.Tools.Docs.Cli -- scaffold --title "Demo" --out d:\temp\demo-docs
 dotnet run --project d:\novolis\novolis-tools\src\Novolis.Tools.Docs.Cli -- graph --root d:\novolis\novolis-tools --out d:\temp\tools-graph
+dotnet run --project d:\novolis\novolis-tools\src\Novolis.Tools.Coverage.Cli -- collect --platform --skip-build --fail-below -1 --out d:\novolis\coverage
 dotnet run --project d:\novolis\novolis-tools\src\Novolis.Tools.Sqlite.Cli -- :memory: -c "SELECT 'ok' AS status;"
 dotnet run --project d:\novolis\novolis-tools\src\Novolis.Tools.LiteDb.Cli -- :memory: -c "INSERT INTO t VALUES {_id: 1, status: \"ok\"}; SELECT $ FROM t;"
 ```
