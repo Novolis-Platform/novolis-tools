@@ -3,7 +3,7 @@
     <OutputType>Exe</OutputType>
     <RootNamespace>Novolis.Tools.MarkdownPdf.Unit</RootNamespace>
     <IsPackable>false</IsPackable>
-    <!-- Disabled until Novolis.Markup.Markdown.Documents publishes to GPR (CI glob would still pick this up). -->
+    <!-- Disabled until Novolis.Markup.Markdown.Documents publishes to GPR (CI globs tests/*). -->
     <IsTestProject>false</IsTestProject>
     <GenerateDocumentationFile>false</GenerateDocumentationFile>
   </PropertyGroup>

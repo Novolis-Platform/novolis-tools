@@ -5,11 +5,10 @@ using Novolis.Markup.Markdown;
 
 namespace Novolis.Tools.Docs.Site;
 
-/// <summary>Builds a static HTML documentation site from a multi-repo <c>docs/</c> corpus.</summary>
+/// <summary>Builds a multi-page documentation site from a multi-repo <c>docs/</c> corpus.</summary>
 public static class DocsSiteBuilder
 {
-    /// <summary>Scans the corpus and writes <c>index.html</c>, per-page HTML, and optional assets.</summary>
-    /// <returns>Number of documentation pages written.</returns>
+    /// <summary>Scans the corpus and writes the catalog plus per-repo doc sites.</summary>
     public static int Build(DocsSiteOptions options)
     {
         ArgumentNullException.ThrowIfNull(options);
@@ -30,46 +29,229 @@ public static class DocsSiteBuilder
         }
 
         Directory.CreateDirectory(output);
-        Directory.CreateDirectory(Path.Combine(output, "docs"));
         Directory.CreateDirectory(Path.Combine(output, "assets"));
-
         CopyAssets(options, output);
 
         var byRepo = pages
             .GroupBy(static p => p.Repo, StringComparer.OrdinalIgnoreCase)
-            .ToDictionary(static g => g.Key, static g => g.Count(), StringComparer.OrdinalIgnoreCase);
+            .ToDictionary(static g => g.Key, static g => g.ToList(), StringComparer.OrdinalIgnoreCase);
 
-        foreach (var page in pages)
+        foreach (var (repo, repoPages) in byRepo.OrderBy(static kv => kv.Key, StringComparer.OrdinalIgnoreCase))
         {
-            var slugMap = pages
-                .Where(p => string.Equals(p.Repo, page.Repo, StringComparison.OrdinalIgnoreCase))
-                .ToDictionary(static p => p.RelativePath, static p => p.Slug, StringComparer.OrdinalIgnoreCase);
+            Directory.CreateDirectory(Path.Combine(output, repo));
+            var slugMap = repoPages.ToDictionary(
+                static p => p.DocsRelativePath,
+                static p => p.OutputRelativePath,
+                StringComparer.OrdinalIgnoreCase);
 
-            var markdown = RewriteMarkdownLinks(page.Markdown, page.RelativePath, slugMap);
-            markdown = StripLeadingH1(markdown);
-            var bodyHtml = MarkdownDocument.Parse(markdown).ToHtml();
-            var article = $"""
-                <article class="article">
-                  <div class="article-kicker">{Html(page.Repo)} / {Html(page.Kind)} / {Html(page.RelativePath)}</div>
-                  <h1>{Html(page.Title)}</h1>
-                  <div class="article-actions">
-                    <a class="btn-primary" href="../index.html#docs">Back to docs index</a>
-                    <a class="btn-secondary" href="../index.html?repo={Uri.EscapeDataString(page.Repo)}#docs">More from {Html(page.Repo)}</a>
-                    <a class="btn-secondary" href="{Html(page.SourceUrl)}">GitHub source</a>
-                  </div>
-                  <div class="markdown-body">
-                    {bodyHtml}
-                  </div>
-                </article>
-                """;
-            var html = PageShell(page.Title, $"Novolis documentation ({page.Repo}): {page.Title}", article, options.Org, nested: true);
-            File.WriteAllText(Path.Combine(output, "docs", page.Slug + ".html"), html, Utf8NoBom());
+            foreach (var page in repoPages)
+            {
+                WriteDocPage(options, output, page, repoPages, slugMap);
+            }
         }
 
-        File.WriteAllText(Path.Combine(output, "index.html"), IndexHtml(options, pages, byRepo), Utf8NoBom());
+        File.WriteAllText(Path.Combine(output, "index.html"), CatalogHtml(options, byRepo), Utf8NoBom());
         File.WriteAllText(Path.Combine(output, ".nojekyll"), string.Empty, Utf8NoBom());
         return pages.Count;
     }
+
+    private static void WriteDocPage(
+        DocsSiteOptions options,
+        string output,
+        DocsSitePage page,
+        IReadOnlyList<DocsSitePage> repoPages,
+        IReadOnlyDictionary<string, string> slugMap)
+    {
+        var markdown = RewriteMarkdownLinks(page.Markdown, page.DocsRelativePath, page.OutputRelativePath, slugMap);
+        markdown = StripLeadingH1(markdown);
+        var bodyHtml = RenderBodyHtml(markdown, page);
+        var sidebar = DocsNavBuilder.BuildSidebar(page.Repo, repoPages, page);
+        var (previous, next) = DocsNavBuilder.Adjacent(repoPages, page);
+
+        var pager = new StringBuilder();
+        pager.AppendLine("""<div class="docs-pager">""");
+        if (previous is not null)
+        {
+            var href = DocsNavBuilder.ToRepoLocalHref(previous.OutputRelativePath, page.OutputRelativePath);
+            pager.AppendLine($"""<a class="prev" href="{Html(href)}">← {Html(previous.Title)}</a>""");
+        }
+        else
+        {
+            pager.AppendLine("""<span></span>""");
+        }
+
+        if (next is not null)
+        {
+            var href = DocsNavBuilder.ToRepoLocalHref(next.OutputRelativePath, page.OutputRelativePath);
+            pager.AppendLine($"""<a class="next" href="{Html(href)}">{Html(next.Title)} →</a>""");
+        }
+        else
+        {
+            pager.AppendLine("""<span></span>""");
+        }
+
+        pager.AppendLine("</div>");
+
+        var kicker = page.IsGeneratedLanding
+            ? $"{page.Repo} / generated overview"
+            : $"{page.Repo} / {page.DocsRelativePath}";
+
+        var article = $"""
+            <article class="article">
+              <div class="article-kicker">{Html(kicker)}</div>
+              <h1>{Html(page.Title)}</h1>
+              <div class="markdown-body">
+                {bodyHtml}
+              </div>
+              {pager}
+            </article>
+            """;
+
+        var depth = page.OutputRelativePath.Count(static c => c == '/');
+        var assetPrefix = string.Concat(Enumerable.Repeat("../", depth));
+        var html = DocShell(page.Title, page.Repo, article, sidebar, options.Org, assetPrefix);
+        var outFile = Path.Combine(output, page.OutputRelativePath.Replace('/', Path.DirectorySeparatorChar));
+        Directory.CreateDirectory(Path.GetDirectoryName(outFile)!);
+        File.WriteAllText(outFile, html, Utf8NoBom());
+    }
+
+    private static string CatalogHtml(DocsSiteOptions options, IReadOnlyDictionary<string, List<DocsSitePage>> byRepo)
+    {
+        var generatedAt = DateTime.UtcNow.ToString("yyyy-MM-dd HH:mm") + " UTC";
+        var cards = new StringBuilder();
+        foreach (var repo in byRepo.Keys.OrderBy(static r => r, StringComparer.OrdinalIgnoreCase))
+        {
+            var pages = byRepo[repo];
+            var landing = pages.First(static p => p.IsLanding);
+            var count = pages.Count(static p => !p.IsGeneratedLanding);
+            var bannerPath = Path.Combine(options.OutputDirectory, "assets", "banners", repo + ".svg");
+            var banner = File.Exists(bannerPath)
+                ? $"""<img class="repo-banner" src="assets/banners/{Html(repo)}.svg" alt=""/>"""
+                : $"""<div class="repo-banner text-banner">{Html(repo)}</div>""";
+
+            cards.AppendLine($"""
+                <article class="repo-card" data-search="{Html(repo.ToLowerInvariant())}">
+                  {banner}
+                  <div class="repo-card-body">
+                    <div class="repo-meta">
+                      <span>{count} pages</span>
+                      {(landing.IsGeneratedLanding ? "<span>generated overview</span>" : "<span>docs/README.md</span>")}
+                    </div>
+                    <h3>{Html(repo)}</h3>
+                    <p>Library documentation from <code>docs/</code>. Docs opens the README landing page with full sidebar navigation.</p>
+                    <div class="card-actions">
+                      <a class="btn-primary" href="{Html(landing.OutputRelativePath)}">Docs</a>
+                      <a class="btn-secondary" href="https://github.com/{Html(options.Org)}/{Html(repo)}">Source</a>
+                    </div>
+                  </div>
+                </article>
+                """);
+        }
+
+        var baseUrl = options.BaseUrl ?? $"https://{options.Org.ToLowerInvariant()}.github.io/.github/";
+        return $$"""
+            <!doctype html>
+            <html lang="en">
+            <head>
+              <meta charset="utf-8"/>
+              <meta name="viewport" content="width=device-width, initial-scale=1"/>
+              <meta name="description" content="Novolis documentation site — one docs tree per repository."/>
+              <title>Novolis Docs</title>
+              <link rel="icon" href="assets/brand/favicon.svg"/>
+              <link rel="stylesheet" href="assets/site.css"/>
+            </head>
+            <body>
+              <header class="topbar">
+                <a class="brand" href="index.html" aria-label="Novolis docs home">
+                  <img src="assets/brand/logo-icon.svg" alt=""/>
+                  <span>Novolis Docs</span>
+                </a>
+                <nav>
+                  <a href="#libraries">Libraries</a>
+                  <a href="https://github.com/{{Html(options.Org)}}">GitHub</a>
+                </nav>
+              </header>
+              <main>
+                <section class="hero hero-compact">
+                  <div class="hero-content">
+                    <img class="hero-logo" src="assets/brand/logo-brand-transparent.svg" alt="Novolis"/>
+                    <p class="eyebrow">Documentation site</p>
+                    <h1>Every library. One docs home.</h1>
+                    <p class="hero-copy">Each card opens that repository's <code>docs/README.md</code> (or a generated overview) with sidebar navigation built from the docs folder layout.</p>
+                  </div>
+                  <div class="telemetry-panel" aria-label="Docs telemetry">
+                    <div><span>{{byRepo.Count}}</span><strong>libraries</strong></div>
+                    <div><span>{{byRepo.Values.Sum(static v => v.Count)}}</span><strong>pages</strong></div>
+                    <div><span>docs/</span><strong>sparse corpus</strong></div>
+                    <div><span>novolis-docs</span><strong>site builder</strong></div>
+                  </div>
+                </section>
+
+                <section id="libraries" class="section">
+                  <div class="section-heading">
+                    <p class="eyebrow">Source and docs for every repository</p>
+                    <h2>Libraries</h2>
+                  </div>
+                  <div class="controls">
+                    <label class="search-box">
+                      <span>Search</span>
+                      <input type="search" id="portfolioSearch" placeholder="raylib, governance, audio"/>
+                    </label>
+                  </div>
+                  <div class="repo-grid" id="repoGrid">
+                    {{cards}}
+                  </div>
+                </section>
+              </main>
+              <footer class="footer">
+                <span>Generated {{generatedAt}}</span>
+                <a href="{{Html(baseUrl)}}">{{Html(baseUrl)}}</a>
+                <a href="https://github.com/{{Html(options.Org)}}/.github">Source</a>
+              </footer>
+              <script src="assets/site.js"></script>
+            </body>
+            </html>
+            """;
+    }
+
+    private static string DocShell(string title, string repo, string article, string sidebar, string org, string assetPrefix)
+        => $"""
+            <!doctype html>
+            <html lang="en">
+            <head>
+              <meta charset="utf-8"/>
+              <meta name="viewport" content="width=device-width, initial-scale=1"/>
+              <meta name="description" content="Novolis documentation for {Html(repo)}"/>
+              <title>{Html(title)} · {Html(repo)} · Novolis Docs</title>
+              <link rel="icon" href="{assetPrefix}assets/brand/favicon.svg"/>
+              <link rel="stylesheet" href="{assetPrefix}assets/site.css"/>
+            </head>
+            <body class="docs-site">
+              <header class="topbar">
+                <a class="brand" href="{assetPrefix}index.html" aria-label="Novolis docs home">
+                  <img src="{assetPrefix}assets/brand/logo-icon.svg" alt=""/>
+                  <span>Novolis Docs</span>
+                </a>
+                <nav>
+                  <a href="{assetPrefix}index.html#libraries">Libraries</a>
+                  <a href="https://github.com/{Html(org)}/{Html(repo)}">Source</a>
+                  <a href="https://github.com/{Html(org)}">GitHub</a>
+                </nav>
+              </header>
+              <div class="docs-layout">
+                {sidebar}
+                <main class="docs-main">
+                  {article}
+                </main>
+              </div>
+              <footer class="footer">
+                <a href="{assetPrefix}index.html">All libraries</a>
+                <a href="https://github.com/{Html(org)}/{Html(repo)}">GitHub source</a>
+              </footer>
+              <script src="{assetPrefix}assets/site.js"></script>
+            </body>
+            </html>
+            """;
 
     private static void CopyAssets(DocsSiteOptions options, string output)
     {
@@ -77,8 +259,7 @@ public static class DocsSiteBuilder
         {
             foreach (var file in Directory.EnumerateFiles(options.AssetsDirectory))
             {
-                var name = Path.GetFileName(file);
-                File.Copy(file, Path.Combine(output, "assets", name), overwrite: true);
+                File.Copy(file, Path.Combine(output, "assets", Path.GetFileName(file)), overwrite: true);
             }
         }
 
@@ -98,12 +279,6 @@ public static class DocsSiteBuilder
             }
         }
 
-        var social = Path.Combine(options.BrandDirectory, "generated", "logo-social.png");
-        if (File.Exists(social))
-        {
-            File.Copy(social, Path.Combine(brandOut, "logo-social.png"), overwrite: true);
-        }
-
         var banners = Path.Combine(options.BrandDirectory, "banners");
         if (!Directory.Exists(banners))
         {
@@ -118,205 +293,11 @@ public static class DocsSiteBuilder
         }
     }
 
-    private static string IndexHtml(DocsSiteOptions options, IReadOnlyList<DocsSitePage> pages, IReadOnlyDictionary<string, int> byRepo)
-    {
-        var generatedAt = DateTime.UtcNow.ToString("yyyy-MM-dd HH:mm") + " UTC";
-        var repoOptions = new StringBuilder();
-        repoOptions.AppendLine("""<option value="all">All repositories</option>""");
-        foreach (var repo in byRepo.Keys.OrderBy(static r => r, StringComparer.OrdinalIgnoreCase))
-        {
-            repoOptions.AppendLine($"""<option value="{Html(repo)}">{Html(repo)} ({byRepo[repo]})</option>""");
-        }
-
-        var docCards = new StringBuilder();
-        foreach (var page in pages.OrderBy(static p => p.Repo, StringComparer.OrdinalIgnoreCase).ThenBy(static p => p.RelativePath, StringComparer.OrdinalIgnoreCase))
-        {
-            docCards.AppendLine($"""
-                <article class="doc-card" data-doc-group="{Html(page.Repo)}" data-doc-kind="{Html(page.Kind)}" data-search="{Html(($"{page.Title} {page.Repo} {page.Kind} {page.RelativePath}").ToLowerInvariant())}">
-                  <div class="doc-card-tags">
-                    <span>{Html(page.Repo)}</span>
-                    <span>{Html(page.Kind)}</span>
-                  </div>
-                  <h3><a href="docs/{Html(page.Slug)}.html">{Html(page.Title)}</a></h3>
-                  <p>{Html($"{page.Repo}/{page.RelativePath}")}</p>
-                  <div class="card-actions">
-                    <a class="btn-primary" href="docs/{Html(page.Slug)}.html">Open docs page</a>
-                    <a class="btn-secondary" href="{Html(page.SourceUrl)}">GitHub source</a>
-                  </div>
-                </article>
-                """);
-        }
-
-        var repoCards = new StringBuilder();
-        foreach (var repo in byRepo.Keys.OrderBy(static r => r, StringComparer.OrdinalIgnoreCase))
-        {
-            var count = byRepo[repo];
-            var banner = File.Exists(Path.Combine(options.OutputDirectory, "assets", "banners", repo + ".svg"))
-                ? $"""<img class="repo-banner" src="assets/banners/{Html(repo)}.svg" alt=""/>"""
-                : $"""<div class="repo-banner text-banner">{Html(repo)}</div>""";
-            repoCards.AppendLine($"""
-                <article class="repo-card" data-kind="Libraries" data-search="{Html(repo.ToLowerInvariant())}">
-                  {banner}
-                  <div class="repo-card-body">
-                    <div class="repo-meta">
-                      <span>Library docs</span>
-                      <a class="docs-count" href="index.html?repo={Uri.EscapeDataString(repo)}#docs">{count} docs</a>
-                    </div>
-                    <h3><a href="index.html?repo={Uri.EscapeDataString(repo)}#docs">{Html(repo)}</a></h3>
-                    <p>Documentation sparse-checked out from <code>docs/</code> in {Html(repo)}.</p>
-                    <div class="card-actions">
-                      <a class="btn-primary" href="index.html?repo={Uri.EscapeDataString(repo)}#docs">Open docs</a>
-                      <a class="btn-secondary" href="https://github.com/{Html(options.Org)}/{Html(repo)}">GitHub</a>
-                    </div>
-                  </div>
-                </article>
-                """);
-        }
-
-        var baseUrl = options.BaseUrl ?? $"https://{options.Org.ToLowerInvariant()}.github.io/.github/";
-        return $$"""
-            <!doctype html>
-            <html lang="en">
-            <head>
-              <meta charset="utf-8"/>
-              <meta name="viewport" content="width=device-width, initial-scale=1"/>
-              <meta name="description" content="Novolis documentation generated from every public repository docs/ folder."/>
-              <title>Novolis Docs</title>
-              <link rel="icon" href="assets/brand/favicon.svg"/>
-              <link rel="stylesheet" href="assets/site.css"/>
-            </head>
-            <body>
-              <header class="topbar">
-                <a class="brand" href="index.html" aria-label="Novolis docs home">
-                  <img src="assets/brand/logo-icon.svg" alt=""/>
-                  <span>Novolis Docs</span>
-                </a>
-                <nav>
-                  <a href="#docs">Docs</a>
-                  <a href="#portfolio">Repositories</a>
-                  <a href="https://github.com/{{Html(options.Org)}}">GitHub</a>
-                </nav>
-              </header>
-              <main>
-                <section class="hero">
-                  <div class="hero-grid" aria-hidden="true"></div>
-                  <div class="hero-content">
-                    <img class="hero-logo" src="assets/brand/logo-brand-transparent.svg" alt="Novolis"/>
-                    <p class="eyebrow">Sparse-checkout docs corpus</p>
-                    <h1>Documentation from every public Novolis repository.</h1>
-                    <p class="hero-copy">Each library's <code>docs/</code> tree is sparse-checked out and rendered by <code>novolis-docs site</code> using Novolis.Markup.</p>
-                    <div class="hero-actions">
-                      <a href="#docs">Browse docs</a>
-                      <a href="#portfolio">Repositories</a>
-                    </div>
-                  </div>
-                  <div class="telemetry-panel" aria-label="Docs telemetry">
-                    <div><span>{{byRepo.Count}}</span><strong>repositories</strong></div>
-                    <div><span>{{pages.Count}}</span><strong>docs pages</strong></div>
-                    <div><span>docs/</span><strong>sparse corpus</strong></div>
-                    <div><span>novolis-docs</span><strong>site builder</strong></div>
-                  </div>
-                </section>
-
-                <section id="docs" class="section docs-section">
-                  <div class="section-heading">
-                    <p class="eyebrow">Generated HTML from sparse-checked-out docs/</p>
-                    <h2>Docs</h2>
-                  </div>
-                  <div class="controls docs-controls">
-                    <label class="search-box">
-                      <span>Search</span>
-                      <input type="search" id="docSearch" placeholder="governance, raylib, nuget"/>
-                    </label>
-                    <label class="search-box">
-                      <span>Repository</span>
-                      <select id="docRepoFilter">
-                        {{repoOptions}}
-                      </select>
-                    </label>
-                    <label class="search-box">
-                      <span>Kind</span>
-                      <select id="docKindFilter">
-                        <option value="all">All kinds</option>
-                        <option value="Docs">Docs</option>
-                      </select>
-                    </label>
-                  </div>
-                  <p class="docs-hint">Each card opens a rendered docs page on this site. GitHub source is optional.</p>
-                  <div class="doc-grid" id="docGrid">
-                    {{docCards}}
-                  </div>
-                </section>
-
-                <section id="portfolio" class="section">
-                  <div class="section-heading">
-                    <p class="eyebrow">Repositories contributing docs/</p>
-                    <h2>Repositories</h2>
-                  </div>
-                  <div class="controls">
-                    <label class="search-box">
-                      <span>Search</span>
-                      <input type="search" id="portfolioSearch" placeholder="raylib, audio, governance"/>
-                    </label>
-                    <div class="segmented" role="tablist" aria-label="Portfolio filters">
-                      <button class="active" data-kind="all">All</button>
-                    </div>
-                  </div>
-                  <div class="repo-grid" id="repoGrid">
-                    {{repoCards}}
-                  </div>
-                </section>
-              </main>
-              <footer class="footer">
-                <span>Generated {{generatedAt}}</span>
-                <a href="{{Html(baseUrl)}}">{{Html(baseUrl)}}</a>
-                <a href="https://github.com/{{Html(options.Org)}}/.github">Source</a>
-              </footer>
-              <script src="assets/site.js"></script>
-            </body>
-            </html>
-            """;
-    }
-
-    private static string PageShell(string title, string description, string body, string org, bool nested)
-    {
-        var prefix = nested ? "../" : string.Empty;
-        return $"""
-            <!doctype html>
-            <html lang="en">
-            <head>
-              <meta charset="utf-8"/>
-              <meta name="viewport" content="width=device-width, initial-scale=1"/>
-              <meta name="description" content="{Html(description)}"/>
-              <title>{Html(title)} - Novolis Docs</title>
-              <link rel="icon" href="{prefix}assets/brand/favicon.svg"/>
-              <link rel="stylesheet" href="{prefix}assets/site.css"/>
-            </head>
-            <body>
-              <header class="topbar">
-                <a class="brand" href="{prefix}index.html" aria-label="Novolis docs home">
-                  <img src="{prefix}assets/brand/logo-icon.svg" alt=""/>
-                  <span>Novolis Docs</span>
-                </a>
-                <nav>
-                  <a href="{prefix}index.html#docs">Docs</a>
-                  <a href="{prefix}index.html#portfolio">Repositories</a>
-                  <a href="https://github.com/{Html(org)}">GitHub</a>
-                </nav>
-              </header>
-              <main class="article-shell">
-                {body}
-              </main>
-              <footer class="footer">
-                <a href="{prefix}index.html#docs">Docs index</a>
-                <a href="https://github.com/{Html(org)}/.github">Source</a>
-              </footer>
-            </body>
-            </html>
-            """;
-    }
-
-    private static string RewriteMarkdownLinks(string markdown, string currentRelative, IReadOnlyDictionary<string, string> slugByPath)
+    private static string RewriteMarkdownLinks(
+        string markdown,
+        string currentDocsRelative,
+        string currentOutputRelative,
+        IReadOnlyDictionary<string, string> outputByDocsPath)
     {
         return Regex.Replace(markdown, @"\[([^\]]+)\]\(([^)]+)\)", match =>
         {
@@ -336,13 +317,15 @@ public static class DocsSiteBuilder
                 return match.Value;
             }
 
-            var resolved = ResolveRelative(currentRelative, pathPart);
-            if (slugByPath.TryGetValue(resolved, out var slug))
+            var resolvedDocs = ResolveRelative(currentDocsRelative, pathPart);
+            if (!outputByDocsPath.TryGetValue(resolvedDocs, out var targetOutput))
             {
-                return $"[{label}]({slug}.html{fragment})";
+                // Also try with docs/ prefix stripped already
+                return match.Value;
             }
 
-            return match.Value;
+            var relativeHref = DocsNavBuilder.ToRepoLocalHref(targetOutput, currentOutputRelative);
+            return $"[{label}]({relativeHref}{fragment})";
         });
     }
 
@@ -376,6 +359,24 @@ public static class DocsSiteBuilder
         }
 
         return string.Join('/', stack);
+    }
+
+    private static string RenderBodyHtml(string markdown, DocsSitePage page)
+    {
+        try
+        {
+            return MarkdownDocument.Parse(markdown).ToHtml();
+        }
+        catch (Exception ex)
+        {
+            // Large org corpora include Markdown the Novolis subset parser does not yet accept.
+            return $"""
+                <div class="callout warn">
+                  <p>Could not fully render <code>{Html(page.DocsRelativePath)}</code> ({Html(ex.GetType().Name)}). Showing source.</p>
+                </div>
+                <pre class="markdown-fallback"><code>{Html(markdown)}</code></pre>
+                """;
+        }
     }
 
     private static string StripLeadingH1(string markdown)

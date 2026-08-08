@@ -21,7 +21,7 @@ novolis-docs site --corpus d:\novolis\.github\corpus --out d:\novolis\.github\_s
 |---------|---------|
 | `scaffold` | Write overview / architecture / relationships / glossary with Mermaid stubs |
 | `graph` | Scan `.csproj` ProjectReference + PackageReference edges into a Markdown pack |
-| `site` | Build a static HTML site from `{corpus}/{repo}/docs/**/*.md` (Novolis.Markup) |
+| `site` | Build a multi-page docs site from `{corpus}/{repo}/docs/**/*.md` (catalog + per-repo sidebar nav; Docs lands on `docs/README.md`) |
 
 ## Local run
 
