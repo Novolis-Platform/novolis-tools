@@ -7,8 +7,7 @@
     <Project Path="src/Novolis.Tools.Docs/Novolis.Tools.Docs.csproj" />
     <Project Path="src/Novolis.Tools.LiteDb.Cli/Novolis.Tools.LiteDb.Cli.csproj" />
     <Project Path="src/Novolis.Tools.LiteDb/Novolis.Tools.LiteDb.csproj" />
-    <Project Path="src/Novolis.Tools.MarkdownPdf.Cli/Novolis.Tools.MarkdownPdf.Cli.csproj" />
-    <Project Path="src/Novolis.Tools.MarkdownPdf/Novolis.Tools.MarkdownPdf.csproj" />
+    <!-- MarkdownPdf omitted until Novolis.Markup.Markdown.Documents + Documents.* publish to GPR -->
     <Project Path="src/Novolis.Tools.Sqlite.Cli/Novolis.Tools.Sqlite.Cli.csproj" />
     <Project Path="src/Novolis.Tools.Sqlite/Novolis.Tools.Sqlite.csproj" />
   </Folder>
@@ -17,7 +16,6 @@
     <Project Path="tests/Novolis.Tools.Coverage.Unit/Novolis.Tools.Coverage.Unit.csproj" />
     <Project Path="tests/Novolis.Tools.Docs.Unit/Novolis.Tools.Docs.Unit.csproj" />
     <Project Path="tests/Novolis.Tools.LiteDb.Unit/Novolis.Tools.LiteDb.Unit.csproj" />
-    <Project Path="tests/Novolis.Tools.MarkdownPdf.Unit/Novolis.Tools.MarkdownPdf.Unit.csproj" />
     <Project Path="tests/Novolis.Tools.Sqlite.Unit/Novolis.Tools.Sqlite.Unit.csproj" />
   </Folder>
 </Solution>
