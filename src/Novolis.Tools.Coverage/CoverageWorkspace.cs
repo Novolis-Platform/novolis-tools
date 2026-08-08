@@ -181,7 +181,9 @@ public static class TestHostDiscovery
 
         foreach (Match m in ProjectPathAttr.Matches(text))
         {
-            var rel = m.Groups[1].Value.Replace('/', Path.DirectorySeparatorChar);
+            var rel = m.Groups[1].Value
+                .Replace('/', Path.DirectorySeparatorChar)
+                .Replace('\\', Path.DirectorySeparatorChar);
             if (!rel.Contains($"{Path.DirectorySeparatorChar}tests{Path.DirectorySeparatorChar}", StringComparison.OrdinalIgnoreCase)
                 && !rel.Contains("/tests/", StringComparison.OrdinalIgnoreCase)
                 && !rel.Contains("\\tests\\", StringComparison.OrdinalIgnoreCase))
