@@ -124,22 +124,36 @@ public static class DocsSiteBuilder
         File.WriteAllText(outFile, html, Utf8NoBom());
     }
 
-    private static string CatalogHtml(DocsSiteOptions options, IReadOnlyDictionary<string, List<DocsSitePage>> byRepo)
+    private static string CatalogHtml(
+        DocsSiteOptions options,
+        IReadOnlyDictionary<string, List<DocsSitePage>> byRepo,
+        IReadOnlyDictionary<string, DocsRepoMeta> catalog)
     {
         var generatedAt = DateTime.UtcNow.ToString("yyyy-MM-dd HH:mm") + " UTC";
+        var output = Path.GetFullPath(options.OutputDirectory);
         var cards = new StringBuilder();
         foreach (var repo in byRepo.Keys.OrderBy(static r => r, StringComparer.OrdinalIgnoreCase))
         {
             var pages = byRepo[repo];
             var landing = pages.First(static p => p.IsLanding);
             var count = pages.Count(static p => !p.IsGeneratedLanding);
-            var bannerPath = Path.Combine(options.OutputDirectory, "assets", "banners", repo + ".svg");
+            catalog.TryGetValue(repo, out var meta);
+            var bannerStem = DocsRepoCatalog.BannerStem(repo);
+            var bannerPath = Path.Combine(output, "assets", "banners", bannerStem + ".svg");
             var banner = File.Exists(bannerPath)
-                ? $"""<img class="repo-banner" src="assets/banners/{Html(repo)}.svg" alt=""/>"""
+                ? $"""<img class="repo-banner" src="assets/banners/{Html(bannerStem)}.svg" alt="{Html(repo)}"/>"""
                 : $"""<div class="repo-banner text-banner">{Html(repo)}</div>""";
 
+            var blurb = !string.IsNullOrWhiteSpace(meta?.Blurb)
+                ? meta!.Blurb
+                : "Library documentation from docs/. Docs opens the README landing page with full sidebar navigation.";
+            var tag = !string.IsNullOrWhiteSpace(meta?.Tag) ? meta!.Tag : repo;
+            var topics = TopicsHtml(meta?.Topics);
+            var search = string.Join(' ', new[] { repo, tag, blurb }.Concat(meta?.Topics ?? Array.Empty<string>()))
+                .ToLowerInvariant();
+
             cards.AppendLine($"""
-                <article class="repo-card" data-search="{Html(repo.ToLowerInvariant())}">
+                <article class="repo-card" data-search="{Html(search)}">
                   {banner}
                   <div class="repo-card-body">
                     <div class="repo-meta">
@@ -147,7 +161,9 @@ public static class DocsSiteBuilder
                       {(landing.IsGeneratedLanding ? "<span>generated overview</span>" : "<span>docs/README.md</span>")}
                     </div>
                     <h3>{Html(repo)}</h3>
-                    <p>Library documentation from <code>docs/</code>. Docs opens the README landing page with full sidebar navigation.</p>
+                    <p class="repo-tagline">{Html(tag)}</p>
+                    <p>{Html(blurb)}</p>
+                    {topics}
                     <div class="card-actions">
                       <a class="btn-primary" href="{Html(landing.OutputRelativePath)}">Docs</a>
                       <a class="btn-secondary" href="https://github.com/{Html(options.Org)}/{Html(repo)}">Source</a>
@@ -204,7 +220,7 @@ public static class DocsSiteBuilder
                   <div class="controls">
                     <label class="search-box">
                       <span>Search</span>
-                      <input type="search" id="portfolioSearch" placeholder="raylib, governance, audio"/>
+                      <input type="search" id="portfolioSearch" placeholder="raylib, pdf, avalonia, docs"/>
                     </label>
                   </div>
                   <div class="repo-grid" id="repoGrid">
@@ -392,6 +408,36 @@ public static class DocsSiteBuilder
     {
         var match = Regex.Match(markdown, @"(?m)^\s*#\s+.+\r?\n+");
         return match.Success ? markdown.Remove(match.Index, match.Length) : markdown;
+    }
+
+    private static string? ResolveCatalogPath(DocsSiteOptions options)
+    {
+        if (!string.IsNullOrWhiteSpace(options.CatalogPath))
+        {
+            return Path.GetFullPath(options.CatalogPath);
+        }
+
+        if (!string.IsNullOrWhiteSpace(options.AssetsDirectory))
+        {
+            var besideAssets = Path.Combine(Path.GetFullPath(options.AssetsDirectory), "..", "repo-catalog.json");
+            if (File.Exists(besideAssets))
+            {
+                return Path.GetFullPath(besideAssets);
+            }
+        }
+
+        return null;
+    }
+
+    private static string TopicsHtml(IReadOnlyList<string>? topics)
+    {
+        if (topics is null || topics.Count == 0)
+        {
+            return string.Empty;
+        }
+
+        var chips = string.Join(string.Empty, topics.Select(static t => $"<span>{Html(t)}</span>"));
+        return $"""<div class="topic-row" aria-label="Topics">{chips}</div>""";
     }
 
     private static string Html(string? value) => WebUtility.HtmlEncode(value ?? string.Empty);
