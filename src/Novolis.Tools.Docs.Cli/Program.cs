@@ -112,6 +112,10 @@ var siteBrand = new Option<string?>("--brand")
 {
     Description = "Optional brand directory (favicon, logos, banners)",
 };
+var siteCatalog = new Option<string?>("--catalog")
+{
+    Description = "Optional repo-catalog.json (tag, blurb, topics) for cards and docs headers",
+};
 var siteBranch = new Option<string>("--branch")
 {
     Description = "Default git branch for GitHub blob URLs",
@@ -126,6 +130,7 @@ siteCommand.Options.Add(siteOut);
 siteCommand.Options.Add(siteOrg);
 siteCommand.Options.Add(siteAssets);
 siteCommand.Options.Add(siteBrand);
+siteCommand.Options.Add(siteCatalog);
 siteCommand.Options.Add(siteBranch);
 siteCommand.Options.Add(siteBaseUrl);
 siteCommand.SetAction(parseResult =>
@@ -137,6 +142,7 @@ siteCommand.SetAction(parseResult =>
         Org = parseResult.GetValue(siteOrg)!,
         AssetsDirectory = parseResult.GetValue(siteAssets),
         BrandDirectory = parseResult.GetValue(siteBrand),
+        CatalogPath = parseResult.GetValue(siteCatalog),
         DefaultBranch = parseResult.GetValue(siteBranch)!,
         BaseUrl = parseResult.GetValue(siteBaseUrl),
     };

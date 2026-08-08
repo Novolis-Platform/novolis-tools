@@ -32,6 +32,7 @@ public static class DocsSiteBuilder
         Directory.CreateDirectory(Path.Combine(output, "assets"));
         CopyAssets(options, output);
 
+        var catalog = DocsRepoCatalog.Load(ResolveCatalogPath(options));
         var byRepo = pages
             .GroupBy(static p => p.Repo, StringComparer.OrdinalIgnoreCase)
             .ToDictionary(static g => g.Key, static g => g.ToList(), StringComparer.OrdinalIgnoreCase);
@@ -44,13 +45,14 @@ public static class DocsSiteBuilder
                 static p => p.OutputRelativePath,
                 StringComparer.OrdinalIgnoreCase);
 
+            catalog.TryGetValue(repo, out var meta);
             foreach (var page in repoPages)
             {
-                WriteDocPage(options, output, page, repoPages, slugMap);
+                WriteDocPage(options, output, page, repoPages, slugMap, meta);
             }
         }
 
-        File.WriteAllText(Path.Combine(output, "index.html"), CatalogHtml(options, byRepo), Utf8NoBom());
+        File.WriteAllText(Path.Combine(output, "index.html"), CatalogHtml(options, byRepo, catalog), Utf8NoBom());
         File.WriteAllText(Path.Combine(output, ".nojekyll"), string.Empty, Utf8NoBom());
         return pages.Count;
     }
@@ -60,7 +62,8 @@ public static class DocsSiteBuilder
         string output,
         DocsSitePage page,
         IReadOnlyList<DocsSitePage> repoPages,
-        IReadOnlyDictionary<string, string> slugMap)
+        IReadOnlyDictionary<string, string> slugMap,
+        DocsRepoMeta? meta)
     {
         var markdown = RewriteMarkdownLinks(page.Markdown, page.DocsRelativePath, page.OutputRelativePath, slugMap);
         markdown = StripLeadingH1(markdown);
@@ -95,11 +98,17 @@ public static class DocsSiteBuilder
         var kicker = page.IsGeneratedLanding
             ? $"{page.Repo} / generated overview"
             : $"{page.Repo} / {page.DocsRelativePath}";
+        var tagline = meta is not null && !string.IsNullOrWhiteSpace(meta.Tag)
+            ? $"""<p class="article-tagline">{Html(meta.Tag)}</p>"""
+            : string.Empty;
+        var topics = TopicsHtml(meta?.Topics);
 
         var article = $"""
             <article class="article">
               <div class="article-kicker">{Html(kicker)}</div>
               <h1>{Html(page.Title)}</h1>
+              {tagline}
+              {topics}
               <div class="markdown-body">
                 {bodyHtml}
               </div>

@@ -21,6 +21,12 @@ public sealed class DocsSiteOptions
     /// <summary>Optional brand directory with favicon / logo / banners (copied under <c>assets/brand</c> and <c>assets/banners</c>).</summary>
     public string? BrandDirectory { get; init; }
 
+    /// <summary>
+    /// Optional <c>repo-catalog.json</c> (tag / blurb / topics) from Upgrade-RepoMarketingReadmes.ps1.
+    /// Used for catalog card copy, banner fallbacks, and docs page topic chips.
+    /// </summary>
+    public string? CatalogPath { get; init; }
+
     /// <summary>Default branch name used in GitHub blob URLs.</summary>
     public string DefaultBranch { get; init; } = "main";
 
