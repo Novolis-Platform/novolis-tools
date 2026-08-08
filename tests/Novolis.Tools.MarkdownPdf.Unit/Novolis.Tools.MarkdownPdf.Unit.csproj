@@ -1,0 +1,14 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+    <RootNamespace>Novolis.Tools.MarkdownPdf.Unit</RootNamespace>
+    <IsPackable>false</IsPackable>
+    <IsTestProject>true</IsTestProject>
+    <GenerateDocumentationFile>false</GenerateDocumentationFile>
+  </PropertyGroup>
+  <ItemGroup>
+    <PackageReference Include="TUnit" />
+    <PackageReference Include="SkiaSharp.NativeAssets.Win32" />
+    <ProjectReference Include="..\..\src\Novolis.Tools.MarkdownPdf\Novolis.Tools.MarkdownPdf.csproj" />
+  </ItemGroup>
+</Project>

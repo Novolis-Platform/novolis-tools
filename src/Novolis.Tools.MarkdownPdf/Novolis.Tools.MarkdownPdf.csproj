@@ -1,0 +1,15 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <PackageId>Novolis.Tools.MarkdownPdf</PackageId>
+    <Description>Markdown → PDF converter with named themes over Novolis.Markup.Markdown.Documents + Documents.Skia.</Description>
+    <IsPackable>true</IsPackable>
+    <RootNamespace>Novolis.Tools.MarkdownPdf</RootNamespace>
+    <PackageTags>novolis;markdown;pdf;documents;theme;tools</PackageTags>
+  </PropertyGroup>
+  <ItemGroup>
+    <PackageReference Include="Novolis.Documents" />
+    <PackageReference Include="Novolis.Documents.Skia" />
+    <PackageReference Include="Novolis.Markup.Markdown" />
+    <PackageReference Include="Novolis.Markup.Markdown.Documents" />
+  </ItemGroup>
+</Project>

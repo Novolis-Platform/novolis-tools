@@ -1,0 +1,19 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+    <PackageId>Novolis.Tools.MarkdownPdf.Cli</PackageId>
+    <Description>dotnet tool novolis-mdpdf — Markdown to PDF with named themes.</Description>
+    <IsPackable>true</IsPackable>
+    <PackAsTool>true</PackAsTool>
+    <ToolCommandName>novolis-mdpdf</ToolCommandName>
+    <RootNamespace>Novolis.Tools.MarkdownPdf.Cli</RootNamespace>
+    <PackageTags>novolis;markdown;pdf;cli;dotnet-tool;theme</PackageTags>
+  </PropertyGroup>
+  <ItemGroup>
+    <PackageReference Include="System.CommandLine" />
+    <PackageReference Include="SkiaSharp.NativeAssets.Win32" />
+    <PackageReference Include="SkiaSharp.NativeAssets.Linux" />
+    <PackageReference Include="SkiaSharp.NativeAssets.macOS" />
+    <ProjectReference Include="..\Novolis.Tools.MarkdownPdf\Novolis.Tools.MarkdownPdf.csproj" />
+  </ItemGroup>
+</Project>
