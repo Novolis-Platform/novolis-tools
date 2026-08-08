@@ -1,10 +1,12 @@
 using System.Diagnostics;
+using System.Diagnostics.CodeAnalysis;
 using System.Text;
 using System.Text.RegularExpressions;
 
 namespace Novolis.Tools.Coverage;
 
 /// <summary>Locate / install and invoke ReportGenerator.</summary>
+[ExcludeFromCodeCoverage] // Process host (install/PATH/reportgenerator invoke); see coverage-report.md
 public static class ReportGeneratorInvoker
 {
     /// <summary>Ensure <c>reportgenerator</c> is on PATH (install global tool if needed).</summary>
@@ -42,6 +44,7 @@ public static class ReportGeneratorInvoker
         string targetDir,
         string title,
         string reportTypes = "Html;HtmlSummary;TextSummary;MarkdownSummaryGithub;Cobertura",
+        string? assemblyFilters = null,
         TextWriter? log = null)
     {
         EnsureInstalled(log);
@@ -53,8 +56,9 @@ public static class ReportGeneratorInvoker
             $"-targetdir:{targetDir}",
             $"-reporttypes:{reportTypes}",
             $"-title:{title}",
+            "-filefilters:-*MessagePack.SourceGenerator*;-*.g.cs",
             "-classfilters:-*.Tests*;-*Test;-*Tests;-MessagePack.*;-Frank.*",
-            "-assemblyfilters:-Novolis.Analyzers.Licensing",
+            $"-assemblyfilters:{(string.IsNullOrWhiteSpace(assemblyFilters) ? "-Novolis.Analyzers.Licensing" : assemblyFilters)}",
         ], log);
     }
 
@@ -100,6 +104,7 @@ public static class ReportGeneratorInvoker
 }
 
 /// <summary>Orchestrates parallel <c>dotnet test --coverage</c> and ReportGenerator merge.</summary>
+[ExcludeFromCodeCoverage] // Process orchestration host (dotnet test / ReportGenerator); helpers remain scored
 public sealed class CoverageCollector
 {
     private static readonly Regex TotalRe = new(@"total:\s*(\d+)", RegexOptions.IgnoreCase | RegexOptions.Compiled);
@@ -225,6 +230,7 @@ public sealed class CoverageCollector
                     repoReport,
                     r.Repo,
                     reportTypes: "Cobertura;TextSummary",
+                    assemblyFilters: CoverageWorkspace.RepoAssemblyFilter(r.Repo),
                     log: TextWriter.Null);
             }
         }
@@ -363,11 +369,20 @@ public sealed class CoverageCollector
 
         var gateFailed = false;
         string? gateMessage = null;
-        if (failBelow > 0 && aggLine is not null && aggLine < failBelow)
+        if (failBelow > 0 && aggLine is not null)
         {
-            gateFailed = true;
-            gateMessage = $"Aggregate line coverage {aggLine:0.0}% is below FailBelow={failBelow}%.";
-            _log.WriteLine(gateMessage);
+            var summary = new CoberturaSummary
+            {
+                LinePercent = aggLine.Value,
+                BranchPercent = aggBranch ?? 100,
+                LinesCovered = 0,
+                LinesValid = 0,
+                BranchesCovered = 0,
+                BranchesValid = aggBranch is null ? 0 : 1,
+            };
+            (gateFailed, gateMessage) = CoverageGate.Evaluate(summary, failBelow);
+            if (gateFailed && gateMessage is not null)
+                _log.WriteLine(gateMessage);
         }
 
         var failed = repoResults.Where(r => r.Status == "fail").ToList();

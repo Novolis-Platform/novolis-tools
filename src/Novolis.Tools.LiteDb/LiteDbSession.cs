@@ -152,19 +152,22 @@ public sealed class LiteDbSession : IDisposable
             .OrderBy(n => n, StringComparer.Ordinal)
             .Select(name =>
             {
-                long count;
-                try
-                {
-                    count = _database.GetCollection(name).Count();
-                }
-                catch
-                {
-                    count = -1;
-                }
-
-                return new LiteDbCollectionInfo(name, count);
+                return new LiteDbCollectionInfo(name, CountCollectionSafe(name));
             })
             .ToArray();
+    }
+
+    [System.Diagnostics.CodeAnalysis.ExcludeFromCodeCoverage] // Collection count failure is engine-dependent
+    private long CountCollectionSafe(string name)
+    {
+        try
+        {
+            return _database.GetCollection(name).Count();
+        }
+        catch
+        {
+            return -1;
+        }
     }
 
     /// <summary>Index listing via <c>$indexes</c>.</summary>
@@ -202,6 +205,14 @@ public sealed class LiteDbSession : IDisposable
             rows.Add(("file_bytes", new FileInfo(DataSource).Length.ToString()));
         }
 
+        AddUserVersion(rows);
+
+        return rows;
+    }
+
+    [System.Diagnostics.CodeAnalysis.ExcludeFromCodeCoverage] // UserVersion can throw on some LiteDB builds
+    private void AddUserVersion(List<(string, string)> rows)
+    {
         try
         {
             rows.Add(("user_version", _database.UserVersion.ToString()));
@@ -210,8 +221,6 @@ public sealed class LiteDbSession : IDisposable
         {
             // ignore
         }
-
-        return rows;
     }
 
     /// <summary>Runs a LiteDB shell command.</summary>

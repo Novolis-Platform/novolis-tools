@@ -1,5 +1,4 @@
 using System.Text.RegularExpressions;
-using System.Xml.Linq;
 
 namespace Novolis.Tools.Coverage;
 
@@ -96,6 +95,58 @@ public static class CoverageWorkspace
 
         throw new FileNotFoundException(
             $"Novolis.Platform.slnx not found under {root}.");
+    }
+
+    /// <summary>
+    /// ReportGenerator assembly include filter for a repo so ProjectRef transitive
+    /// siblings do not drag per-repo SUMMARY percentages.
+    /// </summary>
+    public static string RepoAssemblyFilter(string repoName)
+    {
+        var special = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase)
+        {
+            ["novolis-gaming"] = "+Novolis.Game*",
+            ["novolis-xsd"] = "+Novolis.Xsd*",
+            ["novolis-analyzers"] = "+Novolis.Analyzers.*;-Novolis.Analyzers.Licensing",
+            ["novolis-tools"] = "+Novolis.Tools*",
+            ["novolis-logging"] = "+Novolis.Logging*",
+            ["novolis-civics"] = "+Novolis.Civics*",
+            ["novolis-simulation"] = "+Novolis.Simulation*",
+            ["novolis-economy"] = "+Novolis.Economy*",
+            ["novolis-codegen"] = "+Novolis.CodeGen*",
+            ["novolis-agent"] = "+Novolis.Agent*",
+            ["novolis-storage"] = "+Novolis.Storage*",
+            ["novolis-math"] = "+Novolis.Math*",
+            ["novolis-physics"] = "+Novolis.Physics*",
+            ["novolis-io"] = "+Novolis.IO*",
+            ["novolis-cad"] = "+Novolis.Cad*",
+            ["novolis-markup"] = "+Novolis.Markup*",
+            ["novolis-video"] = "+Novolis.Video*",
+            ["novolis-audio"] = "+Novolis.Audio*",
+            ["novolis-rendering"] = "+Novolis.Rendering*",
+            ["novolis-raylib"] = "+Novolis.Raylib*",
+            ["novolis-avalonia"] = "+Novolis.Avalonia*",
+            ["novolis-astro"] = "+Novolis.Astro*",
+            ["novolis-geopolitics"] = "+Novolis.Geopolitics*",
+            ["novolis-transports"] = "+Novolis.Transports*",
+            ["novolis-testing"] = "+Novolis.Testing*",
+            ["novolis-machinelearning"] = "+Novolis.MachineLearning*",
+            ["novolis-manuscript"] = "+Novolis.Manuscript*",
+        };
+
+        if (special.TryGetValue(repoName, out var filter))
+            return filter;
+
+        if (repoName.StartsWith("novolis-", StringComparison.OrdinalIgnoreCase))
+        {
+            var parts = repoName["novolis-".Length..]
+                .Split('-', StringSplitOptions.RemoveEmptyEntries)
+                .Select(p => p.Length == 0 ? p : char.ToUpperInvariant(p[0]) + p[1..]);
+            var dotted = "Novolis." + string.Join('.', parts);
+            return $"+{dotted}*";
+        }
+
+        return "-Novolis.Analyzers.Licensing";
     }
 }
 
@@ -246,38 +297,5 @@ public static class TestHostDiscovery
         }
 
         return list;
-    }
-}
-
-/// <summary>Parse Cobertura XML summaries.</summary>
-public static class CoberturaSummaryParser
-{
-    /// <summary>Read rates from a Cobertura file.</summary>
-    public static CoberturaSummary Parse(string coberturaPath)
-    {
-        var doc = XDocument.Load(coberturaPath);
-        var coverage = doc.Root ?? throw new InvalidOperationException($"No root element in {coberturaPath}");
-        static double AttrDouble(XElement el, string name) =>
-            double.TryParse((string?)el.Attribute(name), System.Globalization.NumberStyles.Float,
-                System.Globalization.CultureInfo.InvariantCulture, out var v)
-                ? v
-                : 0;
-        static int AttrInt(XElement el, string name) =>
-            int.TryParse((string?)el.Attribute(name), System.Globalization.NumberStyles.Integer,
-                System.Globalization.CultureInfo.InvariantCulture, out var v)
-                ? v
-                : 0;
-
-        var lineRate = AttrDouble(coverage, "line-rate");
-        var branchRate = AttrDouble(coverage, "branch-rate");
-        return new CoberturaSummary
-        {
-            LinePercent = Math.Round(lineRate * 100, 1),
-            BranchPercent = Math.Round(branchRate * 100, 1),
-            LinesCovered = AttrInt(coverage, "lines-covered"),
-            LinesValid = AttrInt(coverage, "lines-valid"),
-            BranchesCovered = AttrInt(coverage, "branches-covered"),
-            BranchesValid = AttrInt(coverage, "branches-valid"),
-        };
     }
 }

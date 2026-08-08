@@ -28,7 +28,7 @@ public sealed class CoverageCollectOptions
     public bool SkipBuild { get; init; }
 
     /// <summary>
-    /// Fail when aggregate line % is below this value.
+    /// Fail when aggregate line OR branch % is below this value.
     /// Use a negative number to disable. When Platform mode and value is 0, defaults to 95.
     /// </summary>
     public double FailBelow { get; init; }

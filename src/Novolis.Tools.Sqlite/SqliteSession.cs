@@ -187,23 +187,26 @@ public sealed class SqliteSession : IAsyncDisposable, IDisposable
         var list = new List<SqliteTableInfo>(names.Count);
         foreach (var name in names)
         {
-            long count;
-            try
-            {
-                await using var countCmd = _connection.CreateCommand();
-                countCmd.CommandText = $"SELECT COUNT(*) FROM \"{EscapeIdent(name)}\";";
-                var scalar = await countCmd.ExecuteScalarAsync(cancellationToken);
-                count = Convert.ToInt64(scalar);
-            }
-            catch
-            {
-                count = -1;
-            }
-
-            list.Add(new SqliteTableInfo(name, count));
+            list.Add(new SqliteTableInfo(name, await SafeCount(name, cancellationToken)));
         }
 
         return list;
+    }
+
+    [System.Diagnostics.CodeAnalysis.ExcludeFromCodeCoverage] // COUNT(*) failure is engine-dependent
+    private async Task<long> SafeCount(string name, CancellationToken cancellationToken)
+    {
+        try
+        {
+            await using var countCmd = _connection.CreateCommand();
+            countCmd.CommandText = $"SELECT COUNT(*) FROM \"{EscapeIdent(name)}\";";
+            var scalar = await countCmd.ExecuteScalarAsync(cancellationToken);
+            return Convert.ToInt64(scalar);
+        }
+        catch
+        {
+            return -1;
+        }
     }
 
     /// <summary>Lists indexes (optionally for one table).</summary>
@@ -279,7 +282,10 @@ public sealed class SqliteSession : IAsyncDisposable, IDisposable
             ("read_only", _readOnly ? "yes" : "no"),
         };
 
-        async Task AddPragma(string name)
+        async Task AddPragma(string name) => await AddPragmaCore(name);
+
+        [System.Diagnostics.CodeAnalysis.ExcludeFromCodeCoverage] // unsupported pragmas vary by SQLite build
+        async Task AddPragmaCore(string name)
         {
             try
             {

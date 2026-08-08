@@ -1,12 +1,15 @@
 using System.CommandLine;
 using Novolis.Tools.Coverage;
 
-var root = new RootCommand("novolis-coverage — collect MTP Cobertura and merge HTML reports for Novolis workspaces");
+var root = new RootCommand(
+    "novolis-coverage — thin CLI over Novolis.Tools.Coverage (collect / list / gaps / crap)");
 
 var collectCommand = new Command("collect", "Run tests with coverage and merge ReportGenerator HTML");
 var listCommand = new Command("list", "List repos / test hosts that would run (no collection)");
+var gapsCommand = new Command("gaps", "Analyze an existing Cobertura.xml for package gaps (library-only; no test run)");
+var crapCommand = new Command("crap", "CRAP (Change Risk Anti-Patterns) report from Cobertura methods → one markdown file");
 
-static CoverageCollectOptions BindOptions(
+static CoverageCollectOptions BindCollectOptions(
     ParseResult parseResult,
     Option<string?> rootOpt,
     Option<string?> outOpt,
@@ -117,7 +120,7 @@ Option<double> AddFailBelow(Command cmd)
 {
     var o = new Option<double>("--fail-below")
     {
-        Description = "Fail if aggregate line %% is below this (Platform default 95 when 0; use -1 to disable)",
+        Description = "Fail if aggregate line OR branch %% is below this (Platform default 95 when 0; use -1 to disable)",
         DefaultValueFactory = _ => 0,
     };
     cmd.Options.Add(o);
@@ -169,59 +172,190 @@ Option<bool> AddOpen(Command cmd)
     return o;
 }
 
-var cRoot = AddRoot(collectCommand);
-var cOut = AddOut(collectCommand);
-var cPlatform = AddPlatform(collectCommand);
-var cPlatformPath = AddPlatformPath(collectCommand);
-var cRegen = AddRegen(collectCommand);
-var cConfig = AddConfig(collectCommand);
-var cThrottle = AddThrottle(collectCommand);
-var cSkip = AddSkipBuild(collectCommand);
-var cFail = AddFailBelow(collectCommand);
-var cExclude = AddExclude(collectCommand);
-var cInclude = AddInclude(collectCommand);
-var cExcludeFile = AddExcludeFile(collectCommand);
-var cFlatten = AddFlatten(collectCommand);
-var cOpen = AddOpen(collectCommand);
-
-collectCommand.SetAction(async parseResult =>
+void WireCollectLike(Command cmd, bool listOnly)
 {
-    var options = BindOptions(
-        parseResult, cRoot, cOut, cPlatform, cPlatformPath, cRegen, cConfig, cThrottle, cSkip, cFail,
-        cExclude, cInclude, cExcludeFile, cFlatten, cOpen, listOnly: false);
-    var collector = new CoverageCollector(Console.Out);
-    var result = await collector.CollectAsync(options);
-    if (result.Repos.Any(r => r.Status == "fail") || result.GateFailed)
+    var cRoot = AddRoot(cmd);
+    var cOut = AddOut(cmd);
+    var cPlatform = AddPlatform(cmd);
+    var cPlatformPath = AddPlatformPath(cmd);
+    var cRegen = AddRegen(cmd);
+    var cConfig = AddConfig(cmd);
+    var cThrottle = AddThrottle(cmd);
+    var cSkip = AddSkipBuild(cmd);
+    var cFail = AddFailBelow(cmd);
+    var cExclude = AddExclude(cmd);
+    var cInclude = AddInclude(cmd);
+    var cExcludeFile = AddExcludeFile(cmd);
+    var cFlatten = AddFlatten(cmd);
+    var cOpen = AddOpen(cmd);
+
+    cmd.SetAction(async parseResult =>
+    {
+        var options = BindCollectOptions(
+            parseResult, cRoot, cOut, cPlatform, cPlatformPath, cRegen, cConfig, cThrottle, cSkip, cFail,
+            cExclude, cInclude, cExcludeFile, cFlatten, cOpen, listOnly);
+        var collector = new CoverageCollector(Console.Out);
+        var result = await collector.CollectAsync(options);
+        if (listOnly)
+            return 0;
+        if (result.Repos.Any(r => r.Status == "fail") || result.GateFailed)
+            return 1;
+        return 0;
+    });
+}
+
+WireCollectLike(collectCommand, listOnly: false);
+WireCollectLike(listCommand, listOnly: true);
+
+var gapsCobertura = new Option<string?>("--cobertura")
+{
+    Description = "Path to Cobertura.xml (default: <root>/coverage/report/Cobertura.xml or <root>/coverage/Cobertura.xml)",
+};
+gapsCommand.Options.Add(gapsCobertura);
+var gapsRoot = AddRoot(gapsCommand);
+var gapsTarget = new Option<double>("--target")
+{
+    Description = "Target line/branch percent",
+    DefaultValueFactory = _ => 95,
+};
+gapsCommand.Options.Add(gapsTarget);
+var gapsTake = new Option<int>("--take")
+{
+    Description = "Max packages to list",
+    DefaultValueFactory = _ => 30,
+};
+gapsCommand.Options.Add(gapsTake);
+var gapsOut = new Option<string?>("--write")
+{
+    Description = "Optional path to write GAPS.md",
+};
+gapsCommand.Options.Add(gapsOut);
+var gapsFailBelow = new Option<double>("--fail-below")
+{
+    Description = "Exit 1 if aggregate is below this (default: same as --target; use -1 to disable)",
+    DefaultValueFactory = _ => 0,
+};
+gapsCommand.Options.Add(gapsFailBelow);
+
+gapsCommand.SetAction(parseResult =>
+{
+    var workspace = CoverageWorkspace.ResolveRoot(parseResult.GetValue(gapsRoot));
+    var cobertura = ResolveCoberturaPath(workspace, parseResult.GetValue(gapsCobertura));
+    var target = parseResult.GetValue(gapsTarget);
+    var take = parseResult.GetValue(gapsTake);
+    var failBelow = parseResult.GetValue(gapsFailBelow);
+    if (failBelow == 0)
+        failBelow = target;
+
+    var document = CoberturaDocumentParser.Load(cobertura);
+    var md = CoverageAnalyzer.FormatGapsMarkdown(document, target, take);
+    Console.WriteLine(md);
+
+    var writePath = parseResult.GetValue(gapsOut);
+    if (!string.IsNullOrWhiteSpace(writePath))
+    {
+        var full = Path.GetFullPath(writePath);
+        Directory.CreateDirectory(Path.GetDirectoryName(full)!);
+        File.WriteAllText(full, md);
+        Console.WriteLine($"Wrote {full}");
+    }
+
+    var (failed, message) = CoverageGate.Evaluate(document.Summary, failBelow);
+    if (failed)
+    {
+        Console.Error.WriteLine(message);
         return 1;
+    }
+
     return 0;
 });
 
-var lRoot = AddRoot(listCommand);
-var lOut = AddOut(listCommand);
-var lPlatform = AddPlatform(listCommand);
-var lPlatformPath = AddPlatformPath(listCommand);
-var lRegen = AddRegen(listCommand);
-var lConfig = AddConfig(listCommand);
-var lThrottle = AddThrottle(listCommand);
-var lSkip = AddSkipBuild(listCommand);
-var lFail = AddFailBelow(listCommand);
-var lExclude = AddExclude(listCommand);
-var lInclude = AddInclude(listCommand);
-var lExcludeFile = AddExcludeFile(listCommand);
-var lFlatten = AddFlatten(listCommand);
-var lOpen = AddOpen(listCommand);
-
-listCommand.SetAction(async parseResult =>
+static string ResolveCoberturaPath(string workspace, string? explicitPath)
 {
-    var options = BindOptions(
-        parseResult, lRoot, lOut, lPlatform, lPlatformPath, lRegen, lConfig, lThrottle, lSkip, lFail,
-        lExclude, lInclude, lExcludeFile, lFlatten, lOpen, listOnly: true);
-    var collector = new CoverageCollector(Console.Out);
-    _ = await collector.CollectAsync(options);
+    if (!string.IsNullOrWhiteSpace(explicitPath))
+        return Path.GetFullPath(explicitPath);
+
+    var candidates = new[]
+    {
+        Path.Combine(workspace, "coverage", "Cobertura.xml"),
+        Path.Combine(workspace, "coverage", "report", "Cobertura.xml"),
+        Path.Combine(workspace, "artifacts", "coverage", "Cobertura.xml"),
+        Path.Combine(workspace, "artifacts", "coverage", "report", "Cobertura.xml"),
+    };
+    return candidates.FirstOrDefault(File.Exists)
+           ?? throw new FileNotFoundException(
+               "Cobertura.xml not found. Pass --cobertura or run collect first.");
+}
+
+var crapCobertura = new Option<string?>("--cobertura")
+{
+    Description = "Path to Cobertura.xml (default: <workspace>/coverage[/report]/Cobertura.xml via Novolis.Platform.slnx root)",
+};
+crapCommand.Options.Add(crapCobertura);
+var crapRoot = AddRoot(crapCommand);
+var crapOut = new Option<string?>("--out")
+{
+    Description = "Single report file path (default: ./CRAP.md under the caller's cwd). Directory → CRAP.md inside it.",
+};
+crapCommand.Options.Add(crapOut);
+var crapThreshold = new Option<double>("--threshold")
+{
+    Description = "Flag methods with CRAP above this value",
+    DefaultValueFactory = _ => CrapScore.DefaultThreshold,
+};
+crapCommand.Options.Add(crapThreshold);
+var crapTake = new Option<int>("--take")
+{
+    Description = "Max methods in the report table",
+    DefaultValueFactory = _ => 200,
+};
+crapCommand.Options.Add(crapTake);
+var crapFlaggedOnly = new Option<bool>("--flagged-only")
+{
+    Description = "Table lists only methods above --threshold",
+    DefaultValueFactory = _ => false,
+};
+crapCommand.Options.Add(crapFlaggedOnly);
+var crapFailAbove = new Option<double>("--fail-above")
+{
+    Description = "Exit 1 if any method CRAP exceeds this (default: same as --threshold; use -1 to disable)",
+    DefaultValueFactory = _ => 0,
+};
+crapCommand.Options.Add(crapFailAbove);
+
+crapCommand.SetAction(parseResult =>
+{
+    var workspace = CoverageWorkspace.ResolveRoot(parseResult.GetValue(crapRoot));
+    var cobertura = ResolveCoberturaPath(workspace, parseResult.GetValue(crapCobertura));
+    var threshold = parseResult.GetValue(crapThreshold);
+    var take = parseResult.GetValue(crapTake);
+    var flaggedOnly = parseResult.GetValue(crapFlaggedOnly);
+    var failAbove = parseResult.GetValue(crapFailAbove);
+    if (failAbove == 0)
+        failAbove = threshold;
+
+    var document = CoberturaDocumentParser.Load(cobertura);
+    var report = CrapAnalyzer.Analyze(document, threshold);
+    var md = CrapAnalyzer.FormatMarkdown(report, tableTake: take, flaggedOnly: flaggedOnly);
+    var written = CrapAnalyzer.WriteReport(md, parseResult.GetValue(crapOut));
+
+    Console.WriteLine(
+        $"CRAP: scored {report.Methods.Count}, flagged {report.FlaggedCount}, max {report.MaxScore.ToString("0.##", System.Globalization.CultureInfo.InvariantCulture)} (threshold {threshold.ToString("0.#", System.Globalization.CultureInfo.InvariantCulture)})");
+    Console.WriteLine($"Wrote {written}");
+
+    var (failed, message) = CrapAnalyzer.EvaluateGate(report, failAbove);
+    if (failed)
+    {
+        Console.Error.WriteLine(message);
+        return 1;
+    }
+
     return 0;
 });
 
 root.Subcommands.Add(collectCommand);
 root.Subcommands.Add(listCommand);
+root.Subcommands.Add(gapsCommand);
+root.Subcommands.Add(crapCommand);
 
 return root.Parse(args).Invoke();

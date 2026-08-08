@@ -1,10 +1,10 @@
 <Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
     <PackageId>Novolis.Tools.Coverage</PackageId>
-    <Description>Collect and merge MTP Cobertura coverage across Novolis test hosts (Platform.slnx or per-repo).</Description>
+    <Description>Collect and merge MTP Cobertura coverage across Novolis test hosts (Platform.slnx or per-repo), including CRAP risk analysis.</Description>
     <IsPackable>true</IsPackable>
     <RootNamespace>Novolis.Tools.Coverage</RootNamespace>
-    <PackageTags>novolis;coverage;cobertura;reportgenerator;testing;mtp</PackageTags>
+    <PackageTags>novolis;coverage;cobertura;crap;reportgenerator;testing;mtp</PackageTags>
   </PropertyGroup>
   <ItemGroup>
     <InternalsVisibleTo Include="Novolis.Tools.Coverage.Unit" />
