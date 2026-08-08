@@ -46,5 +46,19 @@ pack.WriteTo(@"d:\temp\docs-out");
 | `RelationshipGraph` | Nodes + edges → Mermaid + Markdown sections |
 | `ProjectGraphScanner` | Walk `.csproj` PackageReference / ProjectReference edges |
 | `DocPackBuilder` | Emit a Markdown doc pack (`overview`, `architecture`, `relationships`, …) |
+| `DocsCorpusScanner` / `DocsSiteBuilder` | Scan `{repo}/docs/**/*.md` corpora and emit a static HTML site via Novolis.Markup |
+
+```csharp
+using Novolis.Tools.Docs.Site;
+
+var count = DocsSiteBuilder.Build(new DocsSiteOptions
+{
+    CorpusDirectory = @"d:\novolis\.github\corpus",
+    OutputDirectory = @"d:\novolis\.github\_site",
+    AssetsDirectory = @"d:\novolis\.github\site\assets",
+    BrandDirectory = @"d:\novolis\.github\brand",
+});
+```
 
 See [docs/design.md](../../docs/design.md).
+

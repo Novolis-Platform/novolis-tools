@@ -2,7 +2,7 @@
   <PropertyGroup>
     <OutputType>Exe</OutputType>
     <PackageId>Novolis.Tools.Docs.Cli</PackageId>
-    <Description>dotnet tool novolis-docs — scaffold Markdown/Mermaid doc packs and emit .csproj relationship graphs.</Description>
+    <Description>dotnet tool novolis-docs — scaffold Markdown packs, emit .csproj graphs, and build multi-repo docs/ HTML sites.</Description>
     <IsPackable>true</IsPackable>
     <PackAsTool>true</PackAsTool>
     <ToolCommandName>novolis-docs</ToolCommandName>

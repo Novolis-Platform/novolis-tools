@@ -2,6 +2,7 @@ using Novolis.Tools.Docs;
 using Novolis.Tools.Docs.Graph;
 using Novolis.Tools.Docs.Markdown;
 using Novolis.Tools.Docs.Mermaid;
+using Novolis.Tools.Docs.Site;
 
 namespace Novolis.Tools.Docs.Unit;
 
@@ -98,6 +99,72 @@ public sealed class ProjectGraphScannerTests
         finally
         {
             Directory.Delete(root, recursive: true);
+        }
+    }
+}
+
+public sealed class DocsSiteBuilderTests
+{
+    [Test]
+    public async Task Build_Renders_Docs_From_Sparse_Corpus_Layout()
+    {
+        var corpus = Path.Combine(Path.GetTempPath(), "novolis-docs-corpus-" + Guid.NewGuid().ToString("N"));
+        var output = Path.Combine(Path.GetTempPath(), "novolis-docs-site-" + Guid.NewGuid().ToString("N"));
+        try
+        {
+            var docsDir = Path.Combine(corpus, "novolis-sample", "docs");
+            Directory.CreateDirectory(docsDir);
+            await File.WriteAllTextAsync(
+                Path.Combine(docsDir, "getting-started.md"),
+                """
+                # Getting started
+
+                Install the package and call `Hello()`.
+
+                See [design](design.md).
+                """);
+            await File.WriteAllTextAsync(
+                Path.Combine(docsDir, "design.md"),
+                """
+                # Design
+
+                Layer edges point downward.
+                """);
+
+            var count = DocsSiteBuilder.Build(new DocsSiteOptions
+            {
+                CorpusDirectory = corpus,
+                OutputDirectory = output,
+                Org = "Novolis-Platform",
+            });
+
+            await Assert.That(count).IsEqualTo(2);
+            await Assert.That(File.Exists(Path.Combine(output, "index.html"))).IsTrue();
+            await Assert.That(File.Exists(Path.Combine(output, ".nojekyll"))).IsTrue();
+
+            var pages = Directory.GetFiles(Path.Combine(output, "docs"), "*.html");
+            await Assert.That(pages.Length).IsEqualTo(2);
+
+            var index = await File.ReadAllTextAsync(Path.Combine(output, "index.html"));
+            await Assert.That(index).Contains("Open docs page");
+            await Assert.That(index).Contains("novolis-sample");
+
+            var gettingStarted = pages.Single(p => p.Contains("getting-started", StringComparison.OrdinalIgnoreCase));
+            var html = await File.ReadAllTextAsync(gettingStarted);
+            await Assert.That(html).Contains("Install the package");
+            await Assert.That(html).Contains("design.html");
+        }
+        finally
+        {
+            if (Directory.Exists(corpus))
+            {
+                Directory.Delete(corpus, recursive: true);
+            }
+
+            if (Directory.Exists(output))
+            {
+                Directory.Delete(output, recursive: true);
+            }
         }
     }
 }

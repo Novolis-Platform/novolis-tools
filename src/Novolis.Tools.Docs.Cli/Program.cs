@@ -1,8 +1,9 @@
 using System.CommandLine;
 using Novolis.Tools.Docs;
 using Novolis.Tools.Docs.Graph;
+using Novolis.Tools.Docs.Site;
 
-var root = new RootCommand("novolis-docs — Markdown + Mermaid documentation and relationship graphs");
+var root = new RootCommand("novolis-docs — Markdown + Mermaid documentation, relationship graphs, and docs/ HTML sites");
 
 var scaffoldCommand = new Command("scaffold", "Write a starter Markdown doc pack with Mermaid diagrams");
 var scaffoldTitle = new Option<string>("--title")
@@ -87,7 +88,65 @@ graphCommand.SetAction(parseResult =>
     return 0;
 });
 
+var siteCommand = new Command("site", "Build a static HTML docs site from a sparse-checkout corpus of {repo}/docs/**/*.md");
+var siteCorpus = new Option<string>("--corpus")
+{
+    Description = "Corpus root containing {repo}/docs/**/*.md",
+    Required = true,
+};
+var siteOut = new Option<string>("--out")
+{
+    Description = "Output directory for index.html and docs/*.html",
+    Required = true,
+};
+var siteOrg = new Option<string>("--org")
+{
+    Description = "GitHub organization for source links",
+    DefaultValueFactory = _ => "Novolis-Platform",
+};
+var siteAssets = new Option<string?>("--assets")
+{
+    Description = "Optional directory with site.css / site.js",
+};
+var siteBrand = new Option<string?>("--brand")
+{
+    Description = "Optional brand directory (favicon, logos, banners)",
+};
+var siteBranch = new Option<string>("--branch")
+{
+    Description = "Default git branch for GitHub blob URLs",
+    DefaultValueFactory = _ => "main",
+};
+var siteBaseUrl = new Option<string?>("--base-url")
+{
+    Description = "Public site base URL",
+};
+siteCommand.Options.Add(siteCorpus);
+siteCommand.Options.Add(siteOut);
+siteCommand.Options.Add(siteOrg);
+siteCommand.Options.Add(siteAssets);
+siteCommand.Options.Add(siteBrand);
+siteCommand.Options.Add(siteBranch);
+siteCommand.Options.Add(siteBaseUrl);
+siteCommand.SetAction(parseResult =>
+{
+    var options = new DocsSiteOptions
+    {
+        CorpusDirectory = parseResult.GetValue(siteCorpus)!,
+        OutputDirectory = parseResult.GetValue(siteOut)!,
+        Org = parseResult.GetValue(siteOrg)!,
+        AssetsDirectory = parseResult.GetValue(siteAssets),
+        BrandDirectory = parseResult.GetValue(siteBrand),
+        DefaultBranch = parseResult.GetValue(siteBranch)!,
+        BaseUrl = parseResult.GetValue(siteBaseUrl),
+    };
+    var count = DocsSiteBuilder.Build(options);
+    Console.WriteLine($"Built docs site with {count} pages at {Path.GetFullPath(options.OutputDirectory)}");
+    return 0;
+});
+
 root.Subcommands.Add(scaffoldCommand);
 root.Subcommands.Add(graphCommand);
+root.Subcommands.Add(siteCommand);
 
 return root.Parse(args).Invoke();

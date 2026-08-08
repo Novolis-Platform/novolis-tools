@@ -1,9 +1,13 @@
 <Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
     <PackageId>Novolis.Tools.Docs</PackageId>
-    <Description>Markdown and Mermaid builders for documentation packs and relationship graphs.</Description>
+    <Description>Markdown and Mermaid builders, plus multi-repo docs/ static HTML site generation via Novolis.Markup.</Description>
     <IsPackable>true</IsPackable>
     <RootNamespace>Novolis.Tools.Docs</RootNamespace>
-    <PackageTags>novolis;markdown;mermaid;documentation;graph;docs</PackageTags>
+    <PackageTags>novolis;markdown;mermaid;documentation;graph;docs;html;site</PackageTags>
   </PropertyGroup>
+  <ItemGroup>
+    <PackageReference Include="Novolis.Markup.Markdown" />
+    <PackageReference Include="Novolis.Markup.Markdown.Rendering" />
+  </ItemGroup>
 </Project>
