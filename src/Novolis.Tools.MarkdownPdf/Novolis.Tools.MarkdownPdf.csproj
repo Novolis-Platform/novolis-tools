@@ -11,5 +11,6 @@
     <PackageReference Include="Novolis.Documents.Skia" />
     <PackageReference Include="Novolis.Markup.Markdown" />
     <PackageReference Include="Novolis.Markup.Markdown.Documents" />
+    <PackageReference Include="Novolis.Math.Measure" />
   </ItemGroup>
 </Project>

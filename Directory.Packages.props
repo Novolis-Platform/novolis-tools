@@ -11,6 +11,7 @@
     <PackageVersion Include="Novolis.Documents.Skia" Version="2026.1.*" />
     <PackageVersion Include="Novolis.Markup.Markdown" Version="2026.1.*" />
     <PackageVersion Include="Novolis.Markup.Markdown.Documents" Version="2026.1.*" />
+    <PackageVersion Include="Novolis.Math.Measure" Version="2026.1.*" />
     <PackageVersion Include="Novolis.Storage.LiteDb" Version="2026.1.*" />
     <PackageVersion Include="Novolis.Storage.Sqlite" Version="2026.1.*" />
     <PackageVersion Include="SkiaSharp" Version="3.116.1" />
