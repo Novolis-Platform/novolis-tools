@@ -12,5 +12,9 @@
     <PackageReference Include="Novolis.Markup.Markdown" />
     <PackageReference Include="Novolis.Markup.Markdown.Documents" />
     <PackageReference Include="Novolis.Math.Measure" />
+    <PackageReference Include="SkiaSharp" />
+    <PackageReference Include="SkiaSharp.NativeAssets.Win32" />
+    <PackageReference Include="SkiaSharp.NativeAssets.Linux" />
+    <PackageReference Include="SkiaSharp.NativeAssets.macOS" />
   </ItemGroup>
 </Project>
