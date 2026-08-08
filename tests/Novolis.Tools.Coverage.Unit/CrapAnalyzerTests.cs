@@ -111,4 +111,60 @@ public sealed class CrapAnalyzerTests
             File.Delete(path);
         }
     }
+
+    [Test]
+    public async Task AnalyzeFiles_Parallel_Merges_Into_One_Ranking()
+    {
+        var dir = Path.Combine(Path.GetTempPath(), "crap-par-" + Guid.NewGuid().ToString("N"));
+        Directory.CreateDirectory(dir);
+        try
+        {
+            var a = Path.Combine(dir, "a.xml");
+            var b = Path.Combine(dir, "b.xml");
+            await File.WriteAllTextAsync(a, MiniCobertura("PkgA", "A.T", "Ok", lineRate: "1", complexity: "2"));
+            await File.WriteAllTextAsync(b, MiniCobertura("PkgB", "B.T", "Bad", lineRate: "0", complexity: "6"));
+
+            var report = CrapAnalyzer.AnalyzeFiles([a, b], threshold: 30, maxDegreeOfParallelism: 2);
+            await Assert.That(report.SourcePaths.Count).IsEqualTo(2);
+            await Assert.That(report.DegreeOfParallelism).IsEqualTo(2);
+            await Assert.That(report.Methods.Count).IsEqualTo(2);
+            await Assert.That(report.Methods[0].Method.MethodName).IsEqualTo("Bad");
+            await Assert.That(report.FlaggedCount).IsEqualTo(1);
+
+            var md = CrapAnalyzer.FormatMarkdown(report, flaggedOnly: true);
+            await Assert.That(md).Contains("2** Cobertura");
+            await Assert.That(md).Contains("Bad");
+            await Assert.That(md).DoesNotContain("| Ok");
+        }
+        finally
+        {
+            Directory.Delete(dir, recursive: true);
+        }
+    }
+
+    private static string MiniCobertura(
+        string package,
+        string type,
+        string method,
+        string lineRate,
+        string complexity) =>
+        $"""
+        <?xml version="1.0" encoding="utf-8"?>
+        <coverage line-rate="0.5" branch-rate="1" lines-covered="1" lines-valid="1" branches-covered="0" branches-valid="0" version="1.0" timestamp="0">
+          <packages>
+            <package name="{package}" line-rate="{lineRate}" branch-rate="1" complexity="{complexity}">
+              <classes>
+                <class name="{type}" filename="{method}.cs" line-rate="{lineRate}" branch-rate="1" complexity="{complexity}">
+                  <methods>
+                    <method name="{method}" signature="()" line-rate="{lineRate}" branch-rate="1" complexity="{complexity}">
+                      <lines><line number="1" hits="1" branch="false" /></lines>
+                    </method>
+                  </methods>
+                  <lines><line number="1" hits="1" branch="false" /></lines>
+                </class>
+              </classes>
+            </package>
+          </packages>
+        </coverage>
+        """;
 }

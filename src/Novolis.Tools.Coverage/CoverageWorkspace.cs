@@ -132,6 +132,9 @@ public static class CoverageWorkspace
             ["novolis-testing"] = "+Novolis.Testing*",
             ["novolis-machinelearning"] = "+Novolis.MachineLearning*",
             ["novolis-manuscript"] = "+Novolis.Manuscript*",
+            ["novolis-documents"] = "+Novolis.Documents*",
+            ["novolis-workspaces"] = "+Novolis.Workspaces*;+Novolis.Snapshots*;+Novolis.Timeline*",
+            ["novolis-msbuild"] = "+Novolis.MSBuild*",
         };
 
         if (special.TryGetValue(repoName, out var filter))
@@ -217,7 +220,7 @@ public static class TestHostDiscovery
         return repos;
     }
 
-    /// <summary>Hosts listed in Platform.slnx (tests/ only).</summary>
+    /// <summary>Hosts listed in Platform.slnx (tests/ only), plus on-disk tests for slnx repos whose tests were omitted from the meta solution.</summary>
     public static IReadOnlyList<CoverageRepo> DiscoverFromPlatformSlnx(
         string root,
         string slnxPath,
@@ -228,6 +231,7 @@ public static class TestHostDiscovery
                       ?? throw new InvalidOperationException(slnxPath);
         var rootFull = Path.GetFullPath(root).TrimEnd(Path.DirectorySeparatorChar, Path.AltDirectorySeparatorChar);
         var byRepo = new Dictionary<string, (string Path, List<string> Projects)>(StringComparer.OrdinalIgnoreCase);
+        var reposInSlnx = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
         var text = File.ReadAllText(slnxPath);
 
         foreach (Match m in ProjectPathAttr.Matches(text))
@@ -235,24 +239,31 @@ public static class TestHostDiscovery
             var rel = m.Groups[1].Value
                 .Replace('/', Path.DirectorySeparatorChar)
                 .Replace('\\', Path.DirectorySeparatorChar);
-            if (!rel.Contains($"{Path.DirectorySeparatorChar}tests{Path.DirectorySeparatorChar}", StringComparison.OrdinalIgnoreCase)
-                && !rel.Contains("/tests/", StringComparison.OrdinalIgnoreCase)
-                && !rel.Contains("\\tests\\", StringComparison.OrdinalIgnoreCase))
-                continue;
 
             var full = Path.GetFullPath(Path.Combine(slnxDir, rel));
-            if (!File.Exists(full))
-                continue;
             if (!full.StartsWith(rootFull, StringComparison.OrdinalIgnoreCase))
                 continue;
 
             var relFromRoot = full[rootFull.Length..].TrimStart(Path.DirectorySeparatorChar, Path.AltDirectorySeparatorChar);
-            var repoName = relFromRoot.Split(Path.DirectorySeparatorChar, Path.AltDirectorySeparatorChar)[0];
+            var segments = relFromRoot.Split(Path.DirectorySeparatorChar, Path.AltDirectorySeparatorChar);
+            if (segments.Length == 0)
+                continue;
+            var repoName = segments[0];
             if (!repoName.StartsWith("novolis-", StringComparison.OrdinalIgnoreCase))
                 continue;
             if (exclude.Contains(repoName))
                 continue;
             if (include is { Count: > 0 } && !include.Contains(repoName))
+                continue;
+
+            reposInSlnx.Add(repoName);
+
+            var isTestsPath = rel.Contains($"{Path.DirectorySeparatorChar}tests{Path.DirectorySeparatorChar}", StringComparison.OrdinalIgnoreCase)
+                              || rel.Contains("/tests/", StringComparison.OrdinalIgnoreCase)
+                              || rel.Contains("\\tests\\", StringComparison.OrdinalIgnoreCase);
+            if (!isTestsPath)
+                continue;
+            if (!File.Exists(full))
                 continue;
             if (!IsTestHostProject(full))
                 continue;
@@ -265,6 +276,21 @@ public static class TestHostDiscovery
 
             if (!entry.Projects.Contains(full, StringComparer.OrdinalIgnoreCase))
                 entry.Projects.Add(full);
+        }
+
+        // Meta slnx intentionally omits some test hosts (e.g. Agent.Unit hang under full-platform
+        // parallel). Still cover those libraries when tests exist on disk.
+        foreach (var repoName in reposInSlnx)
+        {
+            if (byRepo.ContainsKey(repoName))
+                continue;
+
+            var repoPath = Path.Combine(root, repoName);
+            var diskTests = DiscoverTestProjects(repoPath);
+            if (diskTests.Count == 0)
+                continue;
+
+            byRepo[repoName] = (repoPath, diskTests.ToList());
         }
 
         return byRepo.Keys

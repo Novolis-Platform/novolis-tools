@@ -7,7 +7,9 @@ var root = new RootCommand(
 var collectCommand = new Command("collect", "Run tests with coverage and merge ReportGenerator HTML");
 var listCommand = new Command("list", "List repos / test hosts that would run (no collection)");
 var gapsCommand = new Command("gaps", "Analyze an existing Cobertura.xml for package gaps (library-only; no test run)");
-var crapCommand = new Command("crap", "CRAP (Change Risk Anti-Patterns) report from Cobertura methods → one markdown file");
+var crapCommand = new Command(
+    "crap",
+    "Platform.slnx CRAP report: parallel Cobertura fan-in → one markdown file (no per-repo reports)");
 
 static CoverageCollectOptions BindCollectOptions(
     ParseResult parseResult,
@@ -289,13 +291,19 @@ static string ResolveCoberturaPath(string workspace, string? explicitPath)
 
 var crapCobertura = new Option<string?>("--cobertura")
 {
-    Description = "Path to Cobertura.xml (default: <workspace>/coverage[/report]/Cobertura.xml via Novolis.Platform.slnx root)",
+    Description = "Optional single Cobertura.xml (skips Platform.slnx multi-file discovery)",
 };
 crapCommand.Options.Add(crapCobertura);
 var crapRoot = AddRoot(crapCommand);
+var crapPlatformPath = AddPlatformPath(crapCommand);
+var crapCoverageDir = new Option<string?>("--coverage-dir")
+{
+    Description = "Coverage output root from collect (default: <root>/coverage)",
+};
+crapCommand.Options.Add(crapCoverageDir);
 var crapOut = new Option<string?>("--out")
 {
-    Description = "Single report file path (default: ./CRAP.md under the caller's cwd). Directory → CRAP.md inside it.",
+    Description = "Single report file (default: ./CRAP.md under the caller's cwd). Directory → CRAP.md inside it.",
 };
 crapCommand.Options.Add(crapOut);
 var crapThreshold = new Option<double>("--threshold")
@@ -310,9 +318,9 @@ var crapTake = new Option<int>("--take")
     DefaultValueFactory = _ => 200,
 };
 crapCommand.Options.Add(crapTake);
-var crapFlaggedOnly = new Option<bool>("--flagged-only")
+var crapFlaggedOnly = new Option<bool>("--all")
 {
-    Description = "Table lists only methods above --threshold",
+    Description = "Include non-flagged methods in the table (default: flagged only)",
     DefaultValueFactory = _ => false,
 };
 crapCommand.Options.Add(crapFlaggedOnly);
@@ -322,25 +330,49 @@ var crapFailAbove = new Option<double>("--fail-above")
     DefaultValueFactory = _ => 0,
 };
 crapCommand.Options.Add(crapFailAbove);
+var crapThrottle = AddThrottle(crapCommand);
+var crapExclude = AddExclude(crapCommand);
+var crapInclude = AddInclude(crapCommand);
+var crapExcludeFile = AddExcludeFile(crapCommand);
 
 crapCommand.SetAction(parseResult =>
 {
     var workspace = CoverageWorkspace.ResolveRoot(parseResult.GetValue(crapRoot));
-    var cobertura = ResolveCoberturaPath(workspace, parseResult.GetValue(crapCobertura));
     var threshold = parseResult.GetValue(crapThreshold);
     var take = parseResult.GetValue(crapTake);
-    var flaggedOnly = parseResult.GetValue(crapFlaggedOnly);
+    var flaggedOnly = !parseResult.GetValue(crapFlaggedOnly);
     var failAbove = parseResult.GetValue(crapFailAbove);
     if (failAbove == 0)
         failAbove = threshold;
 
-    var document = CoberturaDocumentParser.Load(cobertura);
-    var report = CrapAnalyzer.Analyze(document, threshold);
+    var explicitCobertura = parseResult.GetValue(crapCobertura);
+    var options = new CrapAnalyzeOptions
+    {
+        Root = workspace,
+        PlatformSlnxPath = parseResult.GetValue(crapPlatformPath),
+        CoverageDir = parseResult.GetValue(crapCoverageDir),
+        CoberturaPaths = string.IsNullOrWhiteSpace(explicitCobertura)
+            ? []
+            : [explicitCobertura],
+        Threshold = threshold,
+        MaxDegreeOfParallelism = parseResult.GetValue(crapThrottle),
+        Exclude = parseResult.GetValue(crapExclude) ?? [],
+        Include = parseResult.GetValue(crapInclude) ?? [],
+        ExcludeFile = parseResult.GetValue(crapExcludeFile),
+    };
+
+    var report = CrapAnalyzer.AnalyzePlatform(options);
     var md = CrapAnalyzer.FormatMarkdown(report, tableTake: take, flaggedOnly: flaggedOnly);
     var written = CrapAnalyzer.WriteReport(md, parseResult.GetValue(crapOut));
 
+    var inv = System.Globalization.CultureInfo.InvariantCulture;
     Console.WriteLine(
-        $"CRAP: scored {report.Methods.Count}, flagged {report.FlaggedCount}, max {report.MaxScore.ToString("0.##", System.Globalization.CultureInfo.InvariantCulture)} (threshold {threshold.ToString("0.#", System.Globalization.CultureInfo.InvariantCulture)})");
+        $"CRAP (Platform.slnx): {report.SourcePaths.Count.ToString(inv)} Cobertura file(s), " +
+        $"dop={report.DegreeOfParallelism.ToString(inv)}, scored {report.Methods.Count.ToString(inv)}, " +
+        $"flagged {report.FlaggedCount.ToString(inv)}, max {report.MaxScore.ToString("0.##", inv)} " +
+        $"(threshold {threshold.ToString("0.#", inv)})");
+    if (!string.IsNullOrWhiteSpace(report.PlatformSlnxPath))
+        Console.WriteLine($"Platform: {report.PlatformSlnxPath}");
     Console.WriteLine($"Wrote {written}");
 
     var (failed, message) = CrapAnalyzer.EvaluateGate(report, failAbove);

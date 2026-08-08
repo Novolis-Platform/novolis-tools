@@ -38,20 +38,25 @@ public static class ReportGeneratorInvoker
                 "reportgenerator not found. Install: dotnet tool install -g dotnet-reportgenerator-globaltool");
     }
 
-    /// <summary>Merge Cobertura files into HTML (+ optional extra report types).</summary>
+    /// <summary>
+    /// Merge Cobertura into an advanced HTML report: class drill-down, risk hotspots (CRAP/CC),
+    /// history chart, and badges. Pass <paramref name="historyDir"/> across runs for trends.
+    /// </summary>
     public static int Generate(
         IReadOnlyList<string> coberturaFiles,
         string targetDir,
         string title,
-        string reportTypes = "Html;HtmlSummary;TextSummary;MarkdownSummaryGithub;Cobertura",
+        string reportTypes = "Html;HtmlSummary;HtmlChart;Badges;TextSummary;MarkdownSummaryGithub;Cobertura",
         string? assemblyFilters = null,
+        string? historyDir = null,
         TextWriter? log = null)
     {
         EnsureInstalled(log);
         Directory.CreateDirectory(targetDir);
         var reports = string.Join(';', coberturaFiles);
         var exe = FindExecutable() ?? "reportgenerator";
-        return Run(exe, [
+        var args = new List<string>
+        {
             $"-reports:{reports}",
             $"-targetdir:{targetDir}",
             $"-reporttypes:{reportTypes}",
@@ -59,7 +64,15 @@ public static class ReportGeneratorInvoker
             "-filefilters:-*MessagePack.SourceGenerator*;-*.g.cs",
             "-classfilters:-*.Tests*;-*Test;-*Tests;-MessagePack.*;-Frank.*",
             $"-assemblyfilters:{(string.IsNullOrWhiteSpace(assemblyFilters) ? "-Novolis.Analyzers.Licensing" : assemblyFilters)}",
-        ], log);
+        };
+
+        if (!string.IsNullOrWhiteSpace(historyDir))
+        {
+            Directory.CreateDirectory(historyDir);
+            args.Add($"-historydir:{historyDir}");
+        }
+
+        return Run(exe, args, log);
     }
 
     private static string? FindExecutable()
@@ -87,6 +100,7 @@ public static class ReportGeneratorInvoker
             RedirectStandardOutput = true,
             RedirectStandardError = true,
             UseShellExecute = false,
+            CreateNoWindow = true,
         };
         foreach (var a in args)
             psi.ArgumentList.Add(a);
@@ -197,23 +211,47 @@ public sealed class CoverageCollector
             File.Delete(old);
 
         var projectRef = options.PlatformSlnx ? "true" : "false";
-        var results = new CoverageRepoResult[repos.Count];
+
+        // Agent LocalIpc/HTTP hosts deadlock when run in the massively parallel platform batch.
+        static bool IsSerialRepo(CoverageRepo r) =>
+            r.Name.Equals("novolis-agent", StringComparison.OrdinalIgnoreCase);
+
+        var parallelRepos = repos.Where(r => !IsSerialRepo(r)).ToList();
+        var serialRepos = repos.Where(IsSerialRepo).ToList();
+        var resultsByName = new Dictionary<string, CoverageRepoResult>(StringComparer.OrdinalIgnoreCase);
+
         await Parallel.ForEachAsync(
-            Enumerable.Range(0, repos.Count),
+            parallelRepos,
             new ParallelOptions { MaxDegreeOfParallelism = throttle, CancellationToken = cancellationToken },
-            async (i, ct) =>
+            async (repo, ct) =>
             {
-                results[i] = await CollectRepoAsync(
-                    repos[i],
+                var result = await CollectRepoAsync(
+                    repo,
                     options.Configuration,
                     options.SkipBuild,
                     projectRef,
-                    Path.Combine(rawDir, repos[i].Name),
-                    Path.Combine(logsDir, repos[i].Name + ".log"),
+                    Path.Combine(rawDir, repo.Name),
+                    Path.Combine(logsDir, repo.Name + ".log"),
                     ct).ConfigureAwait(false);
+                lock (resultsByName)
+                    resultsByName[repo.Name] = result;
             }).ConfigureAwait(false);
 
-        var repoResults = results.OrderBy(r => r.Repo, StringComparer.OrdinalIgnoreCase).ToList();
+        foreach (var repo in serialRepos)
+        {
+            cancellationToken.ThrowIfCancellationRequested();
+            _log.WriteLine($"Serial coverage (avoid platform hang): {repo.Name}");
+            resultsByName[repo.Name] = await CollectRepoAsync(
+                repo,
+                options.Configuration,
+                options.SkipBuild,
+                projectRef,
+                Path.Combine(rawDir, repo.Name),
+                Path.Combine(logsDir, repo.Name + ".log"),
+                cancellationToken).ConfigureAwait(false);
+        }
+
+        var repoResults = resultsByName.Values.OrderBy(r => r.Repo, StringComparer.OrdinalIgnoreCase).ToList();
         var allCobertura = new List<string>();
         foreach (var r in repoResults)
         {
@@ -234,6 +272,18 @@ public sealed class CoverageCollector
                     log: TextWriter.Null);
             }
         }
+
+        // Partial --include runs must not replace the platform aggregate with a 3-repo report.
+        // Prefer persisted per-repo Cobertura under report/novolis-*/ when merging.
+        var persisted = Directory.Exists(reportDir)
+            ? Directory.EnumerateDirectories(reportDir)
+                .Where(d => Path.GetFileName(d).StartsWith("novolis-", StringComparison.OrdinalIgnoreCase))
+                .Select(d => Path.Combine(d, "Cobertura.xml"))
+                .Where(File.Exists)
+                .ToList()
+            : [];
+        if (persisted.Count > 0)
+            allCobertura = persisted;
 
         // Fill per-repo percents from merged or single files
         for (var i = 0; i < repoResults.Count; i++)
@@ -275,13 +325,16 @@ public sealed class CoverageCollector
         {
             _log.WriteLine();
             _log.WriteLine($"Merging {allCobertura.Count} cobertura file(s) with ReportGenerator...");
+            var historyDir = Path.Combine(outputDir, "history");
             var exit = ReportGeneratorInvoker.Generate(
                 allCobertura,
                 reportDir,
                 "Novolis coverage",
+                historyDir: historyDir,
                 log: _log);
             if (exit != 0)
                 throw new InvalidOperationException($"reportgenerator failed (exit {exit})");
+            _log.WriteLine($"HTML risk hotspots + history chart/badges → {historyDir}");
 
             var aggCob = Path.Combine(reportDir, "Cobertura.xml");
             if (File.Exists(aggCob))
@@ -294,6 +347,15 @@ public sealed class CoverageCollector
             htmlIndex = Path.Combine(reportDir, "index.html");
             if (!File.Exists(htmlIndex))
                 htmlIndex = null;
+
+            // Single-file landing next to Novolis.Platform.slnx (same idea as CRAP.md)
+            var summaryHtml = Path.Combine(reportDir, "summary.html");
+            if (File.Exists(summaryHtml))
+            {
+                var rootCoverageHtml = Path.Combine(root, "COVERAGE.html");
+                File.Copy(summaryHtml, rootCoverageHtml, overwrite: true);
+                _log.WriteLine($"Wrote {rootCoverageHtml}");
+            }
         }
 
         if (options.FlattenHtml && htmlIndex is not null)
@@ -429,6 +491,7 @@ public sealed class CoverageCollector
             RedirectStandardOutput = true,
             RedirectStandardError = true,
             UseShellExecute = false,
+            CreateNoWindow = true,
         };
         psi.ArgumentList.Add("-NoProfile");
         psi.ArgumentList.Add("-File");
@@ -582,6 +645,7 @@ public sealed class CoverageCollector
             RedirectStandardOutput = true,
             RedirectStandardError = true,
             UseShellExecute = false,
+            CreateNoWindow = true,
         };
         foreach (var a in args)
             psi.ArgumentList.Add(a);

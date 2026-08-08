@@ -26,6 +26,7 @@ var result = await new CoverageCollector(Console.Out).CollectAsync(new CoverageC
     FailBelow = 95, // line OR branch
     FlattenHtml = true,
 });
+// → <out>/index.html with Risk Hotspots (CRAP), CoverageHistory.html, badges; history in <out>/history
 ```
 
 ## Analyze gaps (no test run)
@@ -38,16 +39,22 @@ Console.Write(CoverageAnalyzer.FormatGapsMarkdown(doc));
 CoverageAssert.AtLeast(doc.Summary, failBelow: 95);
 ```
 
-## CRAP (risk hotspots)
+## CRAP (Platform.slnx risk hotspots)
 
-Uses Coverlet Cobertura method rows (`complexity` + `line-rate`):
+Uses Coverlet Cobertura method rows (`complexity` + `line-rate`), scoped to
+`Novolis.Platform.slnx`: discovers `coverage/report/novolis-*/Cobertura.xml`,
+parses/scores in parallel, writes **one** merged markdown (no per-repo reports).
 
 `CRAP(m) = CC² × (1 − lineCoverage)³ + CC`
 
 ```csharp
-var report = CrapAnalyzer.Analyze(doc, threshold: 30);
+var report = CrapAnalyzer.AnalyzePlatform(new CrapAnalyzeOptions
+{
+    Root = CoverageWorkspace.ResolveRoot(),
+    Threshold = 30,
+});
 var md = CrapAnalyzer.FormatMarkdown(report, flaggedOnly: true);
-CrapAnalyzer.WriteReport(md); // ./CRAP.md under cwd, or pass --out path
+CrapAnalyzer.WriteReport(md); // ./CRAP.md under cwd
 ```
 
 ## CLI (orchestrator)
@@ -56,9 +63,9 @@ CrapAnalyzer.WriteReport(md); // ./CRAP.md under cwd, or pass --out path
 novolis-coverage collect --platform --fail-below 95 --out d:\novolis\coverage
 novolis-coverage list --platform
 novolis-coverage gaps --cobertura d:\novolis\coverage\report\Cobertura.xml --target 95 --write d:\novolis\coverage\GAPS.md
-# One markdown file under the caller's cwd (or --out)
-novolis-coverage crap --cobertura d:\novolis\coverage\Cobertura.xml --flagged-only --fail-above -1
-novolis-coverage crap --out d:\novolis\CRAP.md
+# Platform.slnx parallel fan-in → one file (default ./CRAP.md)
+novolis-coverage crap --fail-above -1
+novolis-coverage crap --out d:\novolis\CRAP.md --throttle 8
 ```
 
 ## Test authoring
