@@ -6,17 +6,24 @@
 </p>
 
 <p align="center">
-  <strong>Developer CLI tools</strong><br/>
-  Markdown + Mermaid documentation packs, relationship graphs, SQLite and LiteDB REPLs.
+  <img src="https://raw.githubusercontent.com/Novolis-Platform/.github/main/brand/banners/novolis-tools.svg" width="100%" alt="novolis-tools"/>
 </p>
 
 <p align="center">
+  <strong>Maintainer CLIs and docs site</strong><br/>
+  Maintainer tools: novolis-docs site builder, SQLite/LiteDB CLIs, and helpers.
+</p>
+
+<p align="center">
+  <a href="https://novolis-platform.github.io/.github/novolis-tools/"><img src="https://img.shields.io/badge/docs-portfolio-0a7ea3" alt="docs"/></a>
   <a href="https://github.com/Novolis-Platform/novolis-tools/actions"><img src="https://img.shields.io/github/actions/workflow/status/Novolis-Platform/novolis-tools/merge.yml?branch=main&label=merge&logo=github" alt="merge"/></a>
   <a href="https://github.com/orgs/Novolis-Platform/packages?repo_name=novolis-tools"><img src="https://img.shields.io/badge/packages-GitHub%20Packages-0a7ea3?logo=nuget" alt="packages"/></a>
   <a href="https://github.com/Novolis-Platform"><img src="https://img.shields.io/badge/org-Novolis--Platform-111827" alt="org"/></a>
 </p>
 
 <p align="center">
+  <a href="https://novolis-platform.github.io/.github/novolis-tools/">Docs</a>
+  ·
   <a href="https://nuget.pkg.github.com/Novolis-Platform/index.json"><code>https://nuget.pkg.github.com/Novolis-Platform/index.json</code></a>
   ·
   <a href="https://github.com/Novolis-Platform/.github/blob/main/profile/README.md">Org landing</a>
@@ -110,3 +117,4 @@ dotnet test d:\novolis\novolis-tools\Novolis.Tools.slnx
 - [Getting started](docs/getting-started.md)
 - [Design](docs/design.md)
 - [Release](docs/release.md)
+
