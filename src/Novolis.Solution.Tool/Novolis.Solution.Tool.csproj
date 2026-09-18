@@ -1,0 +1,21 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+    <PackAsTool>true</PackAsTool>
+    <ToolCommandName>novolis-solution</ToolCommandName>
+    <PackageId>Novolis.Solution.Tool</PackageId>
+    <IsPackable>true</IsPackable>
+    <RootNamespace>Novolis.Solution.Tool</RootNamespace>
+    <Description>Query typed SLNX topology and solution catalogs from the command line.</Description>
+    <PackageTags>novolis;solution;slnx;msbuild;roslyn;tool</PackageTags>
+    <PackageReadmeFile>README.md</PackageReadmeFile>
+  </PropertyGroup>
+  <ItemGroup>
+    <None Include="README.md" Pack="true" PackagePath="\" />
+    <PackageReference Include="Novolis.Workspaces.DotNet.Abstractions" />
+    <PackageReference Include="Novolis.Workspaces.DotNet.Indexing" />
+    <PackageReference Include="Novolis.Workspaces.DotNet.MSBuild" />
+    <PackageReference Include="Novolis.Workspaces.DotNet.Slnx" />
+    <PackageReference Include="System.IO.Abstractions" />
+  </ItemGroup>
+</Project>

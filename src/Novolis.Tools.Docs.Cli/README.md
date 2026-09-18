@@ -16,6 +16,8 @@
 dotnet tool install --global Novolis.Tools.Docs.Cli --version 2026.1.*
 ```
 
+## Quick start
+
 ## Commands
 
 ```powershell

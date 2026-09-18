@@ -33,8 +33,13 @@
     <PackageVersion Include="SkiaSharp.NativeAssets.Win32" Version="3.116.1" />
     <PackageVersion Include="Spectre.Console" Version="0.54.0" />
     <PackageVersion Include="SQLitePCLRaw.bundle_e_sqlite3" Version="3.0.5" />
+    <PackageVersion Include="System.IO.Abstractions" Version="22.1.0" />
     <PackageVersion Include="System.CommandLine" Version="2.0.10" />
     <PackageVersion Include="TUnit" Version="1.44.39" />
     <PackageVersion Include="Novolis.Xsd.Generator" Version="2026.1.*" />
+    <PackageVersion Include="Novolis.Workspaces.DotNet.Abstractions" Version="2026.1.*" />
+    <PackageVersion Include="Novolis.Workspaces.DotNet.Indexing" Version="2026.1.*" />
+    <PackageVersion Include="Novolis.Workspaces.DotNet.MSBuild" Version="2026.1.*" />
+    <PackageVersion Include="Novolis.Workspaces.DotNet.Slnx" Version="2026.1.*" />
   </ItemGroup>
 </Project>

@@ -43,6 +43,7 @@
 |---------|---------|----------------|
 | `Novolis.Install` | `dotnet add package Novolis.Install` | [README](https://github.com/Novolis-Platform/novolis-tools/blob/main/src/Novolis.Install/README.md) |
 | `Novolis.Manuscript.Cli` | `dotnet add package Novolis.Manuscript.Cli` | [README](https://github.com/Novolis-Platform/novolis-tools/blob/main/src/Novolis.Manuscript.Cli/README.md) |
+| `Novolis.Solution.Tool` | `dotnet add package Novolis.Solution.Tool` | [README](https://github.com/Novolis-Platform/novolis-tools/blob/main/src/Novolis.Solution.Tool/README.md) |
 | `Novolis.Tools.Cli` | `dotnet add package Novolis.Tools.Cli` | [README](https://github.com/Novolis-Platform/novolis-tools/blob/main/src/Novolis.Tools.Cli/README.md) |
 | `Novolis.Tools.Coverage` | `dotnet add package Novolis.Tools.Coverage` | [README](https://github.com/Novolis-Platform/novolis-tools/blob/main/src/Novolis.Tools.Coverage/README.md) |
 | `Novolis.Tools.Coverage.Cli` | `dotnet add package Novolis.Tools.Coverage.Cli` | [README](https://github.com/Novolis-Platform/novolis-tools/blob/main/src/Novolis.Tools.Coverage.Cli/README.md) |
@@ -98,6 +99,7 @@ flowchart TB
 | `Novolis.Tools.MarkdownPdf` | Markdown → PDF themes over Documents.Skia |
 | `Novolis.Tools.MarkdownPdf.Cli` | `novolis-mdpdf` tool (`themes` / `convert`) |
 | `Novolis.Manuscript.Cli` | `novolis-manuscript` manuscript surgery, metrics, print, and audiobook commands |
+| `Novolis.Solution.Tool` | `novolis-solution` typed SLNX topology and catalog queries |
 | `Novolis.Xsd.Tool` | `novolis-xsd` XSD / UBL / Peppol source generation |
 | `Novolis.Install` | `novolis` registry search, diagnostics, and package lifecycle command |
 

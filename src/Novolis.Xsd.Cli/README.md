@@ -13,6 +13,8 @@
 The tool host lives in `novolis-tools`; pass the checked-out `novolis-xsd`
 repository with `--repo` when generating source files.
 
+## Quick start
+
 ```powershell
 dotnet run --project d:\novolis\novolis-tools\src\Novolis.Xsd.Cli\Novolis.Xsd.Tool.csproj -- ubl --repo d:\novolis\novolis-xsd
 dotnet run --project d:\novolis\novolis-tools\src\Novolis.Xsd.Cli\Novolis.Xsd.Tool.csproj -- ubl-base --repo d:\novolis\novolis-xsd

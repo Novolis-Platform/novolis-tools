@@ -4,6 +4,10 @@
       "path": "src/Novolis.Tools.Cli",
       "description": "Shared Spectre.Console helpers for Novolis developer CLIs"
     },
+    "Novolis.Solution.Tool": {
+      "path": "src/Novolis.Solution.Tool",
+      "description": "dotnet tool novolis-solution — typed SLNX topology and catalog queries"
+    },
     "Novolis.Tools.Coverage": {
       "path": "src/Novolis.Tools.Coverage",
       "description": "MTP Cobertura collection and ReportGenerator merge helpers"

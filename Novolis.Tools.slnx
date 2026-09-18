@@ -1,6 +1,7 @@
 <Solution>
   <Folder Name="/src/">
     <Project Path="src/Novolis.Manuscript.Cli/Novolis.Manuscript.Cli.csproj" />
+    <Project Path="src/Novolis.Solution.Tool/Novolis.Solution.Tool.csproj" />
     <Project Path="src/Novolis.Xsd.Cli/Novolis.Xsd.Tool.csproj" />
     <Project Path="src/Novolis.Install/Novolis.Install.csproj" />
     <Project Path="src/Novolis.Tools.Cli/Novolis.Tools.Cli.csproj" />

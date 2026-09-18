@@ -19,6 +19,8 @@ dotnet add package Novolis.Tools.Coverage --version 2026.1.*
 dotnet tool install --global Novolis.Tools.Coverage.Cli --version 2026.1.*
 ```
 
+## Quick start
+
 ## Collect (library)
 
 ```csharp

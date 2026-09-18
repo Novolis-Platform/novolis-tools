@@ -16,6 +16,10 @@ Shared Spectre.Console chrome for Novolis developer CLIs: result tables, help pa
 dotnet add package Novolis.Tools.Cli --version 2026.1.*
 ```
 
+## Quick start
+
+Use `ResultPrinter` and `DotHelp` in a command host to provide consistent table, JSON, and help output.
+
 ## API
 
 | Type | Role |
