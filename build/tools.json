@@ -1,0 +1,118 @@
+{
+  "schemaVersion": 1,
+  "catalogVersion": "2026.1.0",
+  "repository": "novolis-tools",
+  "tools": [
+    {
+      "key": "docs",
+      "displayName": "Novolis Docs",
+      "project": "src/Novolis.Tools.Docs.Cli/Novolis.Tools.Docs.Cli.csproj",
+      "packageId": "Novolis.Tools.Docs.Cli",
+      "command": "novolis-docs",
+      "tests": [
+        "tests/Novolis.Tools.Docs.Unit/Novolis.Tools.Docs.Unit.csproj"
+      ],
+      "changedPathGlobs": [
+        "src/Novolis.Tools.Docs.Cli/**",
+        "src/Novolis.Tools.Docs/**",
+        "tests/Novolis.Tools.Docs.Unit/**"
+      ]
+    },
+    {
+      "key": "coverage",
+      "displayName": "Novolis Coverage",
+      "project": "src/Novolis.Tools.Coverage.Cli/Novolis.Tools.Coverage.Cli.csproj",
+      "packageId": "Novolis.Tools.Coverage.Cli",
+      "command": "novolis-coverage",
+      "tests": [
+        "tests/Novolis.Tools.Coverage.Unit/Novolis.Tools.Coverage.Unit.csproj"
+      ],
+      "changedPathGlobs": [
+        "src/Novolis.Tools.Coverage.Cli/**",
+        "src/Novolis.Tools.Coverage/**",
+        "tests/Novolis.Tools.Coverage.Unit/**"
+      ]
+    },
+    {
+      "key": "markdown-pdf",
+      "displayName": "Novolis Markdown PDF",
+      "project": "src/Novolis.Tools.MarkdownPdf.Cli/Novolis.Tools.MarkdownPdf.Cli.csproj",
+      "packageId": "Novolis.Tools.MarkdownPdf.Cli",
+      "command": "novolis-mdpdf",
+      "tests": [
+        "tests/Novolis.Tools.MarkdownPdf.Unit/Novolis.Tools.MarkdownPdf.Unit.csproj"
+      ],
+      "changedPathGlobs": [
+        "src/Novolis.Tools.MarkdownPdf.Cli/**",
+        "src/Novolis.Tools.MarkdownPdf/**",
+        "tests/Novolis.Tools.MarkdownPdf.Unit/**"
+      ]
+    },
+    {
+      "key": "sqlite",
+      "displayName": "Novolis SQLite",
+      "project": "src/Novolis.Tools.Sqlite.Cli/Novolis.Tools.Sqlite.Cli.csproj",
+      "packageId": "Novolis.Tools.Sqlite.Cli",
+      "command": "novolis-sqlite",
+      "tests": [
+        "tests/Novolis.Tools.Sqlite.Unit/Novolis.Tools.Sqlite.Unit.csproj"
+      ],
+      "changedPathGlobs": [
+        "src/Novolis.Tools.Sqlite.Cli/**",
+        "src/Novolis.Tools.Sqlite/**",
+        "tests/Novolis.Tools.Sqlite.Unit/**"
+      ]
+    },
+    {
+      "key": "litedb",
+      "displayName": "Novolis LiteDB",
+      "project": "src/Novolis.Tools.LiteDb.Cli/Novolis.Tools.LiteDb.Cli.csproj",
+      "packageId": "Novolis.Tools.LiteDb.Cli",
+      "command": "novolis-litedb",
+      "tests": [
+        "tests/Novolis.Tools.LiteDb.Unit/Novolis.Tools.LiteDb.Unit.csproj"
+      ],
+      "changedPathGlobs": [
+        "src/Novolis.Tools.LiteDb.Cli/**",
+        "src/Novolis.Tools.LiteDb/**",
+        "tests/Novolis.Tools.LiteDb.Unit/**"
+      ]
+    },
+    {
+      "key": "manuscript",
+      "displayName": "Novolis Manuscript",
+      "project": "src/Novolis.Manuscript.Cli/Novolis.Manuscript.Cli.csproj",
+      "packageId": "Novolis.Manuscript.Cli",
+      "command": "novolis-manuscript",
+      "tests": [],
+      "changedPathGlobs": [
+        "src/Novolis.Manuscript.Cli/**",
+        "Directory.Packages.props"
+      ]
+    },
+    {
+      "key": "xsd",
+      "displayName": "Novolis XSD",
+      "project": "src/Novolis.Xsd.Cli/Novolis.Xsd.Tool.csproj",
+      "packageId": "Novolis.Xsd.Tool",
+      "command": "novolis-xsd",
+      "tests": [],
+      "changedPathGlobs": [
+        "src/Novolis.Xsd.Cli/**",
+        "Directory.Packages.props"
+      ]
+    },
+    {
+      "key": "install",
+      "displayName": "Novolis Install",
+      "project": "src/Novolis.Install/Novolis.Install.csproj",
+      "packageId": "Novolis.Install",
+      "command": "novolis",
+      "tests": [],
+      "changedPathGlobs": [
+        "src/Novolis.Install/**",
+        "Directory.Packages.props"
+      ]
+    }
+  ]
+}

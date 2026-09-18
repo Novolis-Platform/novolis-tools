@@ -1,3 +1,11 @@
+<!-- novolis-pkg-brand:start -->
+<p align="center">
+  <a href="https://github.com/Novolis-Platform/novolis-tools">
+    <img src="https://raw.githubusercontent.com/Novolis-Platform/.github/main/brand/logo-icon.svg" width="72" alt="Novolis"/>
+  </a>
+</p>
+<!-- novolis-pkg-brand:end -->
+
 # Novolis.Tools.Sqlite
 
 Session helpers for ad-hoc SQLite inspection — the same engine stack as `Novolis.Storage.Sqlite`, without the repository abstractions.
@@ -57,3 +65,4 @@ Interactive use: install `Novolis.Tools.Sqlite.Cli` and run `novolis-sqlite`.
 
 - [Getting started](https://github.com/Novolis-Platform/novolis-tools/blob/main/docs/getting-started.md)
 - [Design](https://github.com/Novolis-Platform/novolis-tools/blob/main/docs/design.md)
+

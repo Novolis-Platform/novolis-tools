@@ -1,0 +1,12 @@
+<Solution>
+  <Folder Name="/src/">
+    <Project Path="src/Novolis.Install/Novolis.Install.csproj" />
+    <Project Path="src/Novolis.Manuscript.Cli/Novolis.Manuscript.Cli.csproj" />
+    <Project Path="src/Novolis.Tools.Coverage.Cli/Novolis.Tools.Coverage.Cli.csproj" />
+    <Project Path="src/Novolis.Tools.Docs.Cli/Novolis.Tools.Docs.Cli.csproj" />
+    <Project Path="src/Novolis.Tools.LiteDb.Cli/Novolis.Tools.LiteDb.Cli.csproj" />
+    <Project Path="src/Novolis.Tools.MarkdownPdf.Cli/Novolis.Tools.MarkdownPdf.Cli.csproj" />
+    <Project Path="src/Novolis.Tools.Sqlite.Cli/Novolis.Tools.Sqlite.Cli.csproj" />
+    <Project Path="src/Novolis.Xsd.Cli/Novolis.Xsd.Tool.csproj" />
+  </Folder>
+</Solution>

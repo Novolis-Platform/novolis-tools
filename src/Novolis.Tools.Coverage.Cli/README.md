@@ -1,3 +1,11 @@
+<!-- novolis-pkg-brand:start -->
+<p align="center">
+  <a href="https://github.com/Novolis-Platform/novolis-tools">
+    <img src="https://raw.githubusercontent.com/Novolis-Platform/.github/main/brand/logo-icon.svg" width="72" alt="Novolis"/>
+  </a>
+</p>
+<!-- novolis-pkg-brand:end -->
+
 # Novolis.Tools.Coverage.Cli
 
 `novolis-coverage` — collect MTP Cobertura across Novolis repos / `Novolis.Platform.slnx`,
@@ -64,3 +72,4 @@ HTML entry: `<workspace>/COVERAGE.html` (single-file summary + risk hotspots, ne
 | `--open` | Open the HTML report (Windows) |
 
 Governance PowerShell (`get-coverage-report.ps1`) remains for CI; this tool is the local/agent entrypoint.
+

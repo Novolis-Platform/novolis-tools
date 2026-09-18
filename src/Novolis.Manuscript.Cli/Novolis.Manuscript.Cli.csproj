@@ -1,0 +1,25 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+    <PackAsTool>true</PackAsTool>
+    <ToolCommandName>novolis-manuscript</ToolCommandName>
+    <PackageId>Novolis.Manuscript.Cli</PackageId>
+    <IsPackable>true</IsPackable>
+    <RootNamespace>Novolis.Manuscript.Cli</RootNamespace>
+    <Description>CLI for manuscript book surgery, audiobook generation, print, metrics, and editorial lint.</Description>
+    <GenerateDocumentationFile>false</GenerateDocumentationFile>
+    <NoWarn>$(NoWarn);CS1591</NoWarn>
+  </PropertyGroup>
+  <ItemGroup>
+    <PackageReference Include="Azure.Core" />
+    <PackageReference Include="Novolis.Audio.Voice.AzureSpeech" />
+    <PackageReference Include="Novolis.IO.Paths" />
+    <PackageReference Include="Novolis.Manuscript" />
+    <PackageReference Include="Novolis.Manuscript.Editorial" />
+    <PackageReference Include="Novolis.Manuscript.Export.Audio" />
+    <PackageReference Include="Novolis.Manuscript.Export.Markdown" />
+    <PackageReference Include="Novolis.Manuscript.Export.Pdf" />
+    <PackageReference Include="Novolis.Manuscript.IO" />
+    <PackageReference Include="Novolis.Manuscript.Metrics" />
+  </ItemGroup>
+</Project>

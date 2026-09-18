@@ -2,13 +2,71 @@ name: Pull request
 on:
   pull_request:
     branches: [main]
+
 concurrency:
-  group: pr-${{ github.workflow }}-${{ github.ref }}
+  group: tools-pr-${{ github.workflow }}-${{ github.ref }}
   cancel-in-progress: true
+
+permissions:
+  contents: read
+  packages: read
+
 jobs:
-  ci:
-    uses: Novolis-Platform/novolis-workflows/.github/workflows/dotnet-pull-request.yml@main
-    secrets: inherit
-    permissions:
-      contents: read
-      packages: read
+  detect:
+    runs-on: ubuntu-latest
+    outputs:
+      matrix: ${{ steps.matrix.outputs.matrix }}
+      skip_build: ${{ steps.matrix.outputs.skip_build }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - uses: Novolis-Platform/novolis-workflows/actions/setup-dotnet@main
+        with:
+          dotnet-version: 10.0.x
+      - name: Resolve changed-tool matrix
+        id: matrix
+        shell: bash
+        run: |
+          set -euo pipefail
+          git diff --name-only "${{ github.event.pull_request.base.sha }}...${{ github.sha }}" > /tmp/changed-files.txt || true
+          dotnet run --project tools/ToolsManifest/ToolsManifest.csproj --no-launch-profile -- \
+            ci-matrix --repo "$GITHUB_WORKSPACE" --changed-files /tmp/changed-files.txt \
+            > /tmp/matrix.json
+          echo "matrix=$(jq -c '.include' /tmp/matrix.json)" >> "$GITHUB_OUTPUT"
+          echo "skip_build=$(jq -r '.skip_build' /tmp/matrix.json)" >> "$GITHUB_OUTPUT"
+          cat /tmp/matrix.json
+
+  build:
+    needs: detect
+    if: needs.detect.outputs.skip_build != 'true'
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        include: ${{ fromJson(needs.detect.outputs.matrix) }}
+    concurrency:
+      group: tools-pr-build-${{ matrix.key }}-${{ github.ref }}
+      cancel-in-progress: true
+    steps:
+      - uses: actions/checkout@v4
+      - uses: Novolis-Platform/novolis-workflows/actions/setup-dotnet@main
+        with:
+          dotnet-version: 10.0.x
+      - uses: Novolis-Platform/novolis-workflows/actions/authenticate-github-packages@main
+        with:
+          token: ${{ github.token }}
+      - name: Restore and build tool
+        run: |
+          set -euo pipefail
+          dotnet restore "${{ matrix.project }}"
+          dotnet build "${{ matrix.project }}" --no-restore -c Release
+      - name: Test tool scope
+        env:
+          TESTS_JSON: ${{ toJson(matrix.tests) }}
+        run: |
+          set -euo pipefail
+          while IFS= read -r test; do
+            [ -n "$test" ] || continue
+            dotnet test "$test" --no-build -c Release
+          done < <(jq -r '.[]' <<< "$TESTS_JSON")

@@ -1,0 +1,17 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+    <PackAsTool>true</PackAsTool>
+    <ToolCommandName>novolis-xsd</ToolCommandName>
+    <PackageId>Novolis.Xsd.Tool</PackageId>
+    <IsPackable>true</IsPackable>
+    <RootNamespace>Novolis.Xsd.Tool</RootNamespace>
+    <Description>dotnet tool to generate C# from UBL/Peppol XSDs into Novolis.Xsd packages.</Description>
+    <PackageTags>xsd;ubl;tool;novolis</PackageTags>
+    <PackageReadmeFile>README.md</PackageReadmeFile>
+  </PropertyGroup>
+  <ItemGroup>
+    <None Include="README.md" Pack="true" PackagePath="\" />
+    <PackageReference Include="Novolis.Xsd.Generator" />
+  </ItemGroup>
+</Project>

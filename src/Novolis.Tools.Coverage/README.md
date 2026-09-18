@@ -1,3 +1,11 @@
+<!-- novolis-pkg-brand:start -->
+<p align="center">
+  <a href="https://github.com/Novolis-Platform/novolis-tools">
+    <img src="https://raw.githubusercontent.com/Novolis-Platform/.github/main/brand/logo-icon.svg" width="72" alt="Novolis"/>
+  </a>
+</p>
+<!-- novolis-pkg-brand:end -->
+
 # Novolis.Tools.Coverage
 
 Library for org / Platform.slnx Cobertura collection, package gap analysis, CRAP (Change Risk Anti-Patterns) scoring, and line+branch gates.
@@ -71,3 +79,4 @@ novolis-coverage crap --out d:\novolis\CRAP.md --throttle 8
 ## Test authoring
 
 For public-API smoke helpers while closing gaps, see `Novolis.Testing.Coverage`.
+

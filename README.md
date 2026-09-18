@@ -41,17 +41,22 @@
 
 | Package | Install | Package README |
 |---------|---------|----------------|
+| `Novolis.Install` | `dotnet add package Novolis.Install` | [README](https://github.com/Novolis-Platform/novolis-tools/blob/main/src/Novolis.Install/README.md) |
+| `Novolis.Manuscript.Cli` | `dotnet add package Novolis.Manuscript.Cli` | [README](https://github.com/Novolis-Platform/novolis-tools/blob/main/src/Novolis.Manuscript.Cli/README.md) |
 | `Novolis.Tools.Cli` | `dotnet add package Novolis.Tools.Cli` | [README](https://github.com/Novolis-Platform/novolis-tools/blob/main/src/Novolis.Tools.Cli/README.md) |
 | `Novolis.Tools.Coverage` | `dotnet add package Novolis.Tools.Coverage` | [README](https://github.com/Novolis-Platform/novolis-tools/blob/main/src/Novolis.Tools.Coverage/README.md) |
-| `Novolis.Tools.Coverage.Cli` | `dotnet tool install -g Novolis.Tools.Coverage.Cli` | [README](https://github.com/Novolis-Platform/novolis-tools/blob/main/src/Novolis.Tools.Coverage.Cli/README.md) |
+| `Novolis.Tools.Coverage.Cli` | `dotnet add package Novolis.Tools.Coverage.Cli` | [README](https://github.com/Novolis-Platform/novolis-tools/blob/main/src/Novolis.Tools.Coverage.Cli/README.md) |
 | `Novolis.Tools.Docs` | `dotnet add package Novolis.Tools.Docs` | [README](https://github.com/Novolis-Platform/novolis-tools/blob/main/src/Novolis.Tools.Docs/README.md) |
-| `Novolis.Tools.Docs.Cli` | `dotnet tool install -g Novolis.Tools.Docs.Cli` | [README](https://github.com/Novolis-Platform/novolis-tools/blob/main/src/Novolis.Tools.Docs.Cli/README.md) |
-| `Novolis.Tools.Sqlite` | `dotnet add package Novolis.Tools.Sqlite` | [README](https://github.com/Novolis-Platform/novolis-tools/blob/main/src/Novolis.Tools.Sqlite/README.md) |
-| `Novolis.Tools.Sqlite.Cli` | `dotnet tool install -g Novolis.Tools.Sqlite.Cli` | [README](https://github.com/Novolis-Platform/novolis-tools/blob/main/src/Novolis.Tools.Sqlite.Cli/README.md) |
+| `Novolis.Tools.Docs.Cli` | `dotnet add package Novolis.Tools.Docs.Cli` | [README](https://github.com/Novolis-Platform/novolis-tools/blob/main/src/Novolis.Tools.Docs.Cli/README.md) |
 | `Novolis.Tools.LiteDb` | `dotnet add package Novolis.Tools.LiteDb` | [README](https://github.com/Novolis-Platform/novolis-tools/blob/main/src/Novolis.Tools.LiteDb/README.md) |
-| `Novolis.Tools.LiteDb.Cli` | `dotnet tool install -g Novolis.Tools.LiteDb.Cli` | [README](https://github.com/Novolis-Platform/novolis-tools/blob/main/src/Novolis.Tools.LiteDb.Cli/README.md) |
+| `Novolis.Tools.LiteDb.Cli` | `dotnet add package Novolis.Tools.LiteDb.Cli` | [README](https://github.com/Novolis-Platform/novolis-tools/blob/main/src/Novolis.Tools.LiteDb.Cli/README.md) |
 | `Novolis.Tools.MarkdownPdf` | `dotnet add package Novolis.Tools.MarkdownPdf` | [README](https://github.com/Novolis-Platform/novolis-tools/blob/main/src/Novolis.Tools.MarkdownPdf/README.md) |
-| `Novolis.Tools.MarkdownPdf.Cli` | `dotnet tool install -g Novolis.Tools.MarkdownPdf.Cli` | [README](https://github.com/Novolis-Platform/novolis-tools/blob/main/src/Novolis.Tools.MarkdownPdf.Cli/README.md) |
+| `Novolis.Tools.MarkdownPdf.Cli` | `dotnet add package Novolis.Tools.MarkdownPdf.Cli` | [README](https://github.com/Novolis-Platform/novolis-tools/blob/main/src/Novolis.Tools.MarkdownPdf.Cli/README.md) |
+| `Novolis.Tools.Sqlite` | `dotnet add package Novolis.Tools.Sqlite` | [README](https://github.com/Novolis-Platform/novolis-tools/blob/main/src/Novolis.Tools.Sqlite/README.md) |
+| `Novolis.Tools.Sqlite.Cli` | `dotnet add package Novolis.Tools.Sqlite.Cli` | [README](https://github.com/Novolis-Platform/novolis-tools/blob/main/src/Novolis.Tools.Sqlite.Cli/README.md) |
+| `Novolis.Xsd.Tool` | `dotnet add package Novolis.Xsd.Tool` | [README](https://github.com/Novolis-Platform/novolis-tools/blob/main/src/Novolis.Xsd.Cli/README.md) |
+
+For NuGet.org and Visual Studio, the **embedded** README.md inside each package is authoritative.
 
 <!-- novolis-package-index:end -->
 # novolis-tools
@@ -92,6 +97,9 @@ flowchart TB
 | `Novolis.Tools.LiteDb.Cli` | `novolis-litedb` Spectre REPL |
 | `Novolis.Tools.MarkdownPdf` | Markdown → PDF themes over Documents.Skia |
 | `Novolis.Tools.MarkdownPdf.Cli` | `novolis-mdpdf` tool (`themes` / `convert`) |
+| `Novolis.Manuscript.Cli` | `novolis-manuscript` manuscript surgery, metrics, print, and audiobook commands |
+| `Novolis.Xsd.Tool` | `novolis-xsd` XSD / UBL / Peppol source generation |
+| `Novolis.Install` | `novolis` registry search, diagnostics, and package lifecycle command |
 
 ## Quick start
 
@@ -103,6 +111,9 @@ dotnet run --project d:\novolis\novolis-tools\src\Novolis.Tools.MarkdownPdf.Cli 
 dotnet run --project d:\novolis\novolis-tools\src\Novolis.Tools.Coverage.Cli -- collect --platform --skip-build --fail-below -1 --out d:\novolis\coverage
 dotnet run --project d:\novolis\novolis-tools\src\Novolis.Tools.Sqlite.Cli -- :memory: -c "SELECT 'ok' AS status;"
 dotnet run --project d:\novolis\novolis-tools\src\Novolis.Tools.LiteDb.Cli -- :memory: -c "INSERT INTO t VALUES {_id: 1, status: \"ok\"}; SELECT $ FROM t;"
+dotnet run --project d:\novolis\novolis-tools\src\Novolis.Manuscript.Cli -- book list-books --workspace D:\repos\books
+dotnet run --project d:\novolis\novolis-tools\src\Novolis.Xsd.Cli -- --help
+dotnet run --project d:\novolis\novolis-tools\src\Novolis.Install -- doctor
 ```
 
 ## Build

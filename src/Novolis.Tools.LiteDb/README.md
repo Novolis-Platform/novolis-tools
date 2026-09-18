@@ -1,3 +1,11 @@
+<!-- novolis-pkg-brand:start -->
+<p align="center">
+  <a href="https://github.com/Novolis-Platform/novolis-tools">
+    <img src="https://raw.githubusercontent.com/Novolis-Platform/.github/main/brand/logo-icon.svg" width="72" alt="Novolis"/>
+  </a>
+</p>
+<!-- novolis-pkg-brand:end -->
+
 # Novolis.Tools.LiteDb
 
 Session helpers for ad-hoc LiteDB inspection — the same engine and connection-string conventions as `Novolis.Storage.LiteDb`, without the repository abstractions.
@@ -60,3 +68,4 @@ Interactive use: install `Novolis.Tools.LiteDb.Cli` and run `novolis-litedb`.
 
 - [Getting started](https://github.com/Novolis-Platform/novolis-tools/blob/main/docs/getting-started.md)
 - [Design](https://github.com/Novolis-Platform/novolis-tools/blob/main/docs/design.md)
+

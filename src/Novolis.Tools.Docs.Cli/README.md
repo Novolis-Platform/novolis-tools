@@ -1,3 +1,11 @@
+<!-- novolis-pkg-brand:start -->
+<p align="center">
+  <a href="https://github.com/Novolis-Platform/novolis-tools">
+    <img src="https://raw.githubusercontent.com/Novolis-Platform/.github/main/brand/logo-icon.svg" width="72" alt="Novolis"/>
+  </a>
+</p>
+<!-- novolis-pkg-brand:end -->
+
 # Novolis.Tools.Docs.Cli
 
 `novolis-docs` — scaffold Markdown documentation packs, emit Mermaid relationship graphs from `.csproj` trees, and build multi-repo `docs/` HTML sites.
@@ -28,3 +36,4 @@ novolis-docs site --corpus d:\novolis\.github\corpus --out d:\novolis\.github\_s
 ```powershell
 dotnet run --project d:\novolis\novolis-tools\src\Novolis.Tools.Docs.Cli -- scaffold --title Demo --out d:\temp\demo-docs
 ```
+

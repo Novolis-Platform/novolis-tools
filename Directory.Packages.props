@@ -5,10 +5,22 @@
   </PropertyGroup>
   <ItemGroup>
     <PackageVersion Include="LiteDB" Version="5.0.21" />
+    <PackageVersion Include="Azure.Core" Version="1.53.0" />
     <PackageVersion Include="Microsoft.Data.Sqlite" Version="10.0.10" />
     <PackageVersion Include="Microsoft.SourceLink.GitHub" Version="10.0.401" />
     <PackageVersion Include="Novolis.Documents" Version="2026.1.*" />
     <PackageVersion Include="Novolis.Documents.Skia" Version="2026.1.*" />
+    <PackageVersion Include="Novolis.Audio.Voice.AzureSpeech" Version="2026.1.*" />
+    <PackageVersion Include="Novolis.IO.Git" Version="2026.1.*" />
+    <PackageVersion Include="Novolis.IO.GitHub" Version="2026.1.*" />
+    <PackageVersion Include="Novolis.IO.Paths" Version="2026.1.*" />
+    <PackageVersion Include="Novolis.Manuscript" Version="2026.1.*" />
+    <PackageVersion Include="Novolis.Manuscript.Editorial" Version="2026.1.*" />
+    <PackageVersion Include="Novolis.Manuscript.Export.Audio" Version="2026.1.*" />
+    <PackageVersion Include="Novolis.Manuscript.Export.Markdown" Version="2026.1.*" />
+    <PackageVersion Include="Novolis.Manuscript.Export.Pdf" Version="2026.1.*" />
+    <PackageVersion Include="Novolis.Manuscript.IO" Version="2026.1.*" />
+    <PackageVersion Include="Novolis.Manuscript.Metrics" Version="2026.1.*" />
     <PackageVersion Include="Novolis.Markup.Markdown" Version="2026.1.*" />
     <PackageVersion Include="Novolis.Markup.Markdown.Documents" Version="2026.1.*" />
     <PackageVersion Include="Novolis.Markup.Markdown.Rendering" Version="2026.1.*" />
@@ -23,5 +35,6 @@
     <PackageVersion Include="SQLitePCLRaw.bundle_e_sqlite3" Version="3.0.5" />
     <PackageVersion Include="System.CommandLine" Version="2.0.10" />
     <PackageVersion Include="TUnit" Version="1.44.39" />
+    <PackageVersion Include="Novolis.Xsd.Generator" Version="2026.1.*" />
   </ItemGroup>
 </Project>

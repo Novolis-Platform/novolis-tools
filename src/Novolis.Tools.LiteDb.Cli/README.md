@@ -1,3 +1,11 @@
+<!-- novolis-pkg-brand:start -->
+<p align="center">
+  <a href="https://github.com/Novolis-Platform/novolis-tools">
+    <img src="https://raw.githubusercontent.com/Novolis-Platform/.github/main/brand/logo-icon.svg" width="72" alt="Novolis"/>
+  </a>
+</p>
+<!-- novolis-pkg-brand:end -->
+
 # Novolis.Tools.LiteDb.Cli
 
 `novolis-litedb` — Spectre LiteDB shell REPL with pit-of-success defaults.
@@ -27,3 +35,4 @@ dotnet run --project d:\novolis\novolis-tools\src\Novolis.Tools.LiteDb.Cli -- :m
 ```
 
 Inside the REPL: `.help`, `.help collections`, `.info`, `.export out.json`.
+
