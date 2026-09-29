@@ -1,0 +1,19 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+    <PackageId>Novolis.Tools.Android.Cli</PackageId>
+    <Description>dotnet tool novolis-android — reliable Android device deployment and diagnostics.</Description>
+    <IsPackable>true</IsPackable>
+    <PackAsTool>true</PackAsTool>
+    <ToolCommandName>novolis-android</ToolCommandName>
+    <RootNamespace>Novolis.Tools.Android.Cli</RootNamespace>
+    <PackageTags>novolis;android;adb;cli;dotnet-tool;diagnostics</PackageTags>
+    <PackageReadmeFile>README.md</PackageReadmeFile>
+  </PropertyGroup>
+  <ItemGroup>
+    <None Include="README.md" Pack="true" PackagePath="\" />
+    <LibraryReference Include="Novolis.IO.Mobile.Android" />
+    <ProjectReference Include="..\Novolis.Tools.Cli\Novolis.Tools.Cli.csproj" />
+    <PackageReference Include="System.CommandLine" />
+  </ItemGroup>
+</Project>

@@ -4,6 +4,21 @@
   "repository": "novolis-tools",
   "tools": [
     {
+      "key": "android",
+      "displayName": "Novolis Android",
+      "project": "src/Novolis.Tools.Android.Cli/Novolis.Tools.Android.Cli.csproj",
+      "packageId": "Novolis.Tools.Android.Cli",
+      "command": "novolis-android",
+      "tests": [
+        "tests/Novolis.Tools.Android.Unit/Novolis.Tools.Android.Unit.csproj"
+      ],
+      "changedPathGlobs": [
+        "src/Novolis.Tools.Android.Cli/**",
+        "tests/Novolis.Tools.Android.Unit/**",
+        "Directory.Packages.props"
+      ]
+    },
+    {
       "key": "docs",
       "displayName": "Novolis Docs",
       "project": "src/Novolis.Tools.Docs.Cli/Novolis.Tools.Docs.Cli.csproj",
