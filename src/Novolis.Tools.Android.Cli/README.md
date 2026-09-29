@@ -1,4 +1,4 @@
-# Novolis Android
+# Novolis.Tools.Android.Cli
 
 `novolis-android` is the host-side Android deployment and diagnostics command
 for Novolis developers. It uses `Novolis.IO.Mobile.Android` and the local
