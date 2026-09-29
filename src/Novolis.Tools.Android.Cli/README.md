@@ -15,7 +15,7 @@ Android SDK platform-tools installation.
 ```powershell
 novolis-android doctor
 novolis-android devices
-novolis-android app install d:\build\ReadAloud.apk --package com.novolis.readaloud --launch
+novolis-android app install d:\build\ReadAloud.apk --package com.novolis.readaloud --launch --yes
 novolis-android logcat --package com.novolis.readaloud
 novolis-android screen shot d:\evidence\readaloud.png
 novolis-android ui dump d:\evidence\readaloud.xml
@@ -23,4 +23,5 @@ novolis-android diagnostics collect d:\evidence\readaloud --package com.novolis.
 ```
 
 Use `--json` for automation. Destructive actions require `--yes`, and
-diagnostic output is redacted by default.
+diagnostic output is redacted by default. The `info` command also redacts
+device identifiers; use `--raw` only for local troubleshooting.

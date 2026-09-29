@@ -6,31 +6,43 @@ using Novolis.Tools.Cli;
 var serialOption = new Option<string?>("--serial")
 {
     Description = "Target device serial. Required when several ready devices exist.",
+    Recursive = true,
 };
 var jsonOption = new Option<bool>("--json")
 {
     Description = "Write one JSON document instead of human-readable output.",
     DefaultValueFactory = _ => false,
+    Recursive = true,
 };
 var timeoutOption = new Option<int>("--timeout")
 {
     Description = "Operation timeout in seconds (default: 45).",
     DefaultValueFactory = _ => 45,
+    Recursive = true,
 };
 var yesOption = new Option<bool>("--yes")
 {
     Description = "Confirm a destructive or text-injection action.",
     DefaultValueFactory = _ => false,
+    Recursive = true,
 };
 var quietOption = new Option<bool>("--quiet")
 {
     Description = "Suppress successful status details where possible.",
     DefaultValueFactory = _ => false,
+    Recursive = true,
 };
 var noColorOption = new Option<bool>("--no-color")
 {
     Description = "Disable color in host output.",
     DefaultValueFactory = _ => false,
+    Recursive = true,
+};
+var rawOption = new Option<bool>("--raw")
+{
+    Description = "Include device identifiers in info output; avoid for shared evidence.",
+    DefaultValueFactory = _ => false,
+    Recursive = true,
 };
 
 var root = new RootCommand("""
@@ -46,6 +58,7 @@ var root = new RootCommand("""
     yesOption,
     quietOption,
     noColorOption,
+    rawOption,
 };
 
 var doctor = new Command("doctor", "Check adb, the server, SDK discovery, and device authorization.");
@@ -103,13 +116,16 @@ info.SetAction(async (parseResult, cancellationToken) =>
                 () => adb.GetDeviceInfo(target.Device!.Serial),
                 cancellationToken)
             .ConfigureAwait(false);
+        var outputReport = parseResult.GetValue(rawOption)
+            ? report
+            : AndroidOutputRedactor.RedactDeviceInfo(report);
         if (parseResult.GetValue(jsonOption))
         {
-            Console.WriteLine(JsonSerializer.Serialize(report));
+            Console.WriteLine(JsonSerializer.Serialize(outputReport));
         }
         else
         {
-            Console.WriteLine(report.FormatReport());
+            Console.WriteLine(outputReport.FormatReport());
         }
 
         return ExitCodes.Ok;
@@ -196,6 +212,15 @@ appInstall.SetAction(async (parseResult, cancellationToken) =>
             AndroidInputValidator.RequirePackageName(package);
         var adb = new AndroidDebugBridge();
         var installer = new AndroidAppInstaller(adb);
+        var preflight = installer.ValidateApk(apk);
+        if (!preflight.Ok)
+            return Fail(
+                parseResult,
+                new AndroidFailure(
+                    AndroidFailureKind.InvalidInput,
+                    string.Join("; ", preflight.Errors)));
+        if (!Confirm(parseResult, $"install/overwrite {package ?? Path.GetFileName(apk)}"))
+            return ExitCodes.Failure;
         var result = await installer.InstallAsync(
                 apk,
                 new ApkInstallOptions

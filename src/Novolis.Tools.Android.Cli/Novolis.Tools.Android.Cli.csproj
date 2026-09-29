@@ -11,7 +11,6 @@
     <PackageReadmeFile>README.md</PackageReadmeFile>
   </PropertyGroup>
   <ItemGroup>
-    <None Include="README.md" Pack="true" PackagePath="\" />
     <LibraryReference Include="Novolis.IO.Mobile.Android" />
     <ProjectReference Include="..\Novolis.Tools.Cli\Novolis.Tools.Cli.csproj" />
     <PackageReference Include="System.CommandLine" />
