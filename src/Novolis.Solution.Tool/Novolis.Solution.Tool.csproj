@@ -12,10 +12,10 @@
   </PropertyGroup>
   <ItemGroup>
     <None Include="README.md" Pack="true" PackagePath="\" />
-    <PackageReference Include="Novolis.Workspaces.DotNet.Abstractions" />
-    <PackageReference Include="Novolis.Workspaces.DotNet.Indexing" />
-    <PackageReference Include="Novolis.Workspaces.DotNet.MSBuild" />
-    <PackageReference Include="Novolis.Workspaces.DotNet.Slnx" />
+    <LibraryReference Include="Novolis.Workspaces.DotNet.Abstractions" />
+    <LibraryReference Include="Novolis.Workspaces.DotNet.Indexing" />
+    <LibraryReference Include="Novolis.Workspaces.DotNet.MSBuild" />
+    <LibraryReference Include="Novolis.Workspaces.DotNet.Slnx" />
     <PackageReference Include="System.IO.Abstractions" />
   </ItemGroup>
 </Project>

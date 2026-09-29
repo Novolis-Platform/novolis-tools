@@ -12,14 +12,14 @@
   </PropertyGroup>
   <ItemGroup>
     <PackageReference Include="Azure.Core" />
-    <PackageReference Include="Novolis.Audio.Voice.AzureSpeech" />
-    <PackageReference Include="Novolis.IO.Paths" />
-    <PackageReference Include="Novolis.Manuscript" />
-    <PackageReference Include="Novolis.Manuscript.Editorial" />
-    <PackageReference Include="Novolis.Manuscript.Export.Audio" />
-    <PackageReference Include="Novolis.Manuscript.Export.Markdown" />
-    <PackageReference Include="Novolis.Manuscript.Export.Pdf" />
-    <PackageReference Include="Novolis.Manuscript.IO" />
-    <PackageReference Include="Novolis.Manuscript.Metrics" />
+    <LibraryReference Include="Novolis.Audio.Voice.AzureSpeech" />
+    <LibraryReference Include="Novolis.IO.Paths" />
+    <LibraryReference Include="Novolis.Manuscript" />
+    <LibraryReference Include="Novolis.Manuscript.Editorial" />
+    <LibraryReference Include="Novolis.Manuscript.Export.Audio" />
+    <LibraryReference Include="Novolis.Manuscript.Export.Markdown" />
+    <LibraryReference Include="Novolis.Manuscript.Export.Pdf" />
+    <LibraryReference Include="Novolis.Manuscript.IO" />
+    <LibraryReference Include="Novolis.Manuscript.Metrics" />
   </ItemGroup>
 </Project>

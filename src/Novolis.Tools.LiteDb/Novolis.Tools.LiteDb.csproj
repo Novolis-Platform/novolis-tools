@@ -8,7 +8,7 @@
   </PropertyGroup>
   <ItemGroup>
     <PackageReference Include="LiteDB" />
-    <PackageReference Include="Novolis.Storage.LiteDb" />
+    <LibraryReference Include="Novolis.Storage.LiteDb" />
   </ItemGroup>
   <ItemGroup>
     <InternalsVisibleTo Include="Novolis.Tools.LiteDb.Unit" />

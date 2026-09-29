@@ -7,7 +7,7 @@
     <GenerateDocumentationFile>false</GenerateDocumentationFile>
   </PropertyGroup>
   <ItemGroup>
-    <PackageReference Include="Novolis.Storage.Sqlite" />
+    <LibraryReference Include="Novolis.Storage.Sqlite" />
     <PackageReference Include="TUnit" />
     <ProjectReference Include="..\..\src\Novolis.Tools.Sqlite\Novolis.Tools.Sqlite.csproj" />
   </ItemGroup>

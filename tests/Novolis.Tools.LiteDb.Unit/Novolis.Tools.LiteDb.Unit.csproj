@@ -7,7 +7,7 @@
     <GenerateDocumentationFile>false</GenerateDocumentationFile>
   </PropertyGroup>
   <ItemGroup>
-    <PackageReference Include="Novolis.Storage.LiteDb" />
+    <LibraryReference Include="Novolis.Storage.LiteDb" />
     <PackageReference Include="TUnit" />
     <ProjectReference Include="..\..\src\Novolis.Tools.LiteDb\Novolis.Tools.LiteDb.csproj" />
   </ItemGroup>
