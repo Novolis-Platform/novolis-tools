@@ -118,7 +118,25 @@ public static class DocsSiteBuilder
 
         var depth = page.OutputRelativePath.Count(static c => c == '/');
         var assetPrefix = string.Concat(Enumerable.Repeat("../", depth));
-        var html = DocShell(page.Title, page.Repo, article, sidebar, options.Org, assetPrefix);
+        var baseUrl = SiteBaseUrl(options);
+        var bannerStem = DocsRepoCatalog.BannerStem(page.Repo);
+        var bannerRel = $"assets/banners/{bannerStem}.svg";
+        var socialRel = "assets/brand/logo-social.svg";
+        var ogImage = File.Exists(Path.Combine(output, bannerRel.Replace('/', Path.DirectorySeparatorChar)))
+            ? AbsoluteUrl(baseUrl, bannerRel)
+            : File.Exists(Path.Combine(output, socialRel.Replace('/', Path.DirectorySeparatorChar)))
+                ? AbsoluteUrl(baseUrl, socialRel)
+                : null;
+        var html = DocShell(
+            page.Title,
+            page.Repo,
+            article,
+            sidebar,
+            options.Org,
+            assetPrefix,
+            AbsoluteUrl(baseUrl, page.OutputRelativePath.Replace('\\', '/')),
+            $"Novolis documentation for {page.Repo}",
+            ogImage);
         var outFile = Path.Combine(output, page.OutputRelativePath.Replace('/', Path.DirectorySeparatorChar));
         Directory.CreateDirectory(Path.GetDirectoryName(outFile)!);
         File.WriteAllText(outFile, html, Utf8NoBom());
@@ -173,17 +191,22 @@ public static class DocsSiteBuilder
                 """);
         }
 
-        var baseUrl = options.BaseUrl ?? $"https://{options.Org.ToLowerInvariant()}.github.io/.github/";
+        var baseUrl = SiteBaseUrl(options);
+        var socialRel = "assets/brand/logo-social.svg";
+        var ogImage = File.Exists(Path.Combine(output, socialRel.Replace('/', Path.DirectorySeparatorChar)))
+            ? AbsoluteUrl(baseUrl, socialRel)
+            : null;
         return $$"""
             <!doctype html>
             <html lang="en">
             <head>
-              <meta charset="utf-8"/>
-              <meta name="viewport" content="width=device-width, initial-scale=1"/>
-              <meta name="description" content="Novolis documentation site — one docs tree per repository."/>
-              <title>Novolis Docs</title>
-              <link rel="icon" href="assets/brand/favicon.svg"/>
-              <link rel="stylesheet" href="assets/site.css"/>
+              {{PageHead(
+                  "Novolis Docs",
+                  "Novolis documentation site — one docs tree per repository.",
+                  AbsoluteUrl(baseUrl, "index.html"),
+                  "assets/brand/favicon.svg",
+                  string.Empty,
+                  ogImage)}}
             </head>
             <body>
               <header class="topbar">
@@ -239,17 +262,27 @@ public static class DocsSiteBuilder
             """;
     }
 
-    private static string DocShell(string title, string repo, string article, string sidebar, string org, string assetPrefix)
+    private static string DocShell(
+        string title,
+        string repo,
+        string article,
+        string sidebar,
+        string org,
+        string assetPrefix,
+        string canonical,
+        string description,
+        string? ogImage)
         => $"""
             <!doctype html>
             <html lang="en">
             <head>
-              <meta charset="utf-8"/>
-              <meta name="viewport" content="width=device-width, initial-scale=1"/>
-              <meta name="description" content="Novolis documentation for {Html(repo)}"/>
-              <title>{Html(title)} · {Html(repo)} · Novolis Docs</title>
-              <link rel="icon" href="{assetPrefix}assets/brand/favicon.svg"/>
-              <link rel="stylesheet" href="{assetPrefix}assets/site.css"/>
+              {PageHead(
+                  $"{title} · {repo} · Novolis Docs",
+                  description,
+                  canonical,
+                  $"{assetPrefix}assets/brand/favicon.svg",
+                  assetPrefix,
+                  ogImage)}
             </head>
             <body class="docs-site">
               <header class="topbar">
@@ -302,6 +335,12 @@ public static class DocsSiteBuilder
             {
                 File.Copy(src, Path.Combine(brandOut, name), overwrite: true);
             }
+        }
+
+        var social = Path.Combine(options.BrandDirectory, "generated", "logo-social.svg");
+        if (File.Exists(social))
+        {
+            File.Copy(social, Path.Combine(brandOut, "logo-social.svg"), overwrite: true);
         }
 
         var banners = Path.Combine(options.BrandDirectory, "banners");
@@ -427,6 +466,50 @@ public static class DocsSiteBuilder
         }
 
         return null;
+    }
+
+    private static string PageHead(
+        string title,
+        string description,
+        string canonical,
+        string faviconHref,
+        string assetPrefix,
+        string? ogImage)
+    {
+        var og = string.IsNullOrWhiteSpace(ogImage)
+            ? string.Empty
+            : $"""
+              <meta property="og:image" content="{Html(ogImage)}"/>
+              <meta name="twitter:card" content="summary_large_image"/>
+              <meta name="twitter:image" content="{Html(ogImage)}"/>
+              """;
+        return $"""
+            <meta charset="utf-8"/>
+            <meta name="viewport" content="width=device-width, initial-scale=1"/>
+            <meta name="description" content="{Html(description)}"/>
+            <meta name="theme-color" content="#080D1C"/>
+            <title>{Html(title)}</title>
+            <link rel="canonical" href="{Html(canonical)}"/>
+            <link rel="icon" href="{Html(faviconHref)}"/>
+            <link rel="stylesheet" href="{assetPrefix}assets/profile.css"/>
+            <link rel="stylesheet" href="{assetPrefix}assets/site.css"/>
+            <meta property="og:title" content="{Html(title)}"/>
+            <meta property="og:description" content="{Html(description)}"/>
+            <meta property="og:type" content="website"/>
+            <meta property="og:url" content="{Html(canonical)}"/>
+            {og}
+            """;
+    }
+
+    private static string SiteBaseUrl(DocsSiteOptions options) =>
+        string.IsNullOrWhiteSpace(options.BaseUrl)
+            ? $"https://{options.Org.ToLowerInvariant()}.github.io/.github/"
+            : options.BaseUrl.TrimEnd('/') + "/";
+
+    private static string AbsoluteUrl(string baseUrl, string relative)
+    {
+        var root = baseUrl.TrimEnd('/') + "/";
+        return root + relative.Replace('\\', '/').TrimStart('/');
     }
 
     private static string TopicsHtml(IReadOnlyList<string>? topics)

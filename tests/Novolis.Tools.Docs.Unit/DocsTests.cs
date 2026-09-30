@@ -215,4 +215,63 @@ public sealed class DocsSiteBuilderTests
             }
         }
     }
+
+    [Test]
+    public async Task Build_Publishes_Profile_Tokens_And_OpenGraph_Banner()
+    {
+        var root = Path.Combine(Path.GetTempPath(), "novolis-docs-og-" + Guid.NewGuid().ToString("N"));
+        var corpus = Path.Combine(root, "corpus");
+        var output = Path.Combine(root, "site");
+        var assets = Path.Combine(root, "assets");
+        var brand = Path.Combine(root, "brand");
+        try
+        {
+            var docsDir = Path.Combine(corpus, "novolis-sample", "docs");
+            Directory.CreateDirectory(docsDir);
+            Directory.CreateDirectory(assets);
+            Directory.CreateDirectory(Path.Combine(brand, "banners"));
+            Directory.CreateDirectory(Path.Combine(brand, "generated"));
+            await File.WriteAllTextAsync(Path.Combine(docsDir, "README.md"), "# Sample\n\nHello.\n");
+            await File.WriteAllTextAsync(Path.Combine(assets, "profile.css"), ":root { --ngp-background: #080D1C; }\n");
+            await File.WriteAllTextAsync(Path.Combine(assets, "site.css"), "body { background: var(--ngp-background); }\n");
+            await File.WriteAllTextAsync(Path.Combine(brand, "favicon.svg"), "<svg xmlns=\"http://www.w3.org/2000/svg\"/>");
+            await File.WriteAllTextAsync(
+                Path.Combine(brand, "banners", "novolis-sample.svg"),
+                "<svg xmlns=\"http://www.w3.org/2000/svg\"/>");
+            await File.WriteAllTextAsync(
+                Path.Combine(brand, "generated", "logo-social.svg"),
+                "<svg xmlns=\"http://www.w3.org/2000/svg\"/>");
+
+            DocsSiteBuilder.Build(new DocsSiteOptions
+            {
+                CorpusDirectory = corpus,
+                OutputDirectory = output,
+                Org = "Novolis-Platform",
+                AssetsDirectory = assets,
+                BrandDirectory = brand,
+                BaseUrl = "https://novolis-platform.github.io/.github/",
+            });
+
+            await Assert.That(File.Exists(Path.Combine(output, "assets", "profile.css"))).IsTrue();
+            await Assert.That(File.Exists(Path.Combine(output, "assets", "brand", "logo-social.svg"))).IsTrue();
+
+            var catalog = await File.ReadAllTextAsync(Path.Combine(output, "index.html"));
+            await Assert.That(catalog).Contains("assets/profile.css");
+            await Assert.That(catalog).Contains("og:image");
+            await Assert.That(catalog).Contains("assets/brand/logo-social.svg");
+            await Assert.That(catalog).Contains("rel=\"canonical\"");
+            await Assert.That(catalog).Contains("theme-color");
+
+            var landing = await File.ReadAllTextAsync(Path.Combine(output, "novolis-sample", "index.html"));
+            await Assert.That(landing).Contains("og:image");
+            await Assert.That(landing).Contains("assets/banners/novolis-sample.svg");
+        }
+        finally
+        {
+            if (Directory.Exists(root))
+            {
+                Directory.Delete(root, recursive: true);
+            }
+        }
+    }
 }
