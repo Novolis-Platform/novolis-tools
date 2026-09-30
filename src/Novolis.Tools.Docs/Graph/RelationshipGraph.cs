@@ -1,36 +1,5 @@
 namespace Novolis.Tools.Docs.Graph;
 
-/// <summary>Kind of relationship node in a project / package graph.</summary>
-public enum GraphNodeKind
-{
-    /// <summary>Unknown or generic node.</summary>
-    Unknown = 0,
-
-    /// <summary>A local project (.csproj).</summary>
-    Project,
-
-    /// <summary>A NuGet package identity.</summary>
-    Package,
-
-    /// <summary>A logical folder / area grouping.</summary>
-    Area,
-
-    /// <summary>An external system or boundary.</summary>
-    External,
-}
-
-/// <summary>A node in a <see cref="RelationshipGraph"/>.</summary>
-/// <param name="Id">Stable identifier (safe for Mermaid ids after sanitization).</param>
-/// <param name="Label">Human-readable label.</param>
-/// <param name="Kind">Semantic kind.</param>
-public sealed record GraphNode(string Id, string Label, GraphNodeKind Kind = GraphNodeKind.Unknown);
-
-/// <summary>A directed edge in a <see cref="RelationshipGraph"/>.</summary>
-/// <param name="FromId">Source node id.</param>
-/// <param name="ToId">Target node id.</param>
-/// <param name="Label">Optional edge label (e.g. PackageReference).</param>
-public sealed record GraphEdge(string FromId, string ToId, string? Label = null);
-
 /// <summary>Mutable relationship graph that renders to Markdown + Mermaid.</summary>
 public sealed class RelationshipGraph
 {
@@ -125,20 +94,4 @@ public sealed class RelationshipGraph
             yield return [from, to, edge.Label ?? string.Empty];
         }
     }
-}
-
-/// <summary>Direction hint for <see cref="RelationshipGraph.ToMermaidFlowchart"/>.</summary>
-public enum FlowDirectionHint
-{
-    /// <summary>Top to bottom.</summary>
-    TB,
-
-    /// <summary>Bottom to top.</summary>
-    BT,
-
-    /// <summary>Left to right.</summary>
-    LR,
-
-    /// <summary>Right to left.</summary>
-    RL,
 }

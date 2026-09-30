@@ -1,21 +1,5 @@
 namespace Novolis.Tools.Coverage;
 
-/// <summary>Shortfall against a line/branch percent gate.</summary>
-public sealed class CoverageShortfall
-{
-    /// <summary>Target percent (e.g. 95).</summary>
-    public required double TargetPercent { get; init; }
-
-    /// <summary>Additional covered lines needed (0 if at/above target).</summary>
-    public int LinesNeeded { get; init; }
-
-    /// <summary>Additional covered branches needed.</summary>
-    public int BranchesNeeded { get; init; }
-
-    /// <summary>True when both metrics meet the target.</summary>
-    public bool MeetsTarget => LinesNeeded == 0 && BranchesNeeded == 0;
-}
-
 /// <summary>Pure analysis over <see cref="CoberturaDocument"/> (no process I/O).</summary>
 public static class CoverageAnalyzer
 {
@@ -112,36 +96,4 @@ public static class CoverageAnalyzer
 
         return sb.ToString();
     }
-}
-
-/// <summary>Evaluate aggregate line/branch against a threshold.</summary>
-public static class CoverageGate
-{
-    /// <summary>
-    /// Fail when line or branch percent is below <paramref name="failBelow"/>.
-    /// Negative <paramref name="failBelow"/> disables the gate.
-    /// </summary>
-    public static (bool Failed, string? Message) Evaluate(CoberturaSummary summary, double failBelow)
-    {
-        if (failBelow <= 0)
-            return (false, null);
-
-        if (summary.LinePercent < failBelow)
-        {
-            return (true,
-                $"Aggregate line coverage {summary.LinePercent.ToString("0.0", System.Globalization.CultureInfo.InvariantCulture)}% is below FailBelow={failBelow.ToString("0.#", System.Globalization.CultureInfo.InvariantCulture)}%.");
-        }
-
-        if (summary.BranchesValid > 0 && summary.BranchPercent < failBelow)
-        {
-            return (true,
-                $"Aggregate branch coverage {summary.BranchPercent.ToString("0.0", System.Globalization.CultureInfo.InvariantCulture)}% is below FailBelow={failBelow.ToString("0.#", System.Globalization.CultureInfo.InvariantCulture)}%.");
-        }
-
-        return (false, null);
-    }
-
-    /// <summary>Evaluate a Cobertura file path.</summary>
-    public static (bool Failed, string? Message) EvaluateFile(string coberturaPath, double failBelow) =>
-        Evaluate(CoberturaSummaryParser.Parse(coberturaPath), failBelow);
 }

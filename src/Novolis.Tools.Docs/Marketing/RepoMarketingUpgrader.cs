@@ -5,47 +5,6 @@ using Novolis.Tools.Docs.Site;
 
 namespace Novolis.Tools.Docs.Marketing;
 
-/// <summary>Options for <see cref="RepoMarketingUpgrader"/>.</summary>
-public sealed class RepoMarketingOptions
-{
-    /// <summary>Workspace root containing novolis-* checkouts.</summary>
-    public required string WorkspaceRoot { get; init; }
-
-    /// <summary>Path to Novolis-Platform/.github checkout.</summary>
-    public required string GitHubBrandRoot { get; init; }
-
-    /// <summary>Path to governance graphical-profile profile.json.</summary>
-    public required string ProfilePath { get; init; }
-
-    /// <summary>Path to sync-repo-package-index-readme.ps1.</summary>
-    public required string PackageIndexScriptPath { get; init; }
-
-    /// <summary>When set, updates GitHub repo description and topics via gh.</summary>
-    public bool ApplyGitHubMeta { get; init; }
-
-    /// <summary>Skip SVG banner generation.</summary>
-    public bool SkipBanners { get; init; }
-
-    /// <summary>Write banners and catalog only.</summary>
-    public bool SkipReadmes { get; init; }
-}
-
-/// <summary>Result counters from a marketing upgrade run.</summary>
-public sealed class RepoMarketingResult
-{
-    /// <summary>Repositories processed.</summary>
-    public int Repos { get; set; }
-
-    /// <summary>Package README touches.</summary>
-    public int PackageReadmes { get; set; }
-
-    /// <summary>Package index sync successes.</summary>
-    public int Indexes { get; set; }
-
-    /// <summary>GitHub meta updates.</summary>
-    public int Meta { get; set; }
-}
-
 /// <summary>Upgrades repo README marketing, banners, catalog, and optional GitHub metadata.</summary>
 public static class RepoMarketingUpgrader
 {

@@ -4,47 +4,6 @@ using Novolis.Tools.Docs.Site;
 
 namespace Novolis.Tools.Docs.Seed;
 
-/// <summary>Options for seeding policy docs packs across the workspace.</summary>
-public sealed class DocsPackSeedOptions
-{
-    /// <summary>Workspace root containing novolis-* checkouts.</summary>
-    public required string WorkspaceRoot { get; init; }
-
-    /// <summary>Path to Novolis-Platform/.github (for repo-catalog.json).</summary>
-    public required string GitHubBrandRoot { get; init; }
-
-    /// <summary>Replace thin/stub docs when present.</summary>
-    public bool OverwriteThin { get; init; }
-
-    /// <summary>Skip root README marketing refresh.</summary>
-    public bool SkipMarketing { get; init; }
-
-    /// <summary>When non-empty, only process these repository folder names.</summary>
-    public IReadOnlyList<string> OnlyRepos { get; init; } = [];
-}
-
-/// <summary>Counters from a docs pack seed run.</summary>
-public sealed class DocsPackSeedResult
-{
-    /// <summary>Repositories processed.</summary>
-    public int Repos { get; set; }
-
-    /// <summary>docs/README.md writes.</summary>
-    public int Readme { get; set; }
-
-    /// <summary>getting-started.md writes.</summary>
-    public int GettingStarted { get; set; }
-
-    /// <summary>design.md writes.</summary>
-    public int Design { get; set; }
-
-    /// <summary>release.md writes.</summary>
-    public int Release { get; set; }
-
-    /// <summary>Root README marketing updates.</summary>
-    public int Marketing { get; set; }
-}
-
 /// <summary>Seeds docs/README + policy guides when missing or thin.</summary>
 public static class DocsPackSeeder
 {
