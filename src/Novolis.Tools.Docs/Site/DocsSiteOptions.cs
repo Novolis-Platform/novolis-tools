@@ -32,4 +32,7 @@ public sealed class DocsSiteOptions
 
     /// <summary>Public site base URL (footer / canonical hints).</summary>
     public string? BaseUrl { get; init; }
+
+    /// <summary>Optional org status JSON (failures, releases, package versions).</summary>
+    public string? StatusPath { get; init; }
 }

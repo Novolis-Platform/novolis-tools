@@ -13,4 +13,7 @@
   <ItemGroup>
     <EmbeddedResource Include="Marketing\platform-repo-catalog.json" />
   </ItemGroup>
+  <ItemGroup>
+    <InternalsVisibleTo Include="Novolis.Tools.Docs.Unit" />
+  </ItemGroup>
 </Project>

@@ -7,7 +7,7 @@ using Novolis.Tools.Docs.Org;
 using Novolis.Tools.Docs.Seed;
 using Novolis.Tools.Docs.Site;
 
-var root = new RootCommand("novolis-docs — Markdown + Mermaid documentation, relationship graphs, and docs/ HTML sites");
+var root = new RootCommand("novolis-docs — Markdown + Mermaid documentation, relationship graphs, docs/ HTML sites, and Actions status");
 
 var scaffoldCommand = new Command("scaffold", "Write a starter Markdown doc pack with Mermaid diagrams");
 var scaffoldTitle = new Option<string>("--title")
@@ -129,6 +129,10 @@ var siteBaseUrl = new Option<string?>("--base-url")
 {
     Description = "Public site base URL",
 };
+var siteStatus = new Option<string?>("--status")
+{
+    Description = "Org status JSON (failures, releases, package versions)",
+};
 siteCommand.Options.Add(siteCorpus);
 siteCommand.Options.Add(siteOut);
 siteCommand.Options.Add(siteOrg);
@@ -137,6 +141,7 @@ siteCommand.Options.Add(siteBrand);
 siteCommand.Options.Add(siteCatalog);
 siteCommand.Options.Add(siteBranch);
 siteCommand.Options.Add(siteBaseUrl);
+siteCommand.Options.Add(siteStatus);
 siteCommand.SetAction(parseResult =>
 {
     var options = new DocsSiteOptions
@@ -149,6 +154,7 @@ siteCommand.SetAction(parseResult =>
         CatalogPath = parseResult.GetValue(siteCatalog),
         DefaultBranch = parseResult.GetValue(siteBranch)!,
         BaseUrl = parseResult.GetValue(siteBaseUrl),
+        StatusPath = parseResult.GetValue(siteStatus),
     };
     var count = DocsSiteBuilder.Build(options);
     Console.WriteLine($"Built docs site with {count} pages at {Path.GetFullPath(options.OutputDirectory)}");
@@ -214,10 +220,12 @@ var orgOrg = new Option<string>("--org") { Description = "GitHub organization", 
 var orgReadme = new Option<string?>("--readme") { Description = "Path to profile/README.md" };
 var orgThrottle = new Option<int>("--throttle") { Description = "Max parallel gh/API calls", DefaultValueFactory = _ => 16 };
 var orgMaxPackages = new Option<int>("--max-packages") { Description = "Package IDs shown per repo row", DefaultValueFactory = _ => 3 };
+var orgStatusJson = new Option<string?>("--status-json") { Description = "Write the org status snapshot JSON here" };
 orgReadmeCommand.Options.Add(orgOrg);
 orgReadmeCommand.Options.Add(orgReadme);
 orgReadmeCommand.Options.Add(orgThrottle);
 orgReadmeCommand.Options.Add(orgMaxPackages);
+orgReadmeCommand.Options.Add(orgStatusJson);
 orgReadmeCommand.SetAction(parseResult =>
 {
     var readme = parseResult.GetValue(orgReadme);
@@ -235,9 +243,29 @@ orgReadmeCommand.SetAction(parseResult =>
         ProfileReadmePath = Path.GetFullPath(readme!),
         ThrottleLimit = parseResult.GetValue(orgThrottle),
         MaxPackagesPerRepo = parseResult.GetValue(orgMaxPackages),
+        StatusJsonPath = parseResult.GetValue(orgStatusJson),
     });
     return 0;
 });
+
+var statusCommand = new Command("status", "Print recent Actions runs and the first error from each failed job");
+var statusRepo = new Option<string>("--repo")
+{
+    Description = "GitHub repository as owner/name",
+    DefaultValueFactory = _ => "Novolis-Platform/novolis-apps",
+};
+var statusLimit = new Option<int>("--limit")
+{
+    Description = "How many recent runs to list",
+    DefaultValueFactory = _ => 8,
+};
+statusCommand.Options.Add(statusRepo);
+statusCommand.Options.Add(statusLimit);
+statusCommand.SetAction(parseResult => WorkflowStatusReport.Run(new WorkflowStatusOptions
+{
+    Repo = parseResult.GetValue(statusRepo)!,
+    Limit = parseResult.GetValue(statusLimit),
+}));
 
 root.Subcommands.Add(scaffoldCommand);
 root.Subcommands.Add(graphCommand);
@@ -245,5 +273,6 @@ root.Subcommands.Add(siteCommand);
 root.Subcommands.Add(marketingCommand);
 root.Subcommands.Add(seedCommand);
 root.Subcommands.Add(orgReadmeCommand);
+root.Subcommands.Add(statusCommand);
 
 return root.Parse(args).Invoke();

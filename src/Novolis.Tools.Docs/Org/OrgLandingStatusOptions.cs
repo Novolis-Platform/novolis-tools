@@ -1,10 +1,4 @@
-﻿using System.Collections.Concurrent;
-using System.Net.Http.Json;
-using System.Text;
-using System.Text.Json;
-using System.Text.RegularExpressions;
-
-namespace Novolis.Tools.Docs.Org;
+﻿namespace Novolis.Tools.Docs.Org;
 
 /// <summary>Options for regenerating org profile README status tables.</summary>
 public sealed class OrgLandingStatusOptions
@@ -18,6 +12,9 @@ public sealed class OrgLandingStatusOptions
     /// <summary>Max parallel gh/API calls.</summary>
     public int ThrottleLimit { get; init; } = 16;
 
-    /// <summary>Max package IDs shown per repository row.</summary>
+    /// <summary>Max package IDs shown per repository row. Retained so existing callers keep parsing.</summary>
     public int MaxPackagesPerRepo { get; init; } = 3;
+
+    /// <summary>Optional path for the status JSON consumed by the portfolio docs site.</summary>
+    public string? StatusJsonPath { get; init; }
 }

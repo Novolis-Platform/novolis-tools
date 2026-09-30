@@ -44,14 +44,14 @@ public static partial class OrgLandingStatusUpdater
             })
             .ToArray();
 
-        Console.WriteLine($"Resolving workflow conclusions (throttle={options.ThrottleLimit})...");
-        var statusMap = new ConcurrentDictionary<string, string>(StringComparer.OrdinalIgnoreCase);
+        Console.WriteLine($"Resolving releases and workflow runs (throttle={options.ThrottleLimit})...");
+        var signals = new ConcurrentDictionary<string, OrgRepoSignals>(StringComparer.OrdinalIgnoreCase);
         Parallel.ForEach(
             repoJobs,
             new ParallelOptions { MaxDegreeOfParallelism = options.ThrottleLimit },
             job =>
             {
-                ResolveStatus(options.Org, job, statusMap);
+                signals[job.Name] = ReadSignals(options.Org, job);
             });
 
         Console.WriteLine("Listing NuGet packages on GitHub Packages...");
@@ -71,20 +71,26 @@ public static partial class OrgLandingStatusUpdater
             });
 
         var generatedAt = DateTime.UtcNow.ToString("yyyy-MM-dd HH:mm") + " UTC";
-        var successMerges = repoJobs.Count(j =>
-            statusMap.TryGetValue($"{j.Name}|merge", out var c) && c == "success");
-
         var packagesByRepo = GroupPackagesByRepo(packages);
-        var block = BuildBlock(
-            options,
-            generatedAt,
-            successMerges,
-            repoJobs,
-            packages,
-            packagesByRepo,
-            statusMap,
-            versionMap,
-            nugetOrgMap);
+        var facts = repoJobs
+            .Select(job => ToFacts(
+                job,
+                signals.TryGetValue(job.Name, out var signal)
+                    ? signal
+                    : new OrgRepoSignals(null, null, null),
+                packagesByRepo,
+                versionMap,
+                nugetOrgMap))
+            .ToArray();
+        var snapshot = OrgStatusSnapshotFactory.Create(options.Org, generatedAt, packages.Count, facts);
+        var block = OrgStatusMarkdown.Build(snapshot);
+        if (!string.IsNullOrWhiteSpace(options.StatusJsonPath))
+        {
+            var statusPath = Path.GetFullPath(options.StatusJsonPath);
+            Directory.CreateDirectory(Path.GetDirectoryName(statusPath)!);
+            File.WriteAllText(statusPath, JsonSerializer.Serialize(snapshot, OrgStatusJson.Options), new UTF8Encoding(encoderShouldEmitUTF8Identifier: false));
+            Console.WriteLine($"Wrote {statusPath}");
+        }
 
         var body = File.ReadAllText(options.ProfileReadmePath);
         if (!body.Contains(StartMarker, StringComparison.Ordinal) || !body.Contains(EndMarker, StringComparison.Ordinal))
@@ -188,51 +194,6 @@ public static partial class OrgLandingStatusUpdater
         }
 
         return null;
-    }
-
-    private static void ResolveStatus(string org, RepoJob job, ConcurrentDictionary<string, string> statusMap)
-    {
-        foreach (var pair in new (string Key, string? File, bool PreferMain)[]
-                 {
-                     ($"{job.Name}|pr", job.Pr, false),
-                     ($"{job.Name}|merge", job.Merge, true),
-                     ($"{job.Name}|release", job.Release, false),
-                 })
-        {
-            if (string.IsNullOrEmpty(pair.File))
-            {
-                statusMap.TryAdd(pair.Key, string.Empty);
-                continue;
-            }
-
-            var qs = pair.PreferMain
-                ? "per_page=5&branch=main&status=completed"
-                : "per_page=5&status=completed";
-            var conclusion = string.Empty;
-            try
-            {
-                var json = GhProcess.RunGh([
-                    "api",
-                    $"repos/{org}/{job.Name}/actions/workflows/{pair.File}/runs?{qs}",
-                ], ignoreFailure: true);
-                if (!string.IsNullOrWhiteSpace(json))
-                {
-                    using var doc = JsonDocument.Parse(json);
-                    if (doc.RootElement.TryGetProperty("workflow_runs", out var runs) &&
-                        runs.ValueKind == JsonValueKind.Array &&
-                        runs.GetArrayLength() > 0)
-                    {
-                        conclusion = runs[0].GetProperty("conclusion").GetString() ?? string.Empty;
-                    }
-                }
-            }
-            catch
-            {
-                // leave empty
-            }
-
-            statusMap.TryAdd(pair.Key, conclusion);
-        }
     }
 
     private static List<PackageInfo> ListNuGetPackages(string org)
@@ -339,225 +300,4 @@ public static partial class OrgLandingStatusUpdater
 
         return map;
     }
-
-    private static string BuildBlock(
-        OrgLandingStatusOptions options,
-        string generatedAt,
-        int successMerges,
-        IReadOnlyList<RepoJob> repoJobs,
-        IReadOnlyList<PackageInfo> packages,
-        IReadOnlyDictionary<string, List<PackageInfo>> packagesByRepo,
-        ConcurrentDictionary<string, string> statusMap,
-        ConcurrentDictionary<string, string> versionMap,
-        ConcurrentDictionary<string, string> nugetOrgMap)
-    {
-        var orphanPackages = packages.Where(p => string.IsNullOrEmpty(p.RepoName)).ToList();
-        var enriched = repoJobs.Select(j => EnrichRepo(options.Org, j, packagesByRepo, statusMap)).ToArray();
-        var packageRepos = enriched.Where(r => r.HasPackages).OrderBy(static r => r.Name, StringComparer.OrdinalIgnoreCase).ToArray();
-        var releaseRepos = enriched.Where(r => !r.HasPackages && r.HasReleaseWf).OrderBy(static r => r.Name, StringComparer.OrdinalIgnoreCase).ToArray();
-        var otherRepos = enriched.Where(r => !r.HasPackages && !r.HasReleaseWf).OrderBy(static r => r.Name, StringComparer.OrdinalIgnoreCase).ToArray();
-
-        var sb = new StringBuilder();
-        sb.AppendLine(StartMarker);
-        sb.AppendLine();
-        sb.AppendLine($"<!-- Generated by novolis-docs org-readme — do not hand-edit. Last run: {generatedAt} -->");
-        sb.AppendLine();
-        sb.AppendLine($"CI badges are **live** GitHub Actions SVGs. Package versions and the merge-success count below are snapshotted at regen ({generatedAt}).");
-        sb.AppendLine();
-        sb.AppendLine(
-            $"Merge successes (at last regen): **{successMerges}** / {repoJobs.Count}. NuGet packages on GPR: **{packages.Count}** · [org packages](https://github.com/orgs/{options.Org}/packages) · [novolis-registry](https://github.com/{options.Org}/novolis-registry).");
-        sb.AppendLine();
-
-        sb.AppendLine("### Packages");
-        sb.AppendLine();
-        sb.AppendLine($"Repos that publish to GitHub Packages (top **{options.MaxPackagesPerRepo}** package IDs + count).");
-        sb.AppendLine();
-        sb.AppendLine("| Repository | PR | Merge | Packages |");
-        sb.AppendLine("|------------|----|-------|----------|");
-        foreach (var row in packageRepos)
-        {
-            packagesByRepo.TryGetValue(row.Name, out var pkgs);
-            var pkgCell = FormatPackageCell(options.Org, options.MaxPackagesPerRepo, row.Name, pkgs ?? [], versionMap, nugetOrgMap);
-            sb.AppendLine($"| {row.Link} | {row.Pr} | {row.Merge} | {pkgCell} |");
-        }
-
-        if (orphanPackages.Count > 0)
-        {
-            var pkgCell = FormatPackageCell(options.Org, options.MaxPackagesPerRepo, string.Empty, orphanPackages, versionMap, nugetOrgMap);
-            sb.AppendLine($"| *(unlinked packages)* | — | — | {pkgCell} |");
-        }
-
-        if (packageRepos.Length == 0 && orphanPackages.Count == 0)
-        {
-            sb.AppendLine("| — | — | — | — |");
-        }
-
-        sb.AppendLine();
-        sb.AppendLine("### Other");
-        sb.AppendLine();
-        sb.AppendLine("Repos without NuGet packages and without a `release.yml` workflow (infra, templates, labs, etc.).");
-        sb.AppendLine();
-        sb.AppendLine("| Repository | PR | Merge |");
-        sb.AppendLine("|------------|----|-------|");
-        if (otherRepos.Length == 0)
-        {
-            sb.AppendLine("| — | — | — |");
-        }
-        else
-        {
-            foreach (var row in otherRepos)
-            {
-                sb.AppendLine($"| {row.Link} | {row.Pr} | {row.Merge} |");
-            }
-        }
-
-        sb.AppendLine();
-        sb.AppendLine("### Releases");
-        sb.AppendLine();
-        sb.AppendLine("Repos with `release.yml` that do **not** publish NuGet packages (apps / installers).");
-        sb.AppendLine();
-        sb.AppendLine("| Repository | Release |");
-        sb.AppendLine("|------------|---------|");
-        if (releaseRepos.Length == 0)
-        {
-            sb.AppendLine("| — | — |");
-        }
-        else
-        {
-            foreach (var row in releaseRepos)
-            {
-                sb.AppendLine($"| {row.Link} | {row.Release} |");
-            }
-        }
-
-        sb.AppendLine();
-        sb.AppendLine(EndMarker);
-        return sb.ToString();
-    }
-
-    private sealed record EnrichedRepo(
-        string Name,
-        string Link,
-        string Pr,
-        string Merge,
-        string Release,
-        bool HasPackages,
-        bool HasReleaseWf);
-
-    private static EnrichedRepo EnrichRepo(
-        string org,
-        RepoJob job,
-        IReadOnlyDictionary<string, List<PackageInfo>> packagesByRepo,
-        ConcurrentDictionary<string, string> statusMap)
-    {
-        statusMap.TryGetValue($"{job.Name}|pr", out var prConc);
-        statusMap.TryGetValue($"{job.Name}|merge", out var mergeConc);
-        statusMap.TryGetValue($"{job.Name}|release", out var releaseConc);
-
-        var prBadge = job.Pr is not null && prConc == "success"
-            ? StatusShield(org, job.Name, job.Pr, "PR")
-            : "—";
-        var mergeBadge = job.Merge is not null && !string.IsNullOrEmpty(mergeConc)
-            ? StatusShield(org, job.Name, job.Merge, "merge")
-            : "—";
-        var releaseBadge = job.Release is not null && !string.IsNullOrEmpty(releaseConc)
-            ? StatusShield(org, job.Name, job.Release, "release")
-            : "—";
-
-        var hasPackages = packagesByRepo.ContainsKey(job.Name) && packagesByRepo[job.Name].Count > 0;
-        return new EnrichedRepo(
-            job.Name,
-            $"[`{job.Name}`](https://github.com/{org}/{job.Name})",
-            prBadge,
-            mergeBadge,
-            releaseBadge,
-            hasPackages,
-            job.Release is not null);
-    }
-
-    private static string StatusShield(string org, string repo, string workflowFile, string label)
-    {
-        var href = $"https://github.com/{org}/{repo}/actions/workflows/{workflowFile}";
-        var badgeQuery = workflowFile == "merge.yml" ? "?branch=main" : string.Empty;
-        var badge = $"https://github.com/{org}/{repo}/actions/workflows/{workflowFile}/badge.svg{badgeQuery}";
-        return $"[![{label}]({badge})]({href})";
-    }
-
-    private static string FormatPackageCell(
-        string org,
-        int maxPackages,
-        string repoName,
-        IReadOnlyList<PackageInfo> pkgs,
-        ConcurrentDictionary<string, string> versionMap,
-        ConcurrentDictionary<string, string> nugetOrgMap)
-    {
-        if (pkgs.Count == 0)
-        {
-            return "—";
-        }
-
-        var expected = ExpectedAggregateId(repoName);
-        var sorted = pkgs
-            .OrderBy(p => expected is not null && p.Name == expected ? 0 : 1)
-            .ThenBy(p => p.Name.Split('.').Length)
-            .ThenBy(p => p.Name, StringComparer.OrdinalIgnoreCase)
-            .ToArray();
-
-        var shown = sorted.Take(maxPackages).ToArray();
-        var lines = new List<string>();
-        foreach (var p in shown)
-        {
-            versionMap.TryGetValue(p.Name, out var gprVer);
-            var pkgUrl = p.HtmlUrl ?? $"https://github.com/orgs/{org}/packages/nuget/package/{p.Name}";
-            var shield = VersionShield(gprVer ?? string.Empty, pkgUrl, "GPR");
-            nugetOrgMap.TryGetValue(p.Name, out var nugetVer);
-            var nugetPart = !string.IsNullOrWhiteSpace(nugetVer)
-                ? " " + VersionShield(nugetVer, $"https://www.nuget.org/packages/{p.Name}", "nuget.org")
-                : string.Empty;
-            lines.Add($"``{p.Name}`` {shield}{nugetPart}");
-        }
-
-        var more = sorted.Length - shown.Length;
-        if (more > 0)
-        {
-            lines.Add($"_+{more} more_ → [packages](https://github.com/orgs/{org}/packages?repo_name={repoName})");
-        }
-
-        return string.Join("<br>", lines);
-    }
-
-    private static string? ExpectedAggregateId(string repoName)
-    {
-        if (!repoName.StartsWith("novolis-", StringComparison.OrdinalIgnoreCase))
-        {
-            return null;
-        }
-
-        var tail = repoName["novolis-".Length..];
-        var parts = tail.Split('-', StringSplitOptions.RemoveEmptyEntries);
-        if (parts.Length == 0)
-        {
-            return null;
-        }
-
-        var titled = string.Join('.', parts.Select(static p =>
-            p.Length == 0 ? p : char.ToUpperInvariant(p[0]) + p[1..]));
-        return "Novolis." + titled;
-    }
-
-    private static string VersionShield(string version, string href, string label)
-    {
-        if (string.IsNullOrWhiteSpace(version))
-        {
-            return "—";
-        }
-
-        var url = $"https://img.shields.io/badge/{ShieldPath(label)}-{ShieldPath(version)}-brightgreen";
-        return $"[![{label} {version}]({url})]({href})";
-    }
-
-    private static string ShieldPath(string text) =>
-        text.Replace("-", "--", StringComparison.Ordinal)
-            .Replace("_", "__", StringComparison.Ordinal)
-            .Replace(" ", "_", StringComparison.Ordinal);
 }

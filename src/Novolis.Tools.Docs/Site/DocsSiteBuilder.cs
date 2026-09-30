@@ -2,6 +2,7 @@ using System.Net;
 using System.Text;
 using System.Text.RegularExpressions;
 using Novolis.Markup.Markdown;
+using Novolis.Tools.Docs.Org;
 
 namespace Novolis.Tools.Docs.Site;
 
@@ -33,6 +34,7 @@ public static class DocsSiteBuilder
         CopyAssets(options, output);
 
         var catalog = DocsRepoCatalog.Load(ResolveCatalogPath(options));
+        var status = LoadStatus(options);
         var byRepo = pages
             .GroupBy(static p => p.Repo, StringComparer.OrdinalIgnoreCase)
             .ToDictionary(static g => g.Key, static g => g.ToList(), StringComparer.OrdinalIgnoreCase);
@@ -52,7 +54,7 @@ public static class DocsSiteBuilder
             }
         }
 
-        File.WriteAllText(Path.Combine(output, "index.html"), CatalogHtml(options, byRepo, catalog), Utf8NoBom());
+        File.WriteAllText(Path.Combine(output, "index.html"), CatalogHtml(options, byRepo, catalog, status), Utf8NoBom());
         File.WriteAllText(Path.Combine(output, ".nojekyll"), string.Empty, Utf8NoBom());
         return pages.Count;
     }
@@ -145,10 +147,20 @@ public static class DocsSiteBuilder
     private static string CatalogHtml(
         DocsSiteOptions options,
         IReadOnlyDictionary<string, List<DocsSitePage>> byRepo,
-        IReadOnlyDictionary<string, DocsRepoMeta> catalog)
+        IReadOnlyDictionary<string, DocsRepoMeta> catalog,
+        OrgStatusSnapshot? status)
     {
-        var generatedAt = DateTime.UtcNow.ToString("yyyy-MM-dd HH:mm") + " UTC";
+        var generatedAt = status?.GeneratedAt ?? DateTime.UtcNow.ToString("yyyy-MM-dd HH:mm") + " UTC";
         var output = Path.GetFullPath(options.OutputDirectory);
+        var repoStatus = new Dictionary<string, OrgStatusRepo>(StringComparer.OrdinalIgnoreCase);
+        if (status is not null)
+        {
+            foreach (var row in status.Repos)
+            {
+                repoStatus[row.Name] = row;
+            }
+        }
+
         var cards = new StringBuilder();
         foreach (var repo in byRepo.Keys.OrderBy(static r => r, StringComparer.OrdinalIgnoreCase))
         {
@@ -167,7 +179,11 @@ public static class DocsSiteBuilder
                 : "Library documentation from docs/. Docs opens the README landing page with full sidebar navigation.";
             var tag = !string.IsNullOrWhiteSpace(meta?.Tag) ? meta!.Tag : repo;
             var topics = TopicsHtml(meta?.Topics);
-            var search = string.Join(' ', new[] { repo, tag, blurb }.Concat(meta?.Topics ?? Array.Empty<string>()))
+            repoStatus.TryGetValue(repo, out var repoFacts);
+            var factHtml = OrgStatusHtml.CardFacts(repoFacts);
+            var search = string.Join(' ', new[] { repo, tag, blurb, repoFacts?.GprVersion, repoFacts?.ReleaseTag }
+                    .Concat(meta?.Topics ?? Array.Empty<string>())
+                    .Where(static s => !string.IsNullOrWhiteSpace(s)))
                 .ToLowerInvariant();
 
             cards.AppendLine($"""
@@ -177,6 +193,7 @@ public static class DocsSiteBuilder
                     <div class="repo-meta">
                       <span>{count} pages</span>
                       {(landing.IsGeneratedLanding ? "<span>generated overview</span>" : "<span>docs/README.md</span>")}
+                      {factHtml}
                     </div>
                     <h3>{Html(repo)}</h3>
                     <p class="repo-tagline">{Html(tag)}</p>
@@ -196,6 +213,28 @@ public static class DocsSiteBuilder
         var ogImage = File.Exists(Path.Combine(output, socialRel.Replace('/', Path.DirectorySeparatorChar)))
             ? AbsoluteUrl(baseUrl, socialRel)
             : null;
+        var statusHtml = status is null ? "" : OrgStatusHtml.Bands(status);
+        var navStatus = status is null
+            ? ""
+            : """<a href="#failed">Failed</a><a href="#shipped">Shipped</a>""";
+        var eyebrow = status is null ? "Documentation site" : "Platform status";
+        var heroTitle = status is null ? "Every library. One docs home." : "Releases, failures, and every library.";
+        var heroCopy = status is null
+            ? "Each card opens that repository's <code>docs/README.md</code> (or a generated overview) with sidebar navigation built from the docs folder layout."
+            : "Failed merge and release runs, published GitHub Releases, and the library catalog. Each card still opens that repository's docs.";
+        var telemetry = status is null
+            ? $"""
+                <div><span>{byRepo.Count}</span><strong>libraries</strong></div>
+                <div><span>{byRepo.Values.Sum(static v => v.Count)}</span><strong>pages</strong></div>
+                <div><span>docs/</span><strong>sparse corpus</strong></div>
+                <div><span>novolis-docs</span><strong>site builder</strong></div>
+                """
+            : $"""
+                <div><span>{status.FailedCount}</span><strong>failed runs</strong></div>
+                <div><span>{status.ReleasedRepoCount}</span><strong>releases shipped</strong></div>
+                <div><span>{byRepo.Count}</span><strong>libraries</strong></div>
+                <div><span>{status.PackageCount}</span><strong>packages</strong></div>
+                """;
         return $$"""
             <!doctype html>
             <html lang="en">
@@ -215,6 +254,7 @@ public static class DocsSiteBuilder
                   <span>Novolis Docs</span>
                 </a>
                 <nav>
+                  {{navStatus}}
                   <a href="#libraries">Libraries</a>
                   <a href="https://github.com/{{Html(options.Org)}}">GitHub</a>
                 </nav>
@@ -223,17 +263,16 @@ public static class DocsSiteBuilder
                 <section class="hero hero-compact">
                   <div class="hero-content">
                     <img class="hero-logo" src="assets/brand/logo-brand-transparent.svg" alt="Novolis"/>
-                    <p class="eyebrow">Documentation site</p>
-                    <h1>Every library. One docs home.</h1>
-                    <p class="hero-copy">Each card opens that repository's <code>docs/README.md</code> (or a generated overview) with sidebar navigation built from the docs folder layout.</p>
+                    <p class="eyebrow">{{eyebrow}}</p>
+                    <h1>{{heroTitle}}</h1>
+                    <p class="hero-copy">{{heroCopy}}</p>
                   </div>
-                  <div class="telemetry-panel" aria-label="Docs telemetry">
-                    <div><span>{{byRepo.Count}}</span><strong>libraries</strong></div>
-                    <div><span>{{byRepo.Values.Sum(static v => v.Count)}}</span><strong>pages</strong></div>
-                    <div><span>docs/</span><strong>sparse corpus</strong></div>
-                    <div><span>novolis-docs</span><strong>site builder</strong></div>
+                  <div class="telemetry-panel" aria-label="Platform status">
+                    {{telemetry}}
                   </div>
                 </section>
+
+                {{statusHtml}}
 
                 <section id="libraries" class="section">
                   <div class="section-heading">
@@ -447,6 +486,22 @@ public static class DocsSiteBuilder
     {
         var match = Regex.Match(markdown, @"(?m)^\s*#\s+.+\r?\n+");
         return match.Success ? markdown.Remove(match.Index, match.Length) : markdown;
+    }
+
+    private static OrgStatusSnapshot? LoadStatus(DocsSiteOptions options)
+    {
+        if (string.IsNullOrWhiteSpace(options.StatusPath))
+        {
+            return null;
+        }
+
+        var path = Path.GetFullPath(options.StatusPath);
+        if (!File.Exists(path))
+        {
+            throw new FileNotFoundException("Org status snapshot not found.", path);
+        }
+
+        return OrgStatusSnapshot.Load(path);
     }
 
     private static string? ResolveCatalogPath(DocsSiteOptions options)
