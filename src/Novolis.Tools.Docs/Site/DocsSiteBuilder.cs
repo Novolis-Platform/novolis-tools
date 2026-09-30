@@ -487,7 +487,7 @@ public static class DocsSiteBuilder
             <meta charset="utf-8"/>
             <meta name="viewport" content="width=device-width, initial-scale=1"/>
             <meta name="description" content="{Html(description)}"/>
-            <meta name="theme-color" content="#080D1C"/>
+            <meta name="theme-color" content="#010D18"/>
             <title>{Html(title)}</title>
             <link rel="canonical" href="{Html(canonical)}"/>
             <link rel="icon" href="{Html(faviconHref)}"/>
