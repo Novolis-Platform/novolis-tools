@@ -19,6 +19,22 @@
       ]
     },
     {
+      "key": "code-layout",
+      "displayName": "Novolis Code Layout",
+      "project": "src/Novolis.Tools.CodeLayout.Cli/Novolis.Tools.CodeLayout.Cli.csproj",
+      "packageId": "Novolis.Tools.CodeLayout.Cli",
+      "command": "novolis-code-layout",
+      "tests": [
+        "tests/Novolis.Tools.CodeLayout.Unit/Novolis.Tools.CodeLayout.Unit.csproj"
+      ],
+      "changedPathGlobs": [
+        "src/Novolis.Tools.CodeLayout.Cli/**",
+        "src/Novolis.Tools.CodeLayout/**",
+        "tests/Novolis.Tools.CodeLayout.Unit/**",
+        "Directory.Packages.props"
+      ]
+    },
+    {
       "key": "docs",
       "displayName": "Novolis Docs",
       "project": "src/Novolis.Tools.Docs.Cli/Novolis.Tools.Docs.Cli.csproj",

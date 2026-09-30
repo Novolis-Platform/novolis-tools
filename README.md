@@ -47,6 +47,8 @@
 | `Novolis.Tools.Cli` | `dotnet add package Novolis.Tools.Cli` | [README](https://github.com/Novolis-Platform/novolis-tools/blob/main/src/Novolis.Tools.Cli/README.md) |
 | `Novolis.Tools.Coverage` | `dotnet add package Novolis.Tools.Coverage` | [README](https://github.com/Novolis-Platform/novolis-tools/blob/main/src/Novolis.Tools.Coverage/README.md) |
 | `Novolis.Tools.Coverage.Cli` | `dotnet add package Novolis.Tools.Coverage.Cli` | [README](https://github.com/Novolis-Platform/novolis-tools/blob/main/src/Novolis.Tools.Coverage.Cli/README.md) |
+| `Novolis.Tools.CodeLayout` | `dotnet add package Novolis.Tools.CodeLayout` | [README](https://github.com/Novolis-Platform/novolis-tools/blob/main/src/Novolis.Tools.CodeLayout.Cli/README.md) |
+| `Novolis.Tools.CodeLayout.Cli` | `dotnet add package Novolis.Tools.CodeLayout.Cli` | [README](https://github.com/Novolis-Platform/novolis-tools/blob/main/src/Novolis.Tools.CodeLayout.Cli/README.md) |
 | `Novolis.Tools.Docs` | `dotnet add package Novolis.Tools.Docs` | [README](https://github.com/Novolis-Platform/novolis-tools/blob/main/src/Novolis.Tools.Docs/README.md) |
 | `Novolis.Tools.Docs.Cli` | `dotnet add package Novolis.Tools.Docs.Cli` | [README](https://github.com/Novolis-Platform/novolis-tools/blob/main/src/Novolis.Tools.Docs.Cli/README.md) |
 | `Novolis.Tools.LiteDb` | `dotnet add package Novolis.Tools.LiteDb` | [README](https://github.com/Novolis-Platform/novolis-tools/blob/main/src/Novolis.Tools.LiteDb/README.md) |
@@ -90,6 +92,8 @@ flowchart TB
 | `Novolis.Tools.Cli` | Shared Spectre chrome (tables, help, open guards) |
 | `Novolis.Tools.Coverage` | MTP Cobertura collection + ReportGenerator merge |
 | `Novolis.Tools.Coverage.Cli` | `novolis-coverage` tool |
+| `Novolis.Tools.CodeLayout` | SLNX-wide C# source layout mapping and repair engine |
+| `Novolis.Tools.CodeLayout.Cli` | `novolis-code-layout` tool |
 | `Novolis.Tools.Docs` | Markdown / Mermaid / `.csproj` relationship graphs |
 | `Novolis.Tools.Docs.Cli` | `novolis-docs` tool |
 | `Novolis.Tools.Sqlite` | SQLite session helpers (`Novolis.Storage.Sqlite`) |
@@ -111,6 +115,8 @@ dotnet run --project d:\novolis\novolis-tools\src\Novolis.Tools.Docs.Cli -- grap
 dotnet run --project d:\novolis\novolis-tools\src\Novolis.Tools.MarkdownPdf.Cli -- themes
 dotnet run --project d:\novolis\novolis-tools\src\Novolis.Tools.MarkdownPdf.Cli -- convert --in D:\path\file.md --theme trade
 dotnet run --project d:\novolis\novolis-tools\src\Novolis.Tools.Coverage.Cli -- collect --platform --skip-build --fail-below -1 --out d:\novolis\coverage
+dotnet run --project d:\novolis\novolis-tools\src\Novolis.Tools.CodeLayout.Cli -- map d:\novolis\Novolis.Platform.slnx
+dotnet run --project d:\novolis\novolis-tools\src\Novolis.Tools.CodeLayout.Cli -- fix d:\novolis\Novolis.Platform.slnx --delete
 dotnet run --project d:\novolis\novolis-tools\src\Novolis.Tools.Sqlite.Cli -- :memory: -c "SELECT 'ok' AS status;"
 dotnet run --project d:\novolis\novolis-tools\src\Novolis.Tools.LiteDb.Cli -- :memory: -c "INSERT INTO t VALUES {_id: 1, status: \"ok\"}; SELECT $ FROM t;"
 dotnet run --project d:\novolis\novolis-tools\src\Novolis.Manuscript.Cli -- book list-books --workspace D:\repos\books

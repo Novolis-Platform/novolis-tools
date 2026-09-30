@@ -10,6 +10,8 @@
     <Project Path="src/Novolis.Tools.Coverage/Novolis.Tools.Coverage.csproj" />
     <Project Path="src/Novolis.Tools.Docs.Cli/Novolis.Tools.Docs.Cli.csproj" />
     <Project Path="src/Novolis.Tools.Docs/Novolis.Tools.Docs.csproj" />
+    <Project Path="src/Novolis.Tools.CodeLayout.Cli/Novolis.Tools.CodeLayout.Cli.csproj" />
+    <Project Path="src/Novolis.Tools.CodeLayout/Novolis.Tools.CodeLayout.csproj" />
     <Project Path="src/Novolis.Tools.LiteDb.Cli/Novolis.Tools.LiteDb.Cli.csproj" />
     <Project Path="src/Novolis.Tools.LiteDb/Novolis.Tools.LiteDb.csproj" />
     <!-- MarkdownPdf omitted until Novolis.Markup.Markdown.Documents + Documents.* publish to GPR -->
@@ -20,6 +22,7 @@
     <Project Path="tests/Novolis.Tools.Android.Unit/Novolis.Tools.Android.Unit.csproj" />
     <Project Path="tests/Novolis.Tools.Cli.Unit/Novolis.Tools.Cli.Unit.csproj" />
     <Project Path="tests/Novolis.Tools.Coverage.Unit/Novolis.Tools.Coverage.Unit.csproj" />
+    <Project Path="tests/Novolis.Tools.CodeLayout.Unit/Novolis.Tools.CodeLayout.Unit.csproj" />
     <Project Path="tests/Novolis.Tools.Docs.Unit/Novolis.Tools.Docs.Unit.csproj" />
     <Project Path="tests/Novolis.Tools.LiteDb.Unit/Novolis.Tools.LiteDb.Unit.csproj" />
     <Project Path="tests/Novolis.Tools.Sqlite.Unit/Novolis.Tools.Sqlite.Unit.csproj" />
