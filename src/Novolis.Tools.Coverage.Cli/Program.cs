@@ -2,7 +2,7 @@ using System.CommandLine;
 using Novolis.Tools.Coverage;
 
 var root = new RootCommand(
-    "novolis-coverage — thin CLI over Novolis.Tools.Coverage (collect / list / gaps / crap)");
+    "novolis-coverage — thin CLI over Novolis.Tools.Coverage (collect / list / gaps / test-gaps / crap)");
 
 var collectCommand = new Command("collect", "Run tests with coverage and merge ReportGenerator HTML");
 var listCommand = new Command("list", "List repos / test hosts that would run (no collection)");
@@ -385,9 +385,58 @@ crapCommand.SetAction(parseResult =>
     return 0;
 });
 
+var testGapsCommand = new Command("test-gaps", "Static scan for repos without tests and assemblies never referenced by a test host");
+var testGapsRoot = AddRoot(testGapsCommand);
+var testGapsExclude = AddExclude(testGapsCommand);
+var testGapsInclude = AddInclude(testGapsCommand);
+var testGapsExcludeFile = AddExcludeFile(testGapsCommand);
+var testGapsOut = new Option<string?>("--out") { Description = "Report directory (default: <root>/artifacts/test-gaps)" };
+testGapsCommand.Options.Add(testGapsOut);
+var testGapsIncludeExe = new Option<bool>("--include-executables") { Description = "Include WinExe/Exe projects under src/" };
+testGapsCommand.Options.Add(testGapsIncludeExe);
+var testGapsIncludeNonPackable = new Option<bool>("--include-non-packable") { Description = "Also flag IsPackable=false libraries" };
+testGapsCommand.Options.Add(testGapsIncludeNonPackable);
+var testGapsThrottle = AddThrottle(testGapsCommand);
+var testGapsFail = new Option<bool>("--fail-on-gaps")
+{
+    Description = "Exit 1 when any gap is found",
+    DefaultValueFactory = _ => true,
+};
+testGapsCommand.Options.Add(testGapsFail);
+testGapsCommand.SetAction(parseResult =>
+{
+    var workspace = CoverageWorkspace.ResolveRoot(parseResult.GetValue(testGapsRoot));
+    var output = parseResult.GetValue(testGapsOut);
+    if (string.IsNullOrWhiteSpace(output))
+        output = Path.Combine(workspace, "artifacts", "test-gaps");
+
+    var report = TestGapScanner.Scan(new TestGapOptions
+    {
+        Root = workspace,
+        Exclude = parseResult.GetValue(testGapsExclude) ?? [],
+        Include = parseResult.GetValue(testGapsInclude) ?? [],
+        ExcludeFile = parseResult.GetValue(testGapsExcludeFile),
+        PackableOnly = !parseResult.GetValue(testGapsIncludeNonPackable),
+        IncludeExecutables = parseResult.GetValue(testGapsIncludeExe),
+        ThrottleLimit = parseResult.GetValue(testGapsThrottle),
+    });
+
+    var (mdPath, jsonPath) = TestGapScanner.Write(report, output);
+    Console.WriteLine($"Test-gap root: {report.Root}");
+    Console.WriteLine($"Repos scanned: {report.Repos.Count}");
+    Console.WriteLine($"Repos without tests: {report.ReposWithoutTestHosts.Count}");
+    Console.WriteLine($"Untested assemblies: {report.UntestedAssemblies.Count}");
+    Console.WriteLine($"Summary: {mdPath}");
+    Console.WriteLine($"JSON:    {jsonPath}");
+    if (parseResult.GetValue(testGapsFail) && report.GapCount > 0)
+        return 1;
+    return 0;
+});
+
 root.Subcommands.Add(collectCommand);
 root.Subcommands.Add(listCommand);
 root.Subcommands.Add(gapsCommand);
+root.Subcommands.Add(testGapsCommand);
 root.Subcommands.Add(crapCommand);
 
 return root.Parse(args).Invoke();

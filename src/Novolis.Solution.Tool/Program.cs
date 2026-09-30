@@ -39,7 +39,7 @@ internal static class Program
         {
             "topology" => await PrintTopologyAsync(workspace, asJson).ConfigureAwait(false),
             "catalog" => await PrintCatalogAsync(workspace, ParseContext(args), asJson).ConfigureAwait(false),
-            _ => Fail($"Unknown command '{command}'. Use topology, catalog, or help."),
+            _ => Fail($"Unknown command '{command}'. Use generate, verify, topology, catalog, or help."),
         };
     }
 
