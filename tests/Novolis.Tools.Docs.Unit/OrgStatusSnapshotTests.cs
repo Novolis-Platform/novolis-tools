@@ -85,7 +85,9 @@ public sealed class OrgStatusSnapshotTests
         await Assert.That(OrgStatusHtml.CardFacts(snapshot.Repos.First(r => r.Name == "novolis-physics"))).Contains("Packages");
         await Assert.That(OrgStatusHtml.CardFacts(snapshot.Repos.First(r => r.Name == "novolis-physics"))).Contains("2026.1.1.41");
         await Assert.That(OrgStatusHtml.CardFacts(snapshot.Repos.First(r => r.Name == "novolis-apps"))).Contains("Release failed");
+        await Assert.That(OrgStatusHtml.CardFacts(snapshot.Repos.First(r => r.Name == "novolis-audio"))).DoesNotContain("Release failed");
         await Assert.That(markdown).Contains("release [failed](");
+        await Assert.That(markdown).DoesNotContain("actions/runs/6");
     }
 
     [Test]

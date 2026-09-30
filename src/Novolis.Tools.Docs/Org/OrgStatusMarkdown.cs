@@ -149,7 +149,8 @@ public static class OrgStatusMarkdown
                 sb.Append(" · merge ").Append(RunLink(row.MergeConclusion, row.MergeUrl));
             }
 
-            if (row.ReleaseConclusion is "failure" or "cancelled")
+            if (OrgShipPath.PublishesInstallers(row.Name)
+                && row.ReleaseConclusion is "failure" or "cancelled")
             {
                 sb.Append(" · release ").Append(RunLink(row.ReleaseConclusion, row.ReleaseRunUrl));
             }

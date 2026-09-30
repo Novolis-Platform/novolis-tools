@@ -88,7 +88,8 @@ public static class OrgStatusHtml
             sb.Append(ConclusionMark(repo.MergeConclusion, repo.MergeUrl, "Merge " + Word(repo.MergeConclusion)));
         }
 
-        if (repo.ReleaseConclusion is "failure" or "cancelled")
+        if (OrgShipPath.PublishesInstallers(repo.Name)
+            && repo.ReleaseConclusion is "failure" or "cancelled")
         {
             sb.Append(ConclusionMark(repo.ReleaseConclusion, repo.ReleaseRunUrl, "Release " + Word(repo.ReleaseConclusion)));
         }
