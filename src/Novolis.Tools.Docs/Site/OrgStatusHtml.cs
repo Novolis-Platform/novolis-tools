@@ -12,21 +12,21 @@ public static class OrgStatusHtml
     {
         var sb = new StringBuilder();
         sb.AppendLine("""<section id="failed" class="section status-band">""");
-        sb.AppendLine("""<div class="section-heading"><p class="eyebrow">Latest completed merge.yml and release.yml</p><h2>Failed</h2></div>""");
+        sb.AppendLine($"""<div class="section-heading"><h2>{OrgStatusMarks.Chip("fail", "Failed")}</h2></div>""");
         if (status.Failures.Count == 0)
         {
             sb.AppendLine("<p>No failed or cancelled merge or release runs in the latest completed workflow for each repository.</p>");
         }
         else
         {
-            sb.AppendLine("""<div class="status-scroll"><table class="status-table"><thead><tr><th>When</th><th>Repository</th><th>Workflow</th><th>Run</th><th>Error</th></tr></thead><tbody>""");
+            sb.AppendLine($"""<div class="status-scroll"><table class="status-table"><thead><tr><th>When</th><th>Repository</th><th>{OrgStatusMarks.Chip("merge", "Workflow")}</th><th>{OrgStatusMarks.Chip("fail", "Run")}</th><th>Error</th></tr></thead><tbody>""");
             foreach (var row in status.Failures)
             {
                 var detail = string.IsNullOrWhiteSpace(row.Error) ? row.Title : row.Error;
                 sb.Append("<tr><td class=\"status-mono\">").Append(Encode(row.When)).Append("</td>");
                 sb.Append("<td><a href=\"https://github.com/").Append(Encode(status.Org)).Append('/').Append(Encode(row.Repo)).Append("\">").Append(Encode(row.Repo)).Append("</a></td>");
-                sb.Append("<td class=\"status-mono\">").Append(Encode(row.Workflow)).Append("</td>");
-                sb.Append("<td><a class=\"status-fail\" href=\"").Append(Encode(row.Url)).Append("\">").Append(Encode(row.Conclusion)).Append("</a></td>");
+                sb.Append("<td>").Append(WorkflowMark(row.Workflow)).Append("</td>");
+                sb.Append("<td>").Append(ConclusionMark(row.Conclusion, row.Url)).Append("</td>");
                 sb.Append("<td>").Append(Encode(detail)).Append("</td></tr>");
             }
 
@@ -35,20 +35,20 @@ public static class OrgStatusHtml
 
         sb.AppendLine("</section>");
         sb.AppendLine("""<section id="shipped" class="section status-band">""");
-        sb.AppendLine("""<div class="section-heading"><p class="eyebrow">GitHub Releases, not GPR build numbers</p><h2>Shipped</h2></div>""");
+        sb.AppendLine($"""<div class="section-heading"><h2>{OrgStatusMarks.Chip("ship", "Shipped")}</h2></div>""");
         if (status.Releases.Count == 0)
         {
             sb.AppendLine("<p>No GitHub Releases published.</p>");
         }
         else
         {
-            sb.AppendLine("""<div class="status-scroll"><table class="status-table"><thead><tr><th>Published</th><th>Repository</th><th>Tag</th><th>Channel</th></tr></thead><tbody>""");
+            sb.AppendLine($"""<div class="status-scroll"><table class="status-table"><thead><tr><th>Published</th><th>Repository</th><th>Tag</th><th>{OrgStatusMarks.Chip("ship", "Channel")}</th></tr></thead><tbody>""");
             foreach (var row in status.Releases)
             {
                 sb.Append("<tr><td class=\"status-mono\">").Append(Encode(row.Published)).Append("</td>");
                 sb.Append("<td><a href=\"https://github.com/").Append(Encode(status.Org)).Append('/').Append(Encode(row.Repo)).Append("\">").Append(Encode(row.Repo)).Append("</a></td>");
                 sb.Append("<td><a class=\"status-mono\" href=\"").Append(Encode(row.Url)).Append("\">").Append(Encode(row.Tag)).Append("</a></td>");
-                sb.Append("<td>").Append(Encode(row.Channel)).Append("</td></tr>");
+                sb.Append("<td class=\"status-channel\">").Append(ChannelMark(row.Channel)).Append("</td></tr>");
             }
 
             sb.AppendLine("</tbody></table></div>");
@@ -70,30 +70,80 @@ public static class OrgStatusHtml
         var sb = new StringBuilder();
         if (!string.IsNullOrWhiteSpace(repo.GprVersion))
         {
-            sb.Append("<span class=\"status-mono\">GPR ").Append(Encode(repo.GprVersion)).Append("</span>");
+            sb.Append(VersionChip("package", "GitHub Packages", repo.GprVersion));
         }
 
         if (!string.IsNullOrWhiteSpace(repo.NugetVersion))
         {
-            sb.Append("<span class=\"status-mono\">nuget.org ").Append(Encode(repo.NugetVersion)).Append("</span>");
+            sb.Append(VersionChip("nuget", "nuget.org", repo.NugetVersion));
         }
 
         if (!string.IsNullOrWhiteSpace(repo.ReleaseTag))
         {
-            sb.Append("<span class=\"status-mono\">release ").Append(Encode(repo.ReleaseTag)).Append("</span>");
+            sb.Append(VersionChip("ship", "Release", repo.ReleaseTag));
         }
 
         if (repo.MergeConclusion is "failure" or "cancelled")
         {
-            sb.Append("<span class=\"status-fail\">merge ").Append(Encode(repo.MergeConclusion)).Append("</span>");
+            sb.Append(ConclusionMark(repo.MergeConclusion, repo.MergeUrl));
         }
 
         if (repo.ReleaseConclusion is "failure" or "cancelled")
         {
-            sb.Append("<span class=\"status-fail\">release ").Append(Encode(repo.ReleaseConclusion)).Append("</span>");
+            sb.Append(ConclusionMark(repo.ReleaseConclusion, repo.ReleaseRunUrl));
         }
 
         return sb.ToString();
+    }
+
+    private static string VersionChip(string kind, string label, string version) =>
+        $"""<span class="status-chip">{OrgStatusMarks.Chip(kind, label)}<span class="status-mono">{Encode(version)}</span></span>""";
+
+    private static string WorkflowMark(string workflow) =>
+        workflow.Contains("release", StringComparison.OrdinalIgnoreCase)
+            ? OrgStatusMarks.Chip("ship", "release.yml")
+            : OrgStatusMarks.Chip("merge", "merge.yml");
+
+    private static string ConclusionMark(string conclusion, string url)
+    {
+        var kind = conclusion switch
+        {
+            "success" => "ok",
+            "cancelled" => "cancel",
+            "failure" => "fail",
+            _ => "",
+        };
+        if (kind.Length == 0)
+        {
+            return "—";
+        }
+
+        var chip = OrgStatusMarks.Chip(kind, conclusion);
+        return string.IsNullOrWhiteSpace(url)
+            ? chip
+            : $"""<a class="mark-{kind}" href="{Encode(url)}">{chip}</a>""";
+    }
+
+    private static string ChannelMark(string channel)
+    {
+        if (channel.StartsWith("nuget.org ", StringComparison.Ordinal))
+        {
+            return VersionChip("nuget", "nuget.org", channel["nuget.org ".Length..]);
+        }
+
+        if (channel.EndsWith("release asset", StringComparison.Ordinal) ||
+            channel.EndsWith("release assets", StringComparison.Ordinal))
+        {
+            var count = channel.Split(' ')[0];
+            return VersionChip("ship", "Release assets", count);
+        }
+
+        if (channel == "GitHub Release")
+        {
+            return OrgStatusMarks.Chip("ship", "GitHub Release");
+        }
+
+        return Encode(channel);
     }
 
     private static string Encode(string? text) => WebUtility.HtmlEncode(text ?? "");

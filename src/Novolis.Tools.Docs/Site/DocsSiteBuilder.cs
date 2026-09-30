@@ -216,12 +216,10 @@ public static class DocsSiteBuilder
         var statusHtml = status is null ? "" : OrgStatusHtml.Bands(status);
         var navStatus = status is null
             ? ""
-            : """<a href="#failed">Failed</a><a href="#shipped">Shipped</a>""";
-        var eyebrow = status is null ? "Documentation site" : "Platform status";
-        var heroTitle = status is null ? "Every library. One docs home." : "Releases, failures, and every library.";
-        var heroCopy = status is null
-            ? "Each card opens that repository's <code>docs/README.md</code> (or a generated overview) with sidebar navigation built from the docs folder layout."
-            : "Failed merge and release runs, published GitHub Releases, and the library catalog. Each card still opens that repository's docs.";
+            : $"""<a class="mark-fail" href="#failed" aria-label="Failed">{OrgStatusMarks.Svg("fail")}</a><a class="mark-ship" href="#shipped" aria-label="Shipped">{OrgStatusMarks.Svg("ship")}</a>""";
+        var heroText = status is null
+            ? """<p class="eyebrow">Documentation site</p><h1>Every library. One docs home.</h1><p class="hero-copy">Each card opens that repository's <code>docs/README.md</code> (or a generated overview) with sidebar navigation built from the docs folder layout.</p>"""
+            : "";
         var telemetry = status is null
             ? $"""
                 <div><span>{byRepo.Count}</span><strong>libraries</strong></div>
@@ -230,10 +228,10 @@ public static class DocsSiteBuilder
                 <div><span>novolis-docs</span><strong>site builder</strong></div>
                 """
             : $"""
-                <div><span>{status.FailedCount}</span><strong>failed runs</strong></div>
-                <div><span>{status.ReleasedRepoCount}</span><strong>releases shipped</strong></div>
+                <div class="mark-fail"><span>{status.FailedCount}</span>{OrgStatusMarks.Chip("fail", "Failed")}</div>
+                <div class="mark-ship"><span>{status.ReleasedRepoCount}</span>{OrgStatusMarks.Chip("ship", "Shipped")}</div>
                 <div><span>{byRepo.Count}</span><strong>libraries</strong></div>
-                <div><span>{status.PackageCount}</span><strong>packages</strong></div>
+                <div class="mark-package"><span>{status.PackageCount}</span>{OrgStatusMarks.Chip("package", "Packages")}</div>
                 """;
         return $$"""
             <!doctype html>
@@ -263,9 +261,7 @@ public static class DocsSiteBuilder
                 <section class="hero hero-compact">
                   <div class="hero-content">
                     <img class="hero-logo" src="assets/brand/logo-brand-transparent.svg" alt="Novolis"/>
-                    <p class="eyebrow">{{eyebrow}}</p>
-                    <h1>{{heroTitle}}</h1>
-                    <p class="hero-copy">{{heroCopy}}</p>
+                    {{heroText}}
                   </div>
                   <div class="telemetry-panel" aria-label="Platform status">
                     {{telemetry}}
