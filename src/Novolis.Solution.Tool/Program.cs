@@ -15,10 +15,15 @@ internal static class Program
         if (args.Length is 0 || args[0] is "help" or "--help" or "-h")
             return PrintHelp();
 
+        var command = args[0].ToLowerInvariant();
+        if (command is "generate")
+            return GeneratePlatform(args);
+        if (command is "verify")
+            return VerifyPlatform(args);
+
         if (args.Length < 2)
             return Fail("A solution file path is required.");
 
-        var command = args[0].ToLowerInvariant();
         var solutionPath = Path.GetFullPath(args[1]);
         if (!File.Exists(solutionPath))
             return Fail($"Solution file does not exist: {solutionPath}");
@@ -113,12 +118,58 @@ internal static class Program
     {
         Console.WriteLine("""
             novolis-solution
+              generate [--root <workspace>] [--out <Novolis.Platform.slnx>]
+              verify [--root <workspace>]
               topology <solution.slnx> [--json]
               catalog <solution.slnx> [--configuration Debug] [--platform AnyCPU]
                       [--framework net10.0] [--allow-evaluation]
                       [--allow-design-time-builds] [--json]
             """);
         return 0;
+    }
+
+    private static int GeneratePlatform(string[] args)
+    {
+        var root = GetOption(args, "--root") ?? Environment.GetEnvironmentVariable("NOVOLIS_ROOT") ?? FindWorkspaceRoot();
+        var output = GetOption(args, "--out");
+        var result = PlatformSlnxGenerator.Generate(root, output);
+        Console.WriteLine($"Output File:           {result.OutputPath}");
+        Console.WriteLine($"Package→Project map:   {result.PackageToProjectMap} ({result.PackageToProjectCount} entries)");
+        Console.WriteLine($"Repositories Included: {result.RepositoriesIncluded}");
+        Console.WriteLine($"Total Projects:        {result.TotalProjects}");
+        foreach (var warning in result.Warnings)
+            Console.Error.WriteLine(warning);
+        return 0;
+    }
+
+    private static int VerifyPlatform(string[] args)
+    {
+        var root = GetOption(args, "--root") ?? Environment.GetEnvironmentVariable("NOVOLIS_ROOT") ?? FindWorkspaceRoot();
+        var failures = ProjectRefModeVerifier.Verify(root);
+        if (failures.Count > 0)
+        {
+            Console.Error.WriteLine($"verify-project-ref-mode: FAILED ({failures.Count})");
+            foreach (var failure in failures)
+                Console.Error.WriteLine($"  {failure}");
+            return 1;
+        }
+
+        Console.WriteLine("verify-project-ref-mode: OK");
+        return 0;
+    }
+
+    private static string FindWorkspaceRoot()
+    {
+        var dir = new DirectoryInfo(Environment.CurrentDirectory);
+        while (dir is not null)
+        {
+            if (Directory.Exists(Path.Combine(dir.FullName, "novolis-governance"))
+                && Directory.Exists(Path.Combine(dir.FullName, "novolis-workspaces")))
+                return dir.FullName;
+            dir = dir.Parent;
+        }
+
+        throw new InvalidOperationException("Could not find the Novolis workspace root. Pass --root.");
     }
 
     private static int Fail(string message)

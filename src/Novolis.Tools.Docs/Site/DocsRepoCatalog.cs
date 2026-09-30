@@ -18,7 +18,7 @@ public sealed class DocsRepoMeta
     public IReadOnlyList<string> Topics { get; init; } = [];
 }
 
-/// <summary>Loads <c>repo-catalog.json</c> produced by Upgrade-RepoMarketingReadmes.ps1.</summary>
+/// <summary>Loads <c>repo-catalog.json</c> produced by novolis-docs marketing.</summary>
 public static class DocsRepoCatalog
 {
     private static readonly JsonSerializerOptions JsonOptions = new()

@@ -10,4 +10,7 @@
     <LibraryReference Include="Novolis.Markup.Markdown" />
     <LibraryReference Include="Novolis.Markup.Markdown.Rendering" />
   </ItemGroup>
+  <ItemGroup>
+    <EmbeddedResource Include="Marketing\platform-repo-catalog.json" />
+  </ItemGroup>
 </Project>

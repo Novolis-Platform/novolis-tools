@@ -15,7 +15,7 @@ public sealed class CoverageCollectOptions
     /// <summary>Path to <c>Novolis.Platform.slnx</c> (optional; auto-resolved when <see cref="PlatformSlnx"/>).</summary>
     public string? PlatformSlnxPath { get; init; }
 
-    /// <summary>Run <c>Generate-Platform-Slnx.ps1</c> before collecting (Platform mode only).</summary>
+    /// <summary>Regenerate Novolis.Platform.slnx before collecting (Platform mode only).</summary>
     public bool RegenerateSlnx { get; init; }
 
     /// <summary>Build/test configuration (default Debug for speed).</summary>

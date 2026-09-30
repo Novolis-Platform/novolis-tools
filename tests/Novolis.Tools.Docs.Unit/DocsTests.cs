@@ -1,10 +1,89 @@
 using Novolis.Tools.Docs;
 using Novolis.Tools.Docs.Graph;
 using Novolis.Tools.Docs.Markdown;
+using Novolis.Tools.Docs.Marketing;
 using Novolis.Tools.Docs.Mermaid;
+using Novolis.Tools.Docs.Seed;
 using Novolis.Tools.Docs.Site;
 
 namespace Novolis.Tools.Docs.Unit;
+
+public sealed class PlatformRepoCatalogTests
+{
+    [Test]
+    public async Task Entries_Contains_Known_Repo()
+    {
+        await Assert.That(PlatformRepoCatalog.Entries.ContainsKey("novolis-documents")).IsTrue();
+        var meta = PlatformRepoCatalog.GetOrDefault("novolis-documents");
+        await Assert.That(meta.Tag).Contains("Skia PDF");
+    }
+
+    [Test]
+    public async Task GetOrDefault_Unknown_Repo_Uses_Fallback()
+    {
+        var meta = PlatformRepoCatalog.GetOrDefault("novolis-unknown-repo");
+        await Assert.That(meta.Blurb).Contains("novolis-unknown-repo");
+    }
+}
+
+public sealed class MarketingHeaderBuilderTests
+{
+    [Test]
+    public async Task Build_Includes_Marker_Block()
+    {
+        var meta = PlatformRepoCatalog.GetOrDefault("novolis-tools");
+        var header = MarketingHeaderBuilder.Build("novolis-tools", meta);
+        await Assert.That(MarketingHeaderBuilder.HasMarketingBlock(header)).IsTrue();
+        await Assert.That(header).Contains(MarketingHeaderBuilder.StartMarker);
+        await Assert.That(header).Contains(MarketingHeaderBuilder.EndMarker);
+    }
+
+    [Test]
+    public async Task MergeIntoReadme_Replaces_Existing_Block()
+    {
+        var meta = PlatformRepoCatalog.GetOrDefault("novolis-math");
+        var header = MarketingHeaderBuilder.Build("novolis-math", meta);
+        var body = """
+            <!-- novolis-marketing:start -->
+            old
+            <!-- novolis-marketing:end -->
+
+            # Body
+            """;
+        var merged = MarketingHeaderBuilder.MergeIntoReadme(body, header);
+        await Assert.That(merged).Contains(meta.Tag);
+        await Assert.That(merged).DoesNotContain("old");
+        await Assert.That(merged).Contains("# Body");
+    }
+}
+
+public sealed class DocsPackThinDocTests
+{
+    [Test]
+    public async Task ShouldReplace_Detects_Reserved_Stub_When_OverwriteThin()
+    {
+        var dir = Path.Combine(Path.GetTempPath(), "novolis-thin-" + Guid.NewGuid().ToString("N"));
+        Directory.CreateDirectory(dir);
+        var path = Path.Combine(dir, "design.md");
+        await File.WriteAllTextAsync(path, "# Design\n\nReserved for future content.\n");
+        try
+        {
+            await Assert.That(DocsPackThinDoc.ShouldReplace(path, DocsPackDocKind.Design, "novolis-sample", overwriteThin: false)).IsFalse();
+            await Assert.That(DocsPackThinDoc.ShouldReplace(path, DocsPackDocKind.Design, "novolis-sample", overwriteThin: true)).IsTrue();
+        }
+        finally
+        {
+            Directory.Delete(dir, recursive: true);
+        }
+    }
+
+    [Test]
+    public async Task ShouldReplace_Treats_Missing_File_As_Replace()
+    {
+        var path = Path.Combine(Path.GetTempPath(), "missing-" + Guid.NewGuid().ToString("N") + ".md");
+        await Assert.That(DocsPackThinDoc.ShouldReplace(path, DocsPackDocKind.Readme, "novolis-sample", overwriteThin: false)).IsTrue();
+    }
+}
 
 public sealed class MarkdownDocumentTests
 {

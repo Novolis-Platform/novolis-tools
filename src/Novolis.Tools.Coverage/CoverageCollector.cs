@@ -479,32 +479,11 @@ public sealed class CoverageCollector
         };
     }
 
-    private static async Task RegeneratePlatformSlnxAsync(string root, CancellationToken ct)
+    private static Task RegeneratePlatformSlnxAsync(string root, CancellationToken ct)
     {
-        var script = Path.Combine(root, "novolis-governance", "build", "Generate-Platform-Slnx.ps1");
-        if (!File.Exists(script))
-            throw new FileNotFoundException("Generate-Platform-Slnx.ps1 not found.", script);
-
-        var psi = new ProcessStartInfo
-        {
-            FileName = "pwsh",
-            RedirectStandardOutput = true,
-            RedirectStandardError = true,
-            UseShellExecute = false,
-            CreateNoWindow = true,
-        };
-        psi.ArgumentList.Add("-NoProfile");
-        psi.ArgumentList.Add("-File");
-        psi.ArgumentList.Add(script);
-        psi.ArgumentList.Add("-WorkspaceRoot");
-        psi.ArgumentList.Add(root);
-
-        using var p = Process.Start(psi) ?? throw new InvalidOperationException("Failed to start pwsh");
-        _ = await p.StandardOutput.ReadToEndAsync(ct).ConfigureAwait(false);
-        _ = await p.StandardError.ReadToEndAsync(ct).ConfigureAwait(false);
-        await p.WaitForExitAsync(ct).ConfigureAwait(false);
-        if (p.ExitCode != 0)
-            throw new InvalidOperationException($"Generate-Platform-Slnx.ps1 failed (exit {p.ExitCode})");
+        ct.ThrowIfCancellationRequested();
+        Novolis.Workspaces.DotNet.Slnx.PlatformSlnxGenerator.Generate(root);
+        return Task.CompletedTask;
     }
 
     private static async Task<CoverageRepoResult> CollectRepoAsync(

@@ -1,6 +1,10 @@
 using System.CommandLine;
+using Novolis.Tools.Docs.Cli;
 using Novolis.Tools.Docs;
 using Novolis.Tools.Docs.Graph;
+using Novolis.Tools.Docs.Marketing;
+using Novolis.Tools.Docs.Org;
+using Novolis.Tools.Docs.Seed;
 using Novolis.Tools.Docs.Site;
 
 var root = new RootCommand("novolis-docs — Markdown + Mermaid documentation, relationship graphs, and docs/ HTML sites");
@@ -151,8 +155,95 @@ siteCommand.SetAction(parseResult =>
     return 0;
 });
 
+var marketingCommand = new Command("marketing", "SVG banners, repo-catalog.json, README marketing, optional gh repo meta");
+var marketingRoot = new Option<string?>("--root") { Description = "Workspace root (parent of novolis-* checkouts)" };
+var marketingBrand = new Option<string?>("--brand-root") { Description = "Novolis-Platform/.github checkout" };
+var marketingApplyGh = new Option<bool>("--apply-github-meta") { Description = "Update GitHub description + topics via gh" };
+var marketingSkipBanners = new Option<bool>("--skip-banners") { Description = "Skip SVG banner generation" };
+var marketingSkipReadmes = new Option<bool>("--skip-readmes") { Description = "Banners and catalog only" };
+marketingCommand.Options.Add(marketingRoot);
+marketingCommand.Options.Add(marketingBrand);
+marketingCommand.Options.Add(marketingApplyGh);
+marketingCommand.Options.Add(marketingSkipBanners);
+marketingCommand.Options.Add(marketingSkipReadmes);
+marketingCommand.SetAction(parseResult =>
+{
+    var workspace = DocsCliPaths.ResolveWorkspaceRoot(parseResult.GetValue(marketingRoot));
+    var brand = DocsCliPaths.ResolveBrandRoot(workspace, parseResult.GetValue(marketingBrand));
+    RepoMarketingUpgrader.Run(new RepoMarketingOptions
+    {
+        WorkspaceRoot = workspace,
+        GitHubBrandRoot = brand,
+        ProfilePath = DocsCliPaths.ResolveProfilePath(workspace),
+        PackageIndexScriptPath = DocsCliPaths.ResolvePackageIndexScript(workspace),
+        ApplyGitHubMeta = parseResult.GetValue(marketingApplyGh),
+        SkipBanners = parseResult.GetValue(marketingSkipBanners),
+        SkipReadmes = parseResult.GetValue(marketingSkipReadmes),
+    });
+    return 0;
+});
+
+var seedCommand = new Command("seed", "Seed docs/README + getting-started/design/release when missing or thin");
+var seedRoot = new Option<string?>("--root") { Description = "Workspace root (parent of novolis-* checkouts)" };
+var seedBrand = new Option<string?>("--brand-root") { Description = "Novolis-Platform/.github checkout (repo-catalog.json)" };
+var seedOverwriteThin = new Option<bool>("--overwrite-thin") { Description = "Replace stub or thin policy docs" };
+var seedSkipMarketing = new Option<bool>("--skip-marketing") { Description = "Skip root README marketing refresh" };
+var seedOnly = new Option<string[]>("--only") { Description = "Limit to repository folder names (repeatable)", Arity = ArgumentArity.ZeroOrMore };
+seedCommand.Options.Add(seedRoot);
+seedCommand.Options.Add(seedBrand);
+seedCommand.Options.Add(seedOverwriteThin);
+seedCommand.Options.Add(seedSkipMarketing);
+seedCommand.Options.Add(seedOnly);
+seedCommand.SetAction(parseResult =>
+{
+    var workspace = DocsCliPaths.ResolveWorkspaceRoot(parseResult.GetValue(seedRoot));
+    var brand = DocsCliPaths.ResolveBrandRoot(workspace, parseResult.GetValue(seedBrand));
+    DocsPackSeeder.Run(new DocsPackSeedOptions
+    {
+        WorkspaceRoot = workspace,
+        GitHubBrandRoot = brand,
+        OverwriteThin = parseResult.GetValue(seedOverwriteThin),
+        SkipMarketing = parseResult.GetValue(seedSkipMarketing),
+        OnlyRepos = parseResult.GetValue(seedOnly) ?? [],
+    });
+    return 0;
+});
+
+var orgReadmeCommand = new Command("org-readme", "Regenerate org profile README CI + package status tables via gh");
+var orgOrg = new Option<string>("--org") { Description = "GitHub organization", DefaultValueFactory = _ => "Novolis-Platform" };
+var orgReadme = new Option<string?>("--readme") { Description = "Path to profile/README.md" };
+var orgThrottle = new Option<int>("--throttle") { Description = "Max parallel gh/API calls", DefaultValueFactory = _ => 16 };
+var orgMaxPackages = new Option<int>("--max-packages") { Description = "Package IDs shown per repo row", DefaultValueFactory = _ => 3 };
+orgReadmeCommand.Options.Add(orgOrg);
+orgReadmeCommand.Options.Add(orgReadme);
+orgReadmeCommand.Options.Add(orgThrottle);
+orgReadmeCommand.Options.Add(orgMaxPackages);
+orgReadmeCommand.SetAction(parseResult =>
+{
+    var readme = parseResult.GetValue(orgReadme);
+    if (string.IsNullOrWhiteSpace(readme))
+    {
+        var cwd = Directory.GetCurrentDirectory();
+        readme = File.Exists(Path.Combine(cwd, "profile", "README.md"))
+            ? Path.Combine(cwd, "profile", "README.md")
+            : Path.GetFullPath(Path.Combine(cwd, "..", "profile", "README.md"));
+    }
+
+    OrgLandingStatusUpdater.Run(new OrgLandingStatusOptions
+    {
+        Org = parseResult.GetValue(orgOrg)!,
+        ProfileReadmePath = Path.GetFullPath(readme!),
+        ThrottleLimit = parseResult.GetValue(orgThrottle),
+        MaxPackagesPerRepo = parseResult.GetValue(orgMaxPackages),
+    });
+    return 0;
+});
+
 root.Subcommands.Add(scaffoldCommand);
 root.Subcommands.Add(graphCommand);
 root.Subcommands.Add(siteCommand);
+root.Subcommands.Add(marketingCommand);
+root.Subcommands.Add(seedCommand);
+root.Subcommands.Add(orgReadmeCommand);
 
 return root.Parse(args).Invoke();
