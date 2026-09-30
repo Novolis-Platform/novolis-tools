@@ -211,6 +211,11 @@ public static class OrgStatusMarkdown
             return "Secret NUGET_API_KEY is not set";
         }
 
+        if (text.Contains("Node.js 20 is deprecated", StringComparison.OrdinalIgnoreCase))
+        {
+            return "Node.js 20 actions are deprecated";
+        }
+
         if (text.Contains("maximum execution time", StringComparison.OrdinalIgnoreCase))
         {
             return "Exceeded the 6h job limit";
@@ -225,7 +230,9 @@ public static class OrgStatusMarkdown
     }
 
     private static bool IsSharedCause(string error) =>
-        error is "Secret NUGET_API_KEY is not set" or "Input required and not supplied";
+        error is "Secret NUGET_API_KEY is not set"
+            or "Input required and not supplied"
+            or "Node.js 20 actions are deprecated";
 
     private static string RepoLink(string org, string repo) =>
         $"[**{repo}**](https://github.com/{org}/{repo})";

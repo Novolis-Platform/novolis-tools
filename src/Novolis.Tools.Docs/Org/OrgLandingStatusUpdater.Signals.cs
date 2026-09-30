@@ -193,35 +193,30 @@ public static partial class OrgLandingStatusUpdater
                 return null;
             }
 
-            string? chosen = null;
+            string? failure = null;
+            string? warning = null;
             foreach (var ann in doc.RootElement.EnumerateArray())
             {
                 var level = StringProp(ann, "annotation_level");
                 var message = StringProp(ann, "message");
-                if (string.IsNullOrWhiteSpace(message) || level is not ("failure" or "warning"))
+                if (string.IsNullOrWhiteSpace(message))
                 {
                     continue;
                 }
 
                 if (level == "failure")
                 {
-                    if (!OrgFailureText.IsGenericProcessExit(message))
-                    {
-                        return message;
-                    }
-
-                    if (chosen is null || OrgFailureText.IsGenericProcessExit(chosen))
-                    {
-                        chosen = message;
-                    }
-
+                    failure = OrgFailureText.Prefer(failure, message);
                     continue;
                 }
 
-                chosen ??= message;
+                if (level == "warning" && !OrgFailureText.IsActionRuntimeNotice(message))
+                {
+                    warning ??= message;
+                }
             }
 
-            return chosen;
+            return failure ?? warning;
         }
         catch (JsonException)
         {

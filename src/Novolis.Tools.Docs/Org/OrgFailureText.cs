@@ -13,6 +13,11 @@ internal static class OrgFailureText
         !string.IsNullOrWhiteSpace(error) &&
         error.Contains("Process completed with exit code", StringComparison.OrdinalIgnoreCase);
 
+    /// <summary>Actions runtime notices are not why the job failed.</summary>
+    public static bool IsActionRuntimeNotice(string? error) =>
+        !string.IsNullOrWhiteSpace(error) &&
+        error.Contains("Node.js 20 is deprecated", StringComparison.OrdinalIgnoreCase);
+
     /// <summary>Keeps a specific annotation ahead of the runner's exit-code line.</summary>
     public static string? Prefer(string? current, string? candidate)
     {
