@@ -1,0 +1,18 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <PackageId>Novolis.Tools.CodeLayout</PackageId>
+    <Description>Map and repair C# file layout across an SLNX solution.</Description>
+    <IsPackable>true</IsPackable>
+    <RootNamespace>Novolis.Tools.CodeLayout</RootNamespace>
+    <PackageTags>novolis;csharp;code-layout;source-layout;slnx;tooling</PackageTags>
+  </PropertyGroup>
+  <ItemGroup>
+    <PackageReference Include="Microsoft.CodeAnalysis.CSharp" />
+    <LibraryReference Include="Novolis.Workspaces.DotNet.Abstractions" />
+    <LibraryReference Include="Novolis.Workspaces.DotNet.MSBuild" />
+    <LibraryReference Include="Novolis.Workspaces.DotNet.Slnx" />
+  </ItemGroup>
+  <ItemGroup>
+    <InternalsVisibleTo Include="Novolis.Tools.CodeLayout.Unit" />
+  </ItemGroup>
+</Project>

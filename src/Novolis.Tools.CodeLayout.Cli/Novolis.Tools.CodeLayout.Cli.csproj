@@ -1,0 +1,17 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+    <PackageId>Novolis.Tools.CodeLayout.Cli</PackageId>
+    <Description>dotnet tool novolis-code-layout — map and repair C# file layout across an SLNX solution.</Description>
+    <IsPackable>true</IsPackable>
+    <PackAsTool>true</PackAsTool>
+    <ToolCommandName>novolis-code-layout</ToolCommandName>
+    <RootNamespace>Novolis.Tools.CodeLayout.Cli</RootNamespace>
+    <PackageTags>novolis;csharp;code-layout;slnx;cli;dotnet-tool</PackageTags>
+    <PackageReadmeFile>README.md</PackageReadmeFile>
+  </PropertyGroup>
+  <ItemGroup>
+    <PackageReference Include="System.CommandLine" />
+    <ProjectReference Include="..\Novolis.Tools.CodeLayout\Novolis.Tools.CodeLayout.csproj" />
+  </ItemGroup>
+</Project>

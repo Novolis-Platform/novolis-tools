@@ -14,6 +14,8 @@ Consumer float for packages in this repo: **`2026.1.*`**.
 | Package | Kind |
 |---------|------|
 | `Novolis.Tools.Cli` | Library (Spectre helpers) |
+| `Novolis.Tools.CodeLayout` | Library (SLNX-wide C# layout mapping and repair) |
+| `Novolis.Tools.CodeLayout.Cli` | `dotnet tool` (`novolis-code-layout`) |
 | `Novolis.Tools.Coverage` | Library (coverage collect / merge) |
 | `Novolis.Tools.Coverage.Cli` | `dotnet tool` (`novolis-coverage`) |
 | `Novolis.Tools.Docs` | Library |

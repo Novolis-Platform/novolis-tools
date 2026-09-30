@@ -50,6 +50,28 @@ dotnet tool install --global Novolis.Tools.Coverage.Cli --version 2026.1.*
 novolis-coverage collect --platform --skip-build --fail-below -1 --out d:\novolis\coverage
 ```
 
+### novolis-code-layout
+
+Map and repair C# source layout across an entire `.slnx`. The map identifies files
+with multiple top-level types, type-less files, and safe deletion candidates.
+
+```powershell
+dotnet run --project d:\novolis\novolis-tools\src\Novolis.Tools.CodeLayout.Cli -- map d:\novolis\Novolis.Platform.slnx
+dotnet run --project d:\novolis\novolis-tools\src\Novolis.Tools.CodeLayout.Cli -- map d:\novolis\Novolis.Platform.slnx --json
+dotnet run --project d:\novolis\novolis-tools\src\Novolis.Tools.CodeLayout.Cli -- fix d:\novolis\Novolis.Platform.slnx
+dotnet run --project d:\novolis\novolis-tools\src\Novolis.Tools.CodeLayout.Cli -- fix d:\novolis\Novolis.Platform.slnx --delete
+```
+
+`fix` moves extra types into separate files. `--delete` is required to remove
+only empty or comment-only candidates; files containing usings, attributes,
+top-level statements, directives, generated content, or shared project references
+are retained.
+
+```powershell
+dotnet tool install --global Novolis.Tools.CodeLayout.Cli --version 2026.1.*
+novolis-code-layout map d:\novolis\Novolis.Platform.slnx
+```
+
 ### novolis-sqlite
 
 Spectre REPL over `Novolis.Storage.Sqlite`. Missing files are refused unless `--create`; prefer `--read-only` when inspecting.
@@ -85,6 +107,7 @@ novolis-litedb d:\temp\app.db --read-only
 |---------|-----|
 | `Novolis.Tools.Cli` | Spectre helpers for building more tools |
 | `Novolis.Tools.Coverage` | Coverage collect / merge APIs |
+| `Novolis.Tools.CodeLayout` | SLNX-wide C# source layout mapping and repair APIs |
 | `Novolis.Tools.Docs` | Markdown / Mermaid / relationship graphs in code |
 | `Novolis.Tools.MarkdownPdf` | Markdown → PDF with named themes |
 | `Novolis.Tools.Sqlite` | SQLite session helpers (depends on `Novolis.Storage.Sqlite`) |

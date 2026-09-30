@@ -17,6 +17,8 @@ Published docs: [https://novolis-platform.github.io/.github/novolis-tools/](http
 | Package |
 | --- |
 | `Novolis.Tools.Cli` |
+| `Novolis.Tools.CodeLayout` |
+| `Novolis.Tools.CodeLayout.Cli` |
 | `Novolis.Tools.Coverage` |
 | `Novolis.Tools.Coverage.Cli` |
 | `Novolis.Tools.Docs` |
