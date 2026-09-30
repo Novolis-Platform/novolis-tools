@@ -134,9 +134,10 @@ public static class OrgStatusMarkdown
                 sb.Append(" · `").Append(Text(row.GprVersion)).Append('`');
             }
 
-            if (!string.IsNullOrWhiteSpace(row.NugetVersion))
+            if (row.PackageCount > 0)
             {
-                sb.Append(" · nuget.org `").Append(Text(row.NugetVersion)).Append('`');
+                var nuget = string.IsNullOrWhiteSpace(row.NugetVersion) ? "missing" : row.NugetVersion;
+                sb.Append(" · nuget.org `").Append(Text(nuget)).Append('`');
             }
 
             if (!string.IsNullOrWhiteSpace(row.ReleaseTag))

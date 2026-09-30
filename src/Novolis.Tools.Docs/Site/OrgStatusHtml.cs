@@ -73,9 +73,10 @@ public static class OrgStatusHtml
             sb.Append(VersionChip("package", "Packages", repo.GprVersion));
         }
 
-        if (!string.IsNullOrWhiteSpace(repo.NugetVersion))
+        if (repo.PackageCount > 0)
         {
-            sb.Append(VersionChip("nuget", "nuget.org", repo.NugetVersion));
+            var nuget = string.IsNullOrWhiteSpace(repo.NugetVersion) ? "missing" : repo.NugetVersion;
+            sb.Append(VersionChip("nuget", "nuget.org", nuget));
         }
 
         if (!string.IsNullOrWhiteSpace(repo.ReleaseTag))
