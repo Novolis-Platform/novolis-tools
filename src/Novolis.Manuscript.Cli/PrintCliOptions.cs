@@ -1,5 +1,4 @@
-﻿using Novolis.Manuscript;
-using Novolis.Manuscript.Export.Pdf;
+﻿using Novolis.Manuscript.Export.Pdf;
 
 namespace Novolis.Manuscript.Cli;
 
@@ -12,6 +11,7 @@ sealed class PrintCliOptions
     public string? PrintSettings { get; init; }
     public bool Reference { get; init; }
     public bool Debug { get; init; }
+    public BookPdfOutput PdfOutput { get; init; } = BookPdfOutput.Combine;
 
     public static PrintCliOptions Parse(string[] args)
     {
@@ -19,6 +19,9 @@ sealed class PrintCliOptions
         var reference = false;
         var debug = false;
         var help = false;
+        var combine = false;
+        var chapters = false;
+        var both = false;
         for (var i = 0; i < args.Length; i++)
         {
             var a = args[i];
@@ -47,6 +50,15 @@ sealed class PrintCliOptions
                 case "--debug":
                     debug = true;
                     break;
+                case "--combine":
+                    combine = true;
+                    break;
+                case "--chapters":
+                    chapters = true;
+                    break;
+                case "--both":
+                    both = true;
+                    break;
                 default:
                     throw new InvalidOperationException($"Unknown option: {a}");
             }
@@ -61,6 +73,16 @@ sealed class PrintCliOptions
             PrintSettings = printSettings,
             Reference = reference,
             Debug = debug,
+            PdfOutput = ResolvePdfOutput(combine, chapters, both),
         };
+    }
+
+    static BookPdfOutput ResolvePdfOutput(bool combine, bool chapters, bool both)
+    {
+        if (both || (combine && chapters))
+            return BookPdfOutput.Both;
+        if (chapters)
+            return BookPdfOutput.Chapters;
+        return BookPdfOutput.Combine;
     }
 }

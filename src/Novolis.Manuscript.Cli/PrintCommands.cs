@@ -73,6 +73,9 @@ static class PrintCommands
             var outDir = string.Equals(seriesId, "books", StringComparison.OrdinalIgnoreCase)
                 ? Path.Combine(ws.ContentRoot, "out", book.Id)
                 : Path.Combine(ws.ContentRoot, "out", seriesId, book.Id);
+            var seriesTitle = opts.Series is null
+                ? null
+                : ws.Catalog.Load(ws.ContentRoot).FirstOrDefault(s => s.Id == seriesId)?.Title;
             var paths = BookPrintExporter.ExportBookFolder(
                 book.DirectoryPath,
                 outDir,
@@ -82,23 +85,29 @@ static class PrintCommands
                 {
                     DebugMode = opts.Debug,
                     PrintSettingsPath = opts.PrintSettings,
-                    SeriesTitle = opts.Series is null
-                        ? null
-                        : ws.Catalog.Load(ws.ContentRoot).FirstOrDefault(s => s.Id == seriesId)?.Title,
+                    SeriesTitle = seriesTitle,
+                    PdfOutput = opts.PdfOutput,
                 });
-            Console.WriteLine($"PDF: {paths.PdfPath}");
+            if (opts.PdfOutput is BookPdfOutput.Combine or BookPdfOutput.Both)
+                Console.WriteLine($"PDF: {paths.PdfPath}");
+            if (opts.PdfOutput is BookPdfOutput.Chapters or BookPdfOutput.Both)
+            {
+                var chaptersDir = Path.Combine(outDir, book.Id + "-chapters");
+                Console.WriteLine($"Chapter PDFs: {chaptersDir}");
+            }
 
-            var mdPaths = Novolis.Manuscript.Export.Markdown.ManuscriptMarkdownExporter.ExportBook(
-                book,
-                outDir,
-                new Novolis.Manuscript.Export.Markdown.ManuscriptMarkdownExportOptions
-                {
-                    AuthorMode = opts.Debug,
-                    SeriesTitle = opts.Series is null
-                        ? null
-                        : ws.Catalog.Load(ws.ContentRoot).FirstOrDefault(s => s.Id == seriesId)?.Title,
-                });
-            Console.WriteLine($"Markdown: {mdPaths.ReaderMarkdownPath}");
+            if (opts.PdfOutput is BookPdfOutput.Combine or BookPdfOutput.Both)
+            {
+                var mdPaths = Novolis.Manuscript.Export.Markdown.ManuscriptMarkdownExporter.ExportBook(
+                    book,
+                    outDir,
+                    new Novolis.Manuscript.Export.Markdown.ManuscriptMarkdownExportOptions
+                    {
+                        AuthorMode = opts.Debug,
+                        SeriesTitle = seriesTitle,
+                    });
+                Console.WriteLine($"Markdown: {mdPaths.ReaderMarkdownPath}");
+            }
         }
 
         return 0;
@@ -109,7 +118,10 @@ static class PrintCommands
         Console.WriteLine("""
             novolis-manuscript print [options]
 
-              (default)               Print all books
+              (default) / --combine   One combined PDF per book
+              --chapters              Chapter PDFs only ({bookId}-chapters/)
+              --both                  Combined PDF and chapter folder
+              --combine --chapters    Same as --both
               --series ID --book ID   Print one book
               --reference --series ID Print series reference manual
               --print-settings PATH
