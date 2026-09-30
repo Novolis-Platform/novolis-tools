@@ -148,10 +148,15 @@ public sealed class CodeLayoutTests
                 [project],
                 []);
 
-            var result = await new CodeLayoutFixer().ApplyAsync(report, delete: false);
+            var tracker = new RecordingGitFileTracker();
+            var result = await new CodeLayoutFixer(tracker).ApplyAsync(report, delete: false);
             await Assert.That(result.FilesDeleted).IsEqualTo(0);
             await Assert.That(File.Exists(Path.Combine(root, "Extra.cs"))).IsTrue();
             await Assert.That(File.Exists(emptyPath)).IsTrue();
+            await Assert.That(tracker.FilePaths)
+                .Contains(Path.Combine(root, "Extra.cs"));
+            await Assert.That(result.Changes.Any(change => change.Kind == "git-staged"))
+                .IsTrue();
 
             var deleteResult = await new CodeLayoutFixer().ApplyAsync(report, delete: true);
             await Assert.That(deleteResult.FilesDeleted).IsEqualTo(1);
@@ -194,5 +199,20 @@ public sealed class CodeLayoutTests
             analysis.Types.Count == 0 ? analysis.TypeLessKind : "none",
             analysis.DeletionCandidate,
             analysis.DeletionReason);
+    }
+
+    private sealed class RecordingGitFileTracker : IGitFileTracker
+    {
+        public List<string> FilePaths { get; } = [];
+
+        public ValueTask<GitTrackingResult> TrackAsync(
+            IReadOnlyCollection<string> filePaths,
+            CancellationToken cancellationToken)
+        {
+            FilePaths.AddRange(filePaths);
+            return ValueTask.FromResult(new GitTrackingResult(
+                [new CodeLayoutChange("git-staged", filePaths.First(), "staged")],
+                []));
+        }
     }
 }

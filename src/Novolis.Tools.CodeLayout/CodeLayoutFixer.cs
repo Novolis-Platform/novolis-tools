@@ -7,6 +7,20 @@ namespace Novolis.Tools.CodeLayout;
 /// <summary>Applies the one-type-per-file layout and optional safe deletions.</summary>
 public sealed class CodeLayoutFixer
 {
+    private readonly IGitFileTracker gitFileTracker;
+
+    /// <summary>Creates a fixer that stages newly created files with Git.</summary>
+    public CodeLayoutFixer()
+        : this(new GitFileTracker())
+    {
+    }
+
+    internal CodeLayoutFixer(IGitFileTracker gitFileTracker)
+    {
+        this.gitFileTracker = gitFileTracker
+            ?? throw new ArgumentNullException(nameof(gitFileTracker));
+    }
+
     /// <summary>
     /// Split extra types in every mapped file. Type-less deletion candidates are only
     /// removed when <paramref name="delete"/> is true.
@@ -152,6 +166,20 @@ public sealed class CodeLayoutFixer
                         file.FilePath));
                 }
             }
+        }
+
+        var createdFiles = changes
+            .Where(change => string.Equals(change.Kind, "created", StringComparison.Ordinal))
+            .Select(change => change.FilePath)
+            .Distinct(StringComparer.OrdinalIgnoreCase)
+            .ToArray();
+        if (createdFiles.Length > 0)
+        {
+            var tracking = await gitFileTracker
+                .TrackAsync(createdFiles, cancellationToken)
+                .ConfigureAwait(false);
+            changes.AddRange(tracking.Changes);
+            diagnostics.AddRange(tracking.Diagnostics);
         }
 
         return new CodeLayoutFixResult(report, changes, diagnostics);

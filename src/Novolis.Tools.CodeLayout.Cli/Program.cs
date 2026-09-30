@@ -3,39 +3,41 @@ using System.CommandLine;
 using Novolis.Tools.CodeLayout;
 
 var root = new RootCommand("""
-    novolis-code-layout — map and repair C# file layout across an SLNX solution.
+    novolis-code-layout — detect and repair C# file layout across an SLNX solution.
 
-    map reports files with multiple top-level types and type-less source files.
-    fix moves extra types into their own files. Add --delete to remove only
+    detect reports files with multiple top-level types and type-less source files.
+    detect-and-fix moves extra types into their own files. Add --delete to remove only
     explicitly classified empty-file deletion candidates.
     """);
 
-var map = new Command("map", "Map C# file layout without changing files.");
-var mapOptions = AddScanOptions(map);
-map.SetAction(async (parseResult, cancellationToken) =>
+var detect = new Command("detect", "Detect C# file-layout issues without changing files.");
+detect.Aliases.Add("map");
+var detectOptions = AddScanOptions(detect);
+detect.SetAction(async (parseResult, cancellationToken) =>
     await RunAsync(
         parseResult,
         async () =>
         {
-            var report = await ScanAsync(parseResult, mapOptions, cancellationToken)
+            var report = await ScanAsync(parseResult, detectOptions, cancellationToken)
                 .ConfigureAwait(false);
-            if (parseResult.GetValue(mapOptions.Json))
+            if (parseResult.GetValue(detectOptions.Json))
                 WriteJson(report);
             else
                 WriteHumanReport(report);
             return HasErrors(report.Diagnostics) ? 1 : 0;
         }).ConfigureAwait(false));
-root.Subcommands.Add(map);
+root.Subcommands.Add(detect);
 
-var fix = new Command("fix", "Split extra types and optionally delete safe type-less files.");
-var fixOptions = AddScanOptions(fix);
+var detectAndFix = new Command("detect-and-fix", "Detect and fix C# file-layout issues.");
+detectAndFix.Aliases.Add("fix");
+var fixOptions = AddScanOptions(detectAndFix);
 var deleteOption = new Option<bool>("--delete")
 {
     Description = "Delete only files reported as safe deletion candidates.",
     DefaultValueFactory = _ => false,
 };
-fix.Options.Add(deleteOption);
-fix.SetAction(async (parseResult, cancellationToken) =>
+detectAndFix.Options.Add(deleteOption);
+detectAndFix.SetAction(async (parseResult, cancellationToken) =>
     await RunAsync(
         parseResult,
         async () =>
@@ -55,9 +57,11 @@ fix.SetAction(async (parseResult, cancellationToken) =>
 
             return HasErrors(report.Diagnostics) || HasErrors(result.Diagnostics) ? 1 : 0;
         }).ConfigureAwait(false));
-root.Subcommands.Add(fix);
+root.Subcommands.Add(detectAndFix);
 
 if (args.Length > 0
+    && !args[0].Equals("detect", StringComparison.OrdinalIgnoreCase)
+    && !args[0].Equals("detect-and-fix", StringComparison.OrdinalIgnoreCase)
     && !args[0].Equals("map", StringComparison.OrdinalIgnoreCase)
     && !args[0].Equals("fix", StringComparison.OrdinalIgnoreCase)
     && !args[0].Equals("help", StringComparison.OrdinalIgnoreCase)
@@ -66,8 +70,8 @@ if (args.Length > 0
 {
     var directCommand = args.Any(argument =>
         string.Equals(argument, "--delete", StringComparison.OrdinalIgnoreCase))
-        ? "fix"
-        : "map";
+        ? "detect-and-fix"
+        : "detect";
     args = new[] { directCommand }.Concat(args).ToArray();
 }
 

@@ -52,24 +52,26 @@ novolis-coverage collect --platform --skip-build --fail-below -1 --out d:\novoli
 
 ### novolis-code-layout
 
-Map and repair C# source layout across an entire `.slnx`. The map identifies files
-with multiple top-level types, type-less files, and safe deletion candidates.
+Detect and repair C# source layout across an entire `.slnx`. The detect command
+identifies files with multiple top-level types, type-less files, and safe deletion
+candidates.
 
 ```powershell
-dotnet run --project d:\novolis\novolis-tools\src\Novolis.Tools.CodeLayout.Cli -- map d:\novolis\Novolis.Platform.slnx
-dotnet run --project d:\novolis\novolis-tools\src\Novolis.Tools.CodeLayout.Cli -- map d:\novolis\Novolis.Platform.slnx --json
-dotnet run --project d:\novolis\novolis-tools\src\Novolis.Tools.CodeLayout.Cli -- fix d:\novolis\Novolis.Platform.slnx
-dotnet run --project d:\novolis\novolis-tools\src\Novolis.Tools.CodeLayout.Cli -- fix d:\novolis\Novolis.Platform.slnx --delete
+dotnet run --project d:\novolis\novolis-tools\src\Novolis.Tools.CodeLayout.Cli -- detect d:\novolis\Novolis.Platform.slnx
+dotnet run --project d:\novolis\novolis-tools\src\Novolis.Tools.CodeLayout.Cli -- detect d:\novolis\Novolis.Platform.slnx --json
+dotnet run --project d:\novolis\novolis-tools\src\Novolis.Tools.CodeLayout.Cli -- detect-and-fix d:\novolis\Novolis.Platform.slnx
+dotnet run --project d:\novolis\novolis-tools\src\Novolis.Tools.CodeLayout.Cli -- detect-and-fix d:\novolis\Novolis.Platform.slnx --delete
 ```
 
-`fix` moves extra types into separate files. `--delete` is required to remove
-only empty or comment-only candidates; files containing usings, attributes,
+`fix` is an alias for `detect-and-fix`. The fixer moves extra types into separate
+files and stages each newly created file with Git. `--delete` is required to
+remove only empty or comment-only candidates; files containing usings, attributes,
 top-level statements, directives, generated content, or shared project references
 are retained.
 
 ```powershell
 dotnet tool install --global Novolis.Tools.CodeLayout.Cli --version 2026.1.*
-novolis-code-layout map d:\novolis\Novolis.Platform.slnx
+novolis-code-layout detect d:\novolis\Novolis.Platform.slnx
 ```
 
 ### novolis-sqlite

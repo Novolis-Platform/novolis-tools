@@ -115,8 +115,8 @@ dotnet run --project d:\novolis\novolis-tools\src\Novolis.Tools.Docs.Cli -- grap
 dotnet run --project d:\novolis\novolis-tools\src\Novolis.Tools.MarkdownPdf.Cli -- themes
 dotnet run --project d:\novolis\novolis-tools\src\Novolis.Tools.MarkdownPdf.Cli -- convert --in D:\path\file.md --theme trade
 dotnet run --project d:\novolis\novolis-tools\src\Novolis.Tools.Coverage.Cli -- collect --platform --skip-build --fail-below -1 --out d:\novolis\coverage
-dotnet run --project d:\novolis\novolis-tools\src\Novolis.Tools.CodeLayout.Cli -- map d:\novolis\Novolis.Platform.slnx
-dotnet run --project d:\novolis\novolis-tools\src\Novolis.Tools.CodeLayout.Cli -- fix d:\novolis\Novolis.Platform.slnx --delete
+dotnet run --project d:\novolis\novolis-tools\src\Novolis.Tools.CodeLayout.Cli -- detect d:\novolis\Novolis.Platform.slnx
+dotnet run --project d:\novolis\novolis-tools\src\Novolis.Tools.CodeLayout.Cli -- detect-and-fix d:\novolis\Novolis.Platform.slnx --delete
 dotnet run --project d:\novolis\novolis-tools\src\Novolis.Tools.Sqlite.Cli -- :memory: -c "SELECT 'ok' AS status;"
 dotnet run --project d:\novolis\novolis-tools\src\Novolis.Tools.LiteDb.Cli -- :memory: -c "INSERT INTO t VALUES {_id: 1, status: \"ok\"}; SELECT $ FROM t;"
 dotnet run --project d:\novolis\novolis-tools\src\Novolis.Manuscript.Cli -- book list-books --workspace D:\repos\books
