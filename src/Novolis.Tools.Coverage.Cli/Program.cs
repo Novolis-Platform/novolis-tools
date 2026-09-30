@@ -397,12 +397,8 @@ testGapsCommand.Options.Add(testGapsIncludeExe);
 var testGapsIncludeNonPackable = new Option<bool>("--include-non-packable") { Description = "Also flag IsPackable=false libraries" };
 testGapsCommand.Options.Add(testGapsIncludeNonPackable);
 var testGapsThrottle = AddThrottle(testGapsCommand);
-var testGapsFail = new Option<bool>("--fail-on-gaps")
-{
-    Description = "Exit 1 when any gap is found",
-    DefaultValueFactory = _ => true,
-};
-testGapsCommand.Options.Add(testGapsFail);
+var testGapsNoFail = new Option<bool>("--no-fail") { Description = "Report only; do not exit 1 on gaps" };
+testGapsCommand.Options.Add(testGapsNoFail);
 testGapsCommand.SetAction(parseResult =>
 {
     var workspace = CoverageWorkspace.ResolveRoot(parseResult.GetValue(testGapsRoot));
@@ -428,7 +424,7 @@ testGapsCommand.SetAction(parseResult =>
     Console.WriteLine($"Untested assemblies: {report.UntestedAssemblies.Count}");
     Console.WriteLine($"Summary: {mdPath}");
     Console.WriteLine($"JSON:    {jsonPath}");
-    if (parseResult.GetValue(testGapsFail) && report.GapCount > 0)
+    if (!parseResult.GetValue(testGapsNoFail) && report.GapCount > 0)
         return 1;
     return 0;
 });

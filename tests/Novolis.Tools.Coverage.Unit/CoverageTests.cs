@@ -454,9 +454,6 @@ public sealed class TestGapScannerTests
                   </ItemGroup>
                 </Project>
                 """);
-            await File.WriteAllTextAsync(Path.Combine(root, "novolis-governance", "scripts", "coverage-excludes.txt").Replace(
-                Path.Combine(root, "novolis-governance", "scripts", "coverage-excludes.txt"),
-                Path.Combine(root, "novolis-governance", "scripts", "coverage-excludes.txt")), "");
             Directory.CreateDirectory(Path.Combine(root, "novolis-governance", "scripts"));
             await File.WriteAllTextAsync(Path.Combine(root, "novolis-governance", "scripts", "coverage-excludes.txt"), "# none\n");
 
