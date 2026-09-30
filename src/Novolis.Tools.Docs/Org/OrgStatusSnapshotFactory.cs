@@ -25,7 +25,10 @@ internal static class OrgStatusSnapshotFactory
             }
 
             AddFailure(failures, repo.Name, repo.Merge);
-            AddFailure(failures, repo.Name, repo.ReleaseRun);
+            if (OrgShipPath.PublishesInstallers(repo.Name))
+            {
+                AddFailure(failures, repo.Name, repo.ReleaseRun);
+            }
 
             var row = new OrgStatusRepo
             {
@@ -44,14 +47,17 @@ internal static class OrgStatusSnapshotFactory
                 row.ReleaseTag = release.Tag;
                 row.ReleasePublished = FormatWhen(release.PublishedAt);
                 row.ReleaseUrl = release.HtmlUrl;
-                releases.Add(new OrgStatusRelease
+                if (CountsAsShipped(repo, release))
                 {
-                    Repo = repo.Name,
-                    Tag = release.Tag,
-                    Published = row.ReleasePublished,
-                    Url = release.HtmlUrl,
-                    Channel = Channel(repo),
-                });
+                    releases.Add(new OrgStatusRelease
+                    {
+                        Repo = repo.Name,
+                        Tag = release.Tag,
+                        Published = row.ReleasePublished,
+                        Url = release.HtmlUrl,
+                        Channel = Channel(release),
+                    });
+                }
             }
 
             rows.Add(row);
@@ -83,6 +89,11 @@ internal static class OrgStatusSnapshotFactory
             return;
         }
 
+        if (OrgFailureText.IsSupersededCancellation(run.Error))
+        {
+            return;
+        }
+
         var title = run.Title.Length <= 72 ? run.Title : run.Title[..72] + "…";
         var error = run.Error ?? "";
         if (error.Length > 180)
@@ -102,20 +113,12 @@ internal static class OrgStatusSnapshotFactory
         });
     }
 
-    private static string Channel(OrgRepoFacts repo)
-    {
-        if (!string.IsNullOrWhiteSpace(repo.NugetVersion))
-        {
-            return "nuget.org " + repo.NugetVersion;
-        }
+    /// <summary>A library tag with no uploaded APKs or installers did not ship.</summary>
+    private static bool CountsAsShipped(OrgRepoFacts repo, OrgReleaseFact release) =>
+        OrgShipPath.PublishesInstallers(repo.Name) && release.AssetCount > 0;
 
-        if (repo.LatestRelease is { AssetCount: > 0 } release)
-        {
-            return release.AssetCount == 1 ? "1 release asset" : $"{release.AssetCount} release assets";
-        }
-
-        return "GitHub Release";
-    }
+    private static string Channel(OrgReleaseFact release) =>
+        release.AssetCount == 1 ? "1 release asset" : $"{release.AssetCount} release assets";
 
     /// <summary>Formats a GitHub timestamp as UTC. Unparseable values pass through.</summary>
     public static string FormatWhen(string? iso)

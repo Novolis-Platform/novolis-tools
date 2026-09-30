@@ -15,7 +15,7 @@ public static class OrgStatusHtml
         sb.AppendLine($"""<div class="section-heading"><h2 class="status-label mark-fail">{OrgStatusMarks.Svg("fail")}<span>Failed</span></h2></div>""");
         if (status.Failures.Count == 0)
         {
-            sb.AppendLine("<p>No failed or cancelled merge or release runs in the latest completed workflow for each repository.</p>");
+            sb.AppendLine("<p>No failed or cancelled merge runs.</p>");
         }
         else
         {
@@ -38,7 +38,7 @@ public static class OrgStatusHtml
         sb.AppendLine($"""<div class="section-heading"><h2 class="status-label mark-ship">{OrgStatusMarks.Svg("ship")}<span>Shipped</span></h2></div>""");
         if (status.Releases.Count == 0)
         {
-            sb.AppendLine("<p>No GitHub Releases published.</p>");
+            sb.AppendLine("<p>No app release has published installers or other assets.</p>");
         }
         else
         {

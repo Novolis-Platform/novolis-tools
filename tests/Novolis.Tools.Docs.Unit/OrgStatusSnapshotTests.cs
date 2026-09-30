@@ -13,7 +13,7 @@ public sealed class OrgStatusSnapshotTests
     }
 
     [Test]
-    public async Task Markdown_Lists_Failures_And_Shipped_Releases()
+    public async Task Markdown_Lists_Merge_Failures_And_Shipped_Releases()
     {
         var snapshot = OrgStatusSnapshotFactory.Create(
             "Novolis-Platform",
@@ -29,6 +29,22 @@ public sealed class OrgStatusSnapshotTests
                     new OrgWorkflowFact("release.yml", "failure", "Release", "https://github.com/Novolis-Platform/novolis-apps/actions/runs/2", "2026-09-30T12:00:00Z", "error CS1001 | boom"),
                     new OrgReleaseFact("v1.2.3", "2026-09-01T08:00:00Z", "https://github.com/Novolis-Platform/novolis-apps/releases/tag/v1.2.3", 2)),
                 new OrgRepoFacts(
+                    "novolis-audio",
+                    4,
+                    "2026.1.10.84",
+                    "",
+                    new OrgWorkflowFact("merge.yml", "success", "merge", "https://github.com/Novolis-Platform/novolis-audio/actions/runs/5", "2026-09-30T09:00:00Z", null),
+                    new OrgWorkflowFact("release.yml", "failure", "v2026.1.10", "https://github.com/Novolis-Platform/novolis-audio/actions/runs/6", "2026-07-28T19:30:00Z", "Secret NUGET_API_KEY is not set"),
+                    new OrgReleaseFact("v2026.1.10", "2026-07-28T19:30:00Z", "https://github.com/Novolis-Platform/novolis-audio/releases/tag/v2026.1.10", 0)),
+                new OrgRepoFacts(
+                    "novolis-lab",
+                    0,
+                    "",
+                    "",
+                    new OrgWorkflowFact("merge.yml", "failure", "merge", "https://github.com/Novolis-Platform/novolis-lab/actions/runs/4", "2026-09-30T11:00:00Z", "error CS0246 | boom"),
+                    null,
+                    null),
+                new OrgRepoFacts(
                     "novolis-physics",
                     2,
                     "2026.1.1.41",
@@ -40,10 +56,13 @@ public sealed class OrgStatusSnapshotTests
 
         var markdown = OrgStatusMarkdown.Build(snapshot);
         await Assert.That(markdown).Contains("Failed");
-        await Assert.That(markdown).Contains("novolis-apps");
-        await Assert.That(markdown).Contains("| release |");
-        await Assert.That(markdown).Contains("failed");
-        await Assert.That(markdown).Contains("error CS1001 \\| boom");
+        await Assert.That(markdown).Contains("novolis-lab");
+        await Assert.That(markdown).Contains("[failed](");
+        await Assert.That(markdown).Contains("error CS0246 | boom");
+        await Assert.That(markdown).Contains("error CS1001 | boom");
+        await Assert.That(markdown).DoesNotContain("NUGET_API_KEY");
+        await Assert.That(snapshot.Failures.Select(row => row.Repo).ToArray()).IsEquivalentTo(new[] { "novolis-apps", "novolis-lab" });
+        await Assert.That(snapshot.Releases.Select(row => row.Repo).ToArray()).IsEquivalentTo(new[] { "novolis-apps" });
         await Assert.That(markdown).Contains("Shipped");
         await Assert.That(markdown).Contains("`v1.2.3`");
         await Assert.That(markdown).Contains("2 assets");
@@ -51,9 +70,9 @@ public sealed class OrgStatusSnapshotTests
         await Assert.That(markdown).Contains("`2026.1.1.41`");
         await Assert.That(markdown).Contains("nuget.org");
         await Assert.That(markdown).Contains("`2026.1.0.3`");
-        await Assert.That(snapshot.FailedCount).IsEqualTo(1);
-        await Assert.That(snapshot.ReleasedRepoCount).IsEqualTo(2);
-        await Assert.That(snapshot.MergeSuccesses).IsEqualTo(2);
+        await Assert.That(snapshot.FailedCount).IsEqualTo(2);
+        await Assert.That(snapshot.ReleasedRepoCount).IsEqualTo(1);
+        await Assert.That(snapshot.MergeSuccesses).IsEqualTo(3);
 
         var html = OrgStatusHtml.Bands(snapshot);
         await Assert.That(html).Contains("id=\"failed\"");
@@ -66,5 +85,60 @@ public sealed class OrgStatusSnapshotTests
         await Assert.That(OrgStatusHtml.CardFacts(snapshot.Repos.First(r => r.Name == "novolis-physics"))).Contains("Packages");
         await Assert.That(OrgStatusHtml.CardFacts(snapshot.Repos.First(r => r.Name == "novolis-physics"))).Contains("2026.1.1.41");
         await Assert.That(OrgStatusHtml.CardFacts(snapshot.Repos.First(r => r.Name == "novolis-apps"))).Contains("Release failed");
+        await Assert.That(markdown).Contains("release [failed](");
+    }
+
+    [Test]
+    public async Task Superseded_Merge_Cancel_Is_Not_A_Failure()
+    {
+        var snapshot = OrgStatusSnapshotFactory.Create(
+            "Novolis-Platform",
+            "2026-09-30 18:00 UTC",
+            0,
+            [
+                new OrgRepoFacts(
+                    "novolis-tools",
+                    1,
+                    "2026.1.1.1",
+                    "",
+                    new OrgWorkflowFact(
+                        "merge.yml",
+                        "cancelled",
+                        "merge",
+                        "https://github.com/Novolis-Platform/novolis-tools/actions/runs/9",
+                        "2026-09-30T18:44:00Z",
+                        "Canceling since a higher priority waiting request for merge.yml exists"),
+                    null,
+                    null),
+            ]);
+
+        await Assert.That(snapshot.FailedCount).IsEqualTo(0);
+        await Assert.That(OrgFailureText.Prefer(
+            "Process completed with exit code 1",
+            "error CS0246: The type or namespace name 'Novolis' could not be found")).Contains("CS0246");
+    }
+
+    [Test]
+    public async Task Library_Tag_Without_Assets_Is_Not_Shipped()
+    {
+        var snapshot = OrgStatusSnapshotFactory.Create(
+            "Novolis-Platform",
+            "2026-09-30 18:00 UTC",
+            4,
+            [
+                new OrgRepoFacts(
+                    "novolis-avalonia",
+                    40,
+                    "2026.1.6.189",
+                    "",
+                    new OrgWorkflowFact("merge.yml", "success", "merge", "https://github.com/Novolis-Platform/novolis-avalonia/actions/runs/7", "2026-09-30T11:00:00Z", null),
+                    new OrgWorkflowFact("release.yml", "failure", "0.1", "https://github.com/Novolis-Platform/novolis-avalonia/actions/runs/8", "2026-06-06T21:55:00Z", "Secret NUGET_API_KEY is not set"),
+                    new OrgReleaseFact("0.1", "2026-06-06T21:55:00Z", "https://github.com/Novolis-Platform/novolis-avalonia/releases/tag/0.1", 0)),
+            ]);
+
+        await Assert.That(snapshot.ReleasedRepoCount).IsEqualTo(0);
+        await Assert.That(snapshot.FailedCount).IsEqualTo(0);
+        await Assert.That(snapshot.Repos[0].GprVersion).IsEqualTo("2026.1.6.189");
+        await Assert.That(snapshot.Repos[0].ReleaseTag).IsEqualTo("0.1");
     }
 }

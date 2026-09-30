@@ -35,24 +35,58 @@ public static class OrgStatusMarkdown
         sb.AppendLine();
         if (snapshot.Failures.Count == 0)
         {
-            sb.AppendLine("No failed or cancelled merge or release runs in the latest completed workflow for each repository.");
+            sb.AppendLine("No failed or cancelled merge runs.");
             sb.AppendLine();
             return;
         }
 
-        sb.AppendLine("| When | Repository | Workflow | Result | Error |");
-        sb.AppendLine("|------|------------|----------|--------|-------|");
-        foreach (var row in snapshot.Failures)
+        var sharedRepos = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+        var groups = snapshot.Failures
+            .GroupBy(row => (WorkflowName(row.Workflow), ShortError(row)))
+            .Where(group => group.Count() > 1 && IsSharedCause(group.Key.Item2))
+            .ToList();
+        foreach (var group in groups)
         {
-            sb.Append("| ").Append(Cell(row.When));
-            sb.Append(" | ").Append(RepoLink(org, row.Repo));
-            sb.Append(" | ").Append(WorkflowName(row.Workflow));
-            sb.Append(" | ").Append(ConclusionMark(row.Conclusion, row.Url));
-            sb.Append(" | ").Append(Cell(string.IsNullOrWhiteSpace(row.Error) ? row.Title : row.Error));
-            sb.AppendLine(" |");
+            foreach (var row in group)
+            {
+                sharedRepos.Add(row.Repo);
+            }
         }
 
-        sb.AppendLine();
+        var items = new List<(string When, string Line)>();
+        foreach (var row in snapshot.Failures)
+        {
+            if (sharedRepos.Contains(row.Repo) && groups.Any(group => group.Any(peer => peer.Repo == row.Repo)))
+            {
+                continue;
+            }
+
+            var line = "- " + RepoLink(org, row.Repo)
+                + " · " + WorkflowName(row.Workflow)
+                + " · " + RunLink(row.Conclusion, row.Url)
+                + " · " + Text(row.When)
+                + "<br>" + Text(ShortError(row));
+            items.Add((row.When, line));
+        }
+
+        foreach (var group in groups)
+        {
+            var newest = group.OrderByDescending(row => row.When, StringComparer.Ordinal).First();
+            var links = string.Join(" · ", group
+                .OrderBy(row => row.Repo, StringComparer.OrdinalIgnoreCase)
+                .Select(row => $"[{row.Repo}]({row.Url})"));
+            var line = "- " + WorkflowName(newest.Workflow)
+                + " · " + Word(newest.Conclusion)
+                + "<br>" + Text(group.Key.Item2)
+                + "<br>" + links;
+            items.Add((newest.When, line));
+        }
+
+        foreach (var item in items.OrderByDescending(item => item.When, StringComparer.Ordinal))
+        {
+            sb.AppendLine(item.Line);
+            sb.AppendLine();
+        }
     }
 
     private static void AppendReleases(StringBuilder sb, string org, OrgStatusSnapshot snapshot)
@@ -61,23 +95,25 @@ public static class OrgStatusMarkdown
         sb.AppendLine();
         if (snapshot.Releases.Count == 0)
         {
-            sb.AppendLine("No GitHub Releases published.");
+            sb.AppendLine("No app release has published installers or other assets.");
             sb.AppendLine();
             return;
         }
 
-        sb.AppendLine("| Published | Repository | Tag | Channel |");
-        sb.AppendLine("|-----------|------------|-----|---------|");
         foreach (var row in snapshot.Releases)
         {
-            sb.Append("| ").Append(Cell(row.Published));
-            sb.Append(" | ").Append(RepoLink(org, row.Repo));
-            sb.Append(" | ").Append(Linked($"`{row.Tag}`", row.Url));
-            sb.Append(" | ").Append(ChannelMark(row.Channel));
-            sb.AppendLine(" |");
-        }
+            var channel = ChannelPhrase(row.Channel);
+            sb.Append("- ").Append(RepoLink(org, row.Repo));
+            sb.Append(" · ").Append(Linked($"`{row.Tag}`", row.Url));
+            sb.Append(" · ").Append(Text(row.Published));
+            if (channel.Length > 0)
+            {
+                sb.Append(" · ").Append(channel);
+            }
 
-        sb.AppendLine();
+            sb.AppendLine();
+            sb.AppendLine();
+        }
     }
 
     private static void AppendInventory(StringBuilder sb, string org, OrgStatusSnapshot snapshot)
@@ -85,24 +121,40 @@ public static class OrgStatusMarkdown
         sb.AppendLine("<details>");
         sb.AppendLine($"<summary>{Labeled("package", "What we have")} — {snapshot.RepoCount} repositories, {snapshot.PackageCount} packages</summary>");
         sb.AppendLine();
-        sb.AppendLine("| Repository | Packages | GitHub Packages | nuget.org | Last release | Merge | Release |");
-        sb.AppendLine("|------------|----------|-----------------|-----------|--------------|-------|---------|");
         foreach (var row in snapshot.Repos)
         {
-            var packagesUrl = row.PackageCount > 0
-                ? $"[{row.PackageCount}](https://github.com/orgs/{org}/packages?repo_name={row.Name})"
-                : "0";
-            var release = string.IsNullOrWhiteSpace(row.ReleaseTag)
-                ? "—"
-                : Linked($"`{row.ReleaseTag}`", row.ReleaseUrl);
-            sb.Append("| ").Append(RepoLink(org, row.Name));
-            sb.Append(" | ").Append(packagesUrl);
-            sb.Append(" | ").Append(Mono(row.GprVersion));
-            sb.Append(" | ").Append(Mono(row.NugetVersion));
-            sb.Append(" | ").Append(release);
-            sb.Append(" | ").Append(ConclusionMark(row.MergeConclusion, row.MergeUrl));
-            sb.Append(" | ").Append(ConclusionMark(row.ReleaseConclusion, row.ReleaseRunUrl));
-            sb.AppendLine(" |");
+            var packages = row.PackageCount == 1
+                ? $"[1 package](https://github.com/orgs/{org}/packages?repo_name={row.Name})"
+                : row.PackageCount > 1
+                    ? $"[{row.PackageCount} packages](https://github.com/orgs/{org}/packages?repo_name={row.Name})"
+                    : "0 packages";
+            sb.Append("- ").Append(RepoLink(org, row.Name)).Append(" · ").Append(packages);
+            if (!string.IsNullOrWhiteSpace(row.GprVersion))
+            {
+                sb.Append(" · `").Append(Text(row.GprVersion)).Append('`');
+            }
+
+            if (!string.IsNullOrWhiteSpace(row.NugetVersion))
+            {
+                sb.Append(" · nuget.org `").Append(Text(row.NugetVersion)).Append('`');
+            }
+
+            if (!string.IsNullOrWhiteSpace(row.ReleaseTag))
+            {
+                sb.Append(" · ").Append(Linked($"`{row.ReleaseTag}`", row.ReleaseUrl));
+            }
+
+            if (row.MergeConclusion is "failure" or "cancelled")
+            {
+                sb.Append(" · merge ").Append(RunLink(row.MergeConclusion, row.MergeUrl));
+            }
+
+            if (row.ReleaseConclusion is "failure" or "cancelled")
+            {
+                sb.Append(" · release ").Append(RunLink(row.ReleaseConclusion, row.ReleaseRunUrl));
+            }
+
+            sb.AppendLine();
         }
 
         sb.AppendLine();
@@ -119,63 +171,76 @@ public static class OrgStatusMarkdown
     private static string WorkflowName(string workflow) =>
         workflow.Contains("release", StringComparison.OrdinalIgnoreCase) ? "release" : "merge";
 
-    private static string ConclusionMark(string conclusion, string url)
+    private static string Word(string conclusion) => conclusion switch
     {
-        var (file, word) = conclusion switch
-        {
-            "success" => ("success", "passed"),
-            "cancelled" => ("cancelled", "cancelled"),
-            "failure" => ("failure", "failed"),
-            _ => ("", ""),
-        };
-        if (file.Length == 0)
-        {
-            return "—";
-        }
+        "success" => "passed",
+        "cancelled" => "cancelled",
+        "failure" => "failed",
+        _ => conclusion,
+    };
 
-        var label = Labeled(file, word);
-        return string.IsNullOrWhiteSpace(url) ? label : $"<a href=\"{url}\">{label}</a>";
+    private static string RunLink(string conclusion, string url)
+    {
+        var word = Word(conclusion);
+        return string.IsNullOrWhiteSpace(url) ? word : $"[{word}]({url})";
     }
 
-    private static string ChannelMark(string channel)
+    private static string ChannelPhrase(string channel)
     {
         if (channel.StartsWith("nuget.org ", StringComparison.Ordinal))
         {
-            return Labeled("nuget", "nuget.org") + " `" + Cell(channel["nuget.org ".Length..]) + "`";
+            return "nuget.org `" + Text(channel["nuget.org ".Length..]) + "`";
         }
 
-        if (channel.EndsWith("release asset", StringComparison.Ordinal) ||
-            channel.EndsWith("release assets", StringComparison.Ordinal))
+        if (channel.EndsWith(" release asset", StringComparison.Ordinal) ||
+            channel.EndsWith(" release assets", StringComparison.Ordinal))
         {
-            return Labeled("release", Cell(channel.Split(' ')[0]) + " assets");
+            var count = channel.Split(' ')[0];
+            return count + (count == "1" ? " asset" : " assets");
         }
 
-        if (channel == "GitHub Release")
-        {
-            return Labeled("release", "GitHub Release");
-        }
-
-        return Cell(channel);
+        return "";
     }
 
+    private static string ShortError(OrgStatusFailure row)
+    {
+        var text = string.IsNullOrWhiteSpace(row.Error) ? row.Title : row.Error;
+        text = Text(text);
+        if (text.Contains("NUGET_API_KEY", StringComparison.Ordinal))
+        {
+            return "Secret NUGET_API_KEY is not set";
+        }
+
+        if (text.Contains("maximum execution time", StringComparison.OrdinalIgnoreCase))
+        {
+            return "Exceeded the 6h job limit";
+        }
+
+        if (text.Contains("Input required and not supplied", StringComparison.Ordinal))
+        {
+            return "Input required and not supplied";
+        }
+
+        return text.Length <= 180 ? text : text[..177] + "...";
+    }
+
+    private static bool IsSharedCause(string error) =>
+        error is "Secret NUGET_API_KEY is not set" or "Input required and not supplied";
+
     private static string RepoLink(string org, string repo) =>
-        $"[`{repo}`](https://github.com/{org}/{repo})";
+        $"[**{repo}**](https://github.com/{org}/{repo})";
 
     private static string Linked(string label, string url) =>
-        string.IsNullOrWhiteSpace(url) ? Cell(label) : $"[{label}]({url})";
+        string.IsNullOrWhiteSpace(url) ? label : $"[{label}]({url})";
 
-    private static string Mono(string version) =>
-        string.IsNullOrWhiteSpace(version) ? "—" : $"`{Cell(version)}`";
-
-    private static string Cell(string? text)
+    private static string Text(string? text)
     {
         if (string.IsNullOrWhiteSpace(text))
         {
-            return "—";
+            return "";
         }
 
-        return text.Replace("|", "\\|", StringComparison.Ordinal)
-            .Replace("\r", " ", StringComparison.Ordinal)
+        return text.Replace("\r", " ", StringComparison.Ordinal)
             .Replace("\n", " ", StringComparison.Ordinal)
             .Trim();
     }

@@ -39,8 +39,8 @@ public static partial class OrgLandingStatusUpdater
     private static OrgWorkflowFact? ReadLatestRun(string org, string repo, string workflowFile, bool preferMain)
     {
         var qs = preferMain
-            ? "per_page=1&branch=main&status=completed"
-            : "per_page=1&status=completed";
+            ? "per_page=8&branch=main&status=completed"
+            : "per_page=8&status=completed";
         var json = GhProcess.RunGh(
             ["api", $"repos/{org}/{repo}/actions/workflows/{workflowFile}/runs?{qs}"],
             ignoreFailure: true);
@@ -57,22 +57,31 @@ public static partial class OrgLandingStatusUpdater
             return null;
         }
 
-        var run = runs[0];
-        var conclusion = StringProp(run, "conclusion");
-        var runId = run.TryGetProperty("id", out var idEl) && idEl.TryGetInt64(out var id) ? id : 0L;
-        string? error = null;
-        if (runId > 0 && conclusion is "failure" or "cancelled")
+        foreach (var run in runs.EnumerateArray())
         {
-            error = FirstFailureAnnotation(org, repo, runId);
+            var conclusion = StringProp(run, "conclusion");
+            var runId = run.TryGetProperty("id", out var idEl) && idEl.TryGetInt64(out var id) ? id : 0L;
+            string? error = null;
+            if (runId > 0 && conclusion is "failure" or "cancelled")
+            {
+                error = FirstFailureAnnotation(org, repo, runId);
+            }
+
+            if (OrgFailureText.IsSupersededCancellation(error))
+            {
+                continue;
+            }
+
+            return new OrgWorkflowFact(
+                workflowFile,
+                conclusion,
+                StringProp(run, "display_title"),
+                StringProp(run, "html_url"),
+                StringProp(run, "created_at"),
+                error);
         }
 
-        return new OrgWorkflowFact(
-            workflowFile,
-            conclusion,
-            StringProp(run, "display_title"),
-            StringProp(run, "html_url"),
-            StringProp(run, "created_at"),
-            error);
+        return null;
     }
 
     private static OrgReleaseFact? ReadLatestRelease(string org, string repo)
@@ -136,6 +145,7 @@ public static partial class OrgLandingStatusUpdater
             return null;
         }
 
+        string? chosen = null;
         foreach (var job in jobs.EnumerateArray())
         {
             var conclusion = StringProp(job, "conclusion");
@@ -156,13 +166,16 @@ public static partial class OrgLandingStatusUpdater
                 ["api", $"repos/{org}/{repo}/check-runs/{checkId}/annotations"],
                 ignoreFailure: true);
             var message = FirstAnnotationMessage(annJson);
-            if (!string.IsNullOrWhiteSpace(message))
+            if (string.IsNullOrWhiteSpace(message) || OrgFailureText.IsGenericProcessExit(message))
             {
-                return message;
+                chosen ??= message;
+                continue;
             }
+
+            return message;
         }
 
-        return null;
+        return chosen;
     }
 
     private static string? FirstAnnotationMessage(string json)
@@ -180,28 +193,35 @@ public static partial class OrgLandingStatusUpdater
                 return null;
             }
 
-            string? warning = null;
+            string? chosen = null;
             foreach (var ann in doc.RootElement.EnumerateArray())
             {
                 var level = StringProp(ann, "annotation_level");
                 var message = StringProp(ann, "message");
-                if (string.IsNullOrWhiteSpace(message))
+                if (string.IsNullOrWhiteSpace(message) || level is not ("failure" or "warning"))
                 {
                     continue;
                 }
 
                 if (level == "failure")
                 {
-                    return message;
+                    if (!OrgFailureText.IsGenericProcessExit(message))
+                    {
+                        return message;
+                    }
+
+                    if (chosen is null || OrgFailureText.IsGenericProcessExit(chosen))
+                    {
+                        chosen = message;
+                    }
+
+                    continue;
                 }
 
-                if (level == "warning" && warning is null)
-                {
-                    warning = message;
-                }
+                chosen ??= message;
             }
 
-            return warning;
+            return chosen;
         }
         catch (JsonException)
         {

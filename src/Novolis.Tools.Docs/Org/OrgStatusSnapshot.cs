@@ -20,10 +20,10 @@ public sealed class OrgStatusSnapshot
     /// <summary>NuGet packages on GitHub Packages.</summary>
     public int PackageCount { get; set; }
 
-    /// <summary>Failed or cancelled latest merge.yml / release.yml runs.</summary>
+    /// <summary>Library merge failures, plus app release failures. A library GitHub Release is not a ship.</summary>
     public int FailedCount { get; set; }
 
-    /// <summary>Repositories that have published a GitHub Release.</summary>
+    /// <summary>App repositories whose latest GitHub Release published installers or other assets.</summary>
     public int ReleasedRepoCount { get; set; }
 
     /// <summary>Failed or cancelled runs, newest first.</summary>
