@@ -9,6 +9,13 @@
     <PackageVersion Include="Microsoft.CodeAnalysis.CSharp" Version="4.14.0" />
     <PackageVersion Include="Microsoft.Data.Sqlite" Version="10.0.12" />
     <PackageVersion Include="Microsoft.SourceLink.GitHub" Version="10.0.401" />
+    <PackageVersion Include="SkiaSharp" Version="3.119.4" />
+    <PackageVersion Include="SkiaSharp.NativeAssets.Android" Version="3.119.4" />
+    <PackageVersion Include="SkiaSharp.NativeAssets.Linux" Version="3.119.4" />
+    <PackageVersion Include="SkiaSharp.NativeAssets.macOS" Version="3.119.4" />
+    <PackageVersion Include="SkiaSharp.NativeAssets.WebAssembly" Version="3.119.4" />
+    <PackageVersion Include="SkiaSharp.NativeAssets.Win32" Version="3.119.4" />
+    <PackageVersion Include="Svg.Skia" Version="4.9.1" />
     <PackageVersion Include="Novolis.Documents" Version="2026.1.*" />
     <PackageVersion Include="Novolis.Documents.Skia" Version="2026.1.*" />
     <PackageVersion Include="Novolis.Audio.Voice.AzureSpeech" Version="2026.1.*" />
@@ -29,10 +36,6 @@
     <PackageVersion Include="Novolis.Math.Measure" Version="2026.1.*" />
     <PackageVersion Include="Novolis.Storage.LiteDb" Version="2026.1.*" />
     <PackageVersion Include="Novolis.Storage.Sqlite" Version="2026.1.*" />
-    <PackageVersion Include="SkiaSharp" Version="3.119.4" />
-    <PackageVersion Include="SkiaSharp.NativeAssets.Linux" Version="3.119.4" />
-    <PackageVersion Include="SkiaSharp.NativeAssets.macOS" Version="3.119.4" />
-    <PackageVersion Include="SkiaSharp.NativeAssets.Win32" Version="3.119.4" />
     <PackageVersion Include="Spectre.Console" Version="0.57.2" />
     <PackageVersion Include="SQLitePCLRaw.bundle_e_sqlite3" Version="3.0.5" />
     <PackageVersion Include="System.IO.Abstractions" Version="22.3.0" />
