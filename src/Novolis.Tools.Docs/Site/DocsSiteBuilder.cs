@@ -216,10 +216,10 @@ public static class DocsSiteBuilder
         var statusHtml = status is null ? "" : OrgStatusHtml.Bands(status);
         var navStatus = status is null
             ? ""
-            : $"""<a class="mark-fail" href="#failed" aria-label="Failed">{OrgStatusMarks.Svg("fail")}</a><a class="mark-ship" href="#shipped" aria-label="Shipped">{OrgStatusMarks.Svg("ship")}</a>""";
+            : $"""<a class="mark-fail" href="#failed">{OrgStatusMarks.Svg("fail")} Failed</a><a class="mark-ship" href="#shipped">{OrgStatusMarks.Svg("ship")} Shipped</a>""";
         var heroText = status is null
             ? """<p class="eyebrow">Documentation site</p><h1>Every library. One docs home.</h1><p class="hero-copy">Each card opens that repository's <code>docs/README.md</code> (or a generated overview) with sidebar navigation built from the docs folder layout.</p>"""
-            : "";
+            : """<p class="eyebrow">Release status</p><h1>What failed, what shipped, what we have.</h1><p class="hero-copy">Latest merge and release runs, published GitHub Releases, and the package inventory. Library docs follow.</p>""";
         var telemetry = status is null
             ? $"""
                 <div><span>{byRepo.Count}</span><strong>libraries</strong></div>
@@ -228,10 +228,10 @@ public static class DocsSiteBuilder
                 <div><span>novolis-docs</span><strong>site builder</strong></div>
                 """
             : $"""
-                <div class="mark-fail"><span>{status.FailedCount}</span>{OrgStatusMarks.Chip("fail", "Failed")}</div>
-                <div class="mark-ship"><span>{status.ReleasedRepoCount}</span>{OrgStatusMarks.Chip("ship", "Shipped")}</div>
-                <div><span>{byRepo.Count}</span><strong>libraries</strong></div>
-                <div class="mark-package"><span>{status.PackageCount}</span>{OrgStatusMarks.Chip("package", "Packages")}</div>
+                <div class="mark-fail"><span>{status.FailedCount}</span><strong>{OrgStatusMarks.Svg("fail")} Failed</strong></div>
+                <div class="mark-ship"><span>{status.ReleasedRepoCount}</span><strong>{OrgStatusMarks.Svg("ship")} Shipped</strong></div>
+                <div><span>{byRepo.Count}</span><strong>Libraries</strong></div>
+                <div class="mark-package"><span>{status.PackageCount}</span><strong>{OrgStatusMarks.Svg("package")} Packages</strong></div>
                 """;
         return $$"""
             <!doctype html>

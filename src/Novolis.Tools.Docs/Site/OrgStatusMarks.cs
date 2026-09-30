@@ -20,9 +20,13 @@ public static class OrgStatusMarks
         return $"""<svg class="status-mark" viewBox="0 0 16 16" aria-hidden="true">{body}</svg>""";
     }
 
-    /// <summary>Mark wrapped so the accessible name is on the parent and the color class is <c>mark-*</c>.</summary>
-    public static string Chip(string kind, string label) =>
-        $"""<span class="mark-{WebUtility.HtmlEncode(kind)}" title="{WebUtility.HtmlEncode(label)}">{Svg(kind)}<span class="visually-hidden">{WebUtility.HtmlEncode(label)}</span></span>""";
+    /// <summary>Mark plus a visible label. The color class is <c>mark-*</c>.</summary>
+    public static string Label(string kind, string label)
+    {
+        var text = WebUtility.HtmlEncode(label);
+        var safeKind = WebUtility.HtmlEncode(kind);
+        return $"""<span class="status-label mark-{safeKind}">{Svg(kind)}<span>{text}</span></span>""";
+    }
 
     private static string Circle(string glyph) =>
         $"""<circle cx="8" cy="8" r="7" fill="currentColor"/>{glyph}""";

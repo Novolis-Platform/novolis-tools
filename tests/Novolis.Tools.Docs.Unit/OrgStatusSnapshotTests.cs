@@ -39,18 +39,17 @@ public sealed class OrgStatusSnapshotTests
             ]);
 
         var markdown = OrgStatusMarkdown.Build(snapshot);
-        await Assert.That(markdown).Contains("brand/status/failure.svg");
-        await Assert.That(markdown).Contains("alt=\"Failed\"");
+        await Assert.That(markdown).Contains("Failed");
         await Assert.That(markdown).Contains("novolis-apps");
-        await Assert.That(markdown).Contains("alt=\"release.yml\"");
+        await Assert.That(markdown).Contains("| release |");
+        await Assert.That(markdown).Contains("failed");
         await Assert.That(markdown).Contains("error CS1001 \\| boom");
-        await Assert.That(markdown).Contains("alt=\"Shipped\"");
+        await Assert.That(markdown).Contains("Shipped");
         await Assert.That(markdown).Contains("`v1.2.3`");
-        await Assert.That(markdown).Contains("brand/status/release.svg");
-        await Assert.That(markdown).Contains("`2`");
-        await Assert.That(markdown).Contains("alt=\"What we have\"");
+        await Assert.That(markdown).Contains("2 assets");
+        await Assert.That(markdown).Contains("What we have");
         await Assert.That(markdown).Contains("`2026.1.1.41`");
-        await Assert.That(markdown).Contains("brand/status/nuget.svg");
+        await Assert.That(markdown).Contains("nuget.org");
         await Assert.That(markdown).Contains("`2026.1.0.3`");
         await Assert.That(snapshot.FailedCount).IsEqualTo(1);
         await Assert.That(snapshot.ReleasedRepoCount).IsEqualTo(2);
@@ -60,8 +59,12 @@ public sealed class OrgStatusSnapshotTests
         await Assert.That(html).Contains("id=\"failed\"");
         await Assert.That(html).Contains("id=\"shipped\"");
         await Assert.That(html).Contains("v1.2.3");
-        await Assert.That(html).Contains("status-mark");
-        await Assert.That(html).Contains("mark-fail");
+        await Assert.That(html).Contains(">Failed</span>");
+        await Assert.That(html).Contains(">Shipped</span>");
+        await Assert.That(html).Contains(">failed</span>");
+        await Assert.That(html).Contains("2 assets");
+        await Assert.That(OrgStatusHtml.CardFacts(snapshot.Repos.First(r => r.Name == "novolis-physics"))).Contains("Packages");
         await Assert.That(OrgStatusHtml.CardFacts(snapshot.Repos.First(r => r.Name == "novolis-physics"))).Contains("2026.1.1.41");
+        await Assert.That(OrgStatusHtml.CardFacts(snapshot.Repos.First(r => r.Name == "novolis-apps"))).Contains("Release failed");
     }
 }
