@@ -197,6 +197,12 @@
     "desc": "Minimal Debian glibc runtime images for Novolis apps (rootfs + QEMU appliance).",
     "topics": ["dotnet", "linux", "debian", "runtime", "novolis"]
   },
+  "novolis-pdf": {
+    "tag": "Read arbitrary PDF files",
+    "blurb": "UI-neutral PDF reading: typed objects, text, and Skia raster. novolis-documents writes PDFs; this reads them.",
+    "desc": "Ground-up PDF reader for Novolis. Parses arbitrary files into a typed object graph, text, and Skia pages. No third-party PDF engine.",
+    "topics": ["dotnet", "pdf", "novolis"]
+  },
   "novolis-physics": {
     "tag": "Force-first textbook physics",
     "blurb": "Motion, gravity, ballistics, cloth, collision, orbits — Math only, no cameras.",

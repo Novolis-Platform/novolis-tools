@@ -33,6 +33,7 @@ public static class MarketingBannerSvg
             Directory.CreateDirectory(dir);
         }
 
-        File.WriteAllText(outputPath, svg, new UTF8Encoding(encoderShouldEmitUTF8Identifier: false));
+        var text = svg.Replace("\r\n", "\n", StringComparison.Ordinal).TrimEnd('\n') + "\n";
+        File.WriteAllText(outputPath, text, new UTF8Encoding(encoderShouldEmitUTF8Identifier: false));
     }
 }

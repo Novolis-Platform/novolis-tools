@@ -1,4 +1,5 @@
 using System.Text;
+using System.Text.Encodings.Web;
 using System.Text.Json;
 using Novolis.Tools.Docs.Site;
 
@@ -12,7 +13,11 @@ public static class RepoCatalogExporter
     {
         var ordered = catalog.Keys.OrderBy(static k => k, StringComparer.OrdinalIgnoreCase).ToArray();
         using var stream = new MemoryStream();
-        using (var writer = new Utf8JsonWriter(stream, new JsonWriterOptions { Indented = true }))
+        using (var writer = new Utf8JsonWriter(stream, new JsonWriterOptions
+        {
+            Indented = true,
+            Encoder = JavaScriptEncoder.UnsafeRelaxedJsonEscaping,
+        }))
         {
             writer.WriteStartObject();
             foreach (var key in ordered)
