@@ -3,11 +3,10 @@
     <OutputType>Exe</OutputType>
     <RootNamespace>Novolis.Tools.MarkdownPdf.Unit</RootNamespace>
     <IsPackable>false</IsPackable>
-    <!-- Disabled until Novolis.Markup.Markdown.Documents publishes to GPR (CI globs tests/*). -->
-    <IsTestProject>false</IsTestProject>
+    <IsTestProject>true</IsTestProject>
     <GenerateDocumentationFile>false</GenerateDocumentationFile>
   </PropertyGroup>
-  <ItemGroup Condition="'$(EnableMarkdownPdfTests)' == 'true'">
+  <ItemGroup>
     <PackageReference Include="TUnit" />
     <PackageReference Include="SkiaSharp" />
     <PackageReference Include="SkiaSharp.NativeAssets.Win32" />
