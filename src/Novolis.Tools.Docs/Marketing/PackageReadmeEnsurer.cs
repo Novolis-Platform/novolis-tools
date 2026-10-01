@@ -7,6 +7,9 @@ public static partial class PackageReadmeEnsurer
 {
     private const string Org = "Novolis-Platform";
 
+    [GeneratedRegex("(?s)<!-- novolis-pkg-brand:start -->.*?<!-- novolis-pkg-brand:end -->\\s*")]
+    private static partial Regex BrandBlockRegex();
+
     [GeneratedRegex("(?m)^## Install\\s*$")]
     private static partial Regex InstallHeadingRegex();
 
@@ -25,20 +28,22 @@ public static partial class PackageReadmeEnsurer
         var id = CsprojPackaging.GetPackageId(csprojPath);
         var desc = CsprojPackaging.GetDescription(csprojPath) ?? $"{id} — Novolis platform library.";
         var readmePath = Path.Combine(dir, "README.md");
-        var brandIconUrl = $"https://raw.githubusercontent.com/{Org}/.github/main/brand/logo-icon.svg";
+        var docsUrl = $"https://{Org.ToLowerInvariant()}.github.io/.github/{repoName}/";
+        var brandIconUrl = $"https://raw.githubusercontent.com/{Org}/.github/main/brand/logo-icon.png";
         var brandStrip = $"""
-            <p align="center">
-              <a href="https://github.com/{Org}/{repoName}">
-                <img src="{brandIconUrl}" width="72" alt="Novolis"/>
-              </a>
-            </p>
+            [![Novolis]({brandIconUrl})]({docsUrl})
+
+            [Novolis](https://github.com/{Org}) · [Docs]({docsUrl}) · [Source](https://github.com/{Org}/{repoName})
 
             """;
 
         if (!File.Exists(readmePath))
         {
             var content = $"""
-                {brandStrip}# {id}
+                <!-- novolis-pkg-brand:start -->
+                {brandStrip}<!-- novolis-pkg-brand:end -->
+
+                # {id}
 
                 {desc}
 
@@ -72,14 +77,20 @@ public static partial class PackageReadmeEnsurer
 
         var body = File.ReadAllText(readmePath);
         var changed = false;
-        if (!body.Contains("logo-icon.svg", StringComparison.Ordinal))
+        var markedStrip = $"<!-- novolis-pkg-brand:start -->{Environment.NewLine}{brandStrip}<!-- novolis-pkg-brand:end -->{Environment.NewLine}{Environment.NewLine}";
+        if (body.Contains("novolis-pkg-brand:start", StringComparison.Ordinal))
         {
-            if (!body.Contains("novolis-pkg-brand:start", StringComparison.Ordinal))
+            var replaced = BrandBlockRegex().Replace(body, markedStrip);
+            if (!string.Equals(replaced, body, StringComparison.Ordinal))
             {
-                var strip = $"<!-- novolis-pkg-brand:start -->{Environment.NewLine}{brandStrip}<!-- novolis-pkg-brand:end -->{Environment.NewLine}{Environment.NewLine}";
-                body = strip + body.TrimStart();
+                body = replaced;
                 changed = true;
             }
+        }
+        else if (!body.Contains("logo-icon.png", StringComparison.Ordinal))
+        {
+            body = markedStrip + body.TrimStart();
+            changed = true;
         }
 
         if (!InstallHeadingRegex().IsMatch(body) && !InstallationHeadingRegex().IsMatch(body))
