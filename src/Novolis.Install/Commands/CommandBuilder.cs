@@ -30,18 +30,23 @@ public static class CommandBuilder
         search.SetAction(async (parseResult, cancellationToken) =>
         {
             var term = parseResult.GetValue(searchTerm);
-            var index = await RegistryIndex.LoadAsync(new Uri(RegistryOptions.DefaultIndexUrl), cancellationToken);
-            var matches = index.Packages
-                .Where(p => string.IsNullOrWhiteSpace(term) || p.Id.Contains(term, StringComparison.OrdinalIgnoreCase))
-                .OrderBy(p => p.Id)
+            var catalog = await RegistryIndex.LoadAsync(
+                new Uri(RegistryOptions.DefaultIndexUrl),
+                cancellationToken);
+            var matches = catalog.Entries
+                .Where(entry =>
+                    string.IsNullOrWhiteSpace(term) ||
+                    entry.Id.Contains(term, StringComparison.OrdinalIgnoreCase) ||
+                    entry.Name.Contains(term, StringComparison.OrdinalIgnoreCase))
+                .OrderBy(entry => entry.Id)
                 .ToList();
             if (matches.Count == 0)
             {
                 Console.WriteLine("No packages found.");
                 return 0;
             }
-            foreach (var pkg in matches)
-                Console.WriteLine($"{pkg.Id}\t{pkg.Manifest}");
+            foreach (var entry in matches)
+                Console.WriteLine($"{entry.Id}\t{entry.Name}\t{entry.Version}");
             return 0;
         });
 

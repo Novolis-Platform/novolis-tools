@@ -15,6 +15,7 @@
     <RepositoryType>git</RepositoryType>
   </PropertyGroup>
   <ItemGroup>
+    <LibraryReference Include="Novolis.Registry" />
     <PackageReference Include="System.CommandLine" />
   </ItemGroup>
 </Project>
