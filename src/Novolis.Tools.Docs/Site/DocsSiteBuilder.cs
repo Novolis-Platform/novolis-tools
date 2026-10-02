@@ -232,7 +232,7 @@ public static class DocsSiteBuilder
                 <div><span>novolis-docs</span><strong>site builder</strong></div>
                 """
             : $"""
-                <div class="mark-fail"><span>{status.FailedCount}</span><strong>{OrgStatusMarks.Svg("fail")} Failed</strong></div>
+                <div class="mark-fail"><span id="failed-count">{status.FailedCount}</span><strong>{OrgStatusMarks.Svg("fail")} Failed</strong></div>
                 <div class="mark-ship"><span>{status.ReleasedRepoCount}</span><strong>{OrgStatusMarks.Svg("ship")} Shipped</strong></div>
                 <div><span>{byRepo.Count}</span><strong>Libraries</strong></div>
                 <div class="mark-package"><span>{status.PackageCount}</span><strong>{OrgStatusMarks.Svg("package")} Packages</strong></div>

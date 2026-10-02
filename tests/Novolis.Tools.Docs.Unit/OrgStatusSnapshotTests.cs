@@ -76,6 +76,9 @@ public sealed class OrgStatusSnapshotTests
 
         var html = OrgStatusHtml.Bands(snapshot);
         await Assert.That(html).Contains("id=\"failed\"");
+        await Assert.That(html).Contains("data-repo=\"novolis-lab\"");
+        await Assert.That(html).Contains("data-workflow=\"merge.yml\"");
+        await Assert.That(html).Contains("id=\"status-stamp\"");
         await Assert.That(html).Contains("id=\"shipped\"");
         await Assert.That(html).Contains("v1.2.3");
         await Assert.That(html).Contains(">Failed</span>");

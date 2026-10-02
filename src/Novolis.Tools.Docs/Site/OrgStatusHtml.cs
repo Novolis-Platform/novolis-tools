@@ -11,7 +11,7 @@ public static partial class OrgStatusHtml
     public static string Bands(OrgStatusSnapshot status)
     {
         var sb = new StringBuilder();
-        sb.AppendLine("""<section id="failed" class="section status-band">""");
+        sb.Append("<section id=\"failed\" class=\"section status-band\" data-org=\"").Append(Encode(status.Org)).AppendLine("\">");
         sb.AppendLine($"""<div class="section-heading"><h2 class="status-label mark-fail">{OrgStatusMarks.Svg("fail")}<span>Failed</span></h2></div>""");
         if (status.Failures.Count == 0)
         {
@@ -23,7 +23,7 @@ public static partial class OrgStatusHtml
             foreach (var row in status.Failures)
             {
                 var detail = string.IsNullOrWhiteSpace(row.Error) ? row.Title : row.Error;
-                sb.Append("<tr><td class=\"status-mono\">").Append(Encode(row.When)).Append("</td>");
+                sb.Append("<tr data-repo=\"").Append(Encode(row.Repo)).Append("\" data-workflow=\"").Append(Encode(row.Workflow)).Append("\" data-run=\"").Append(Encode(row.Url)).Append("\"><td class=\"status-mono\">").Append(Encode(row.When)).Append("</td>");
                 sb.Append("<td><a href=\"https://github.com/").Append(Encode(status.Org)).Append('/').Append(Encode(row.Repo)).Append("\">").Append(Encode(row.Repo)).Append("</a></td>");
                 sb.Append("<td>").Append(WorkflowName(row.Workflow)).Append("</td>");
                 sb.Append("<td>").Append(ConclusionMark(row.Conclusion, row.Url)).Append("</td>");
@@ -56,7 +56,7 @@ public static partial class OrgStatusHtml
 
         sb.AppendLine("</section>");
         sb.Append(Downloads(status));
-        sb.Append("<p class=\"status-stamp\">Snapshot ").Append(Encode(status.GeneratedAt)).AppendLine("</p>");
+        sb.Append("<p class=\"status-stamp\" id=\"status-stamp\">Snapshot ").Append(Encode(status.GeneratedAt)).AppendLine("</p>");
         return sb.ToString();
     }
 
