@@ -17,4 +17,7 @@ public sealed class OrgStatusRelease
 
     /// <summary>nuget.org version, or release-asset count.</summary>
     public string Channel { get; set; } = "";
+
+    /// <summary>Installer, package, and checksum files published with this release.</summary>
+    public List<OrgStatusAsset> Assets { get; set; } = [];
 }

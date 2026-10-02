@@ -24,6 +24,7 @@ public static class OrgStatusMarkdown
         sb.AppendLine();
         AppendFailures(sb, org, snapshot);
         AppendReleases(sb, org, snapshot);
+        AppendDownloads(sb, org, snapshot);
         AppendInventory(sb, org, snapshot);
         sb.AppendLine(OrgLandingStatusUpdater.EndMarker);
         return sb.ToString();
@@ -113,6 +114,79 @@ public static class OrgStatusMarkdown
 
             sb.AppendLine();
             sb.AppendLine();
+        }
+    }
+
+    private static void AppendDownloads(StringBuilder sb, string org, OrgStatusSnapshot snapshot)
+    {
+        sb.AppendLine("### Latest app downloads");
+        sb.AppendLine();
+        var groups = OrgDownloadCatalog.From(snapshot.Releases);
+        var anyFiles = groups.Any(static group => group.Apps.Count > 0 || group.Checksums.Count > 0);
+        if (!anyFiles)
+        {
+            if (snapshot.Releases.Count == 0)
+            {
+                sb.AppendLine("No app release has published installers or other assets.");
+            }
+            else
+            {
+                foreach (var release in snapshot.Releases)
+                {
+                    sb.Append("- ").Append(RepoLink(org, release.Repo));
+                    sb.Append(" · ").Append(Linked($"`{release.Tag}`", release.Url));
+                    sb.AppendLine();
+                    sb.AppendLine();
+                }
+            }
+
+            sb.AppendLine();
+            return;
+        }
+
+        foreach (var group in groups)
+        {
+            sb.Append("- ").Append(RepoLink(org, group.Repo));
+            sb.Append(" · ").Append(Linked($"`{group.Tag}`", group.Url));
+            if (!string.IsNullOrWhiteSpace(group.Published))
+            {
+                sb.Append(" · ").Append(Text(group.Published));
+            }
+
+            sb.AppendLine();
+            foreach (var app in group.Apps)
+            {
+                var links = new List<string>();
+                AddDownloadLink(links, "Windows", app.Windows);
+                AddDownloadLink(links, "Android", app.Android);
+                AddDownloadLink(links, "Linux", app.Linux);
+                AddDownloadLink(links, "Download", app.Other);
+                if (links.Count == 0)
+                {
+                    continue;
+                }
+
+                sb.Append("  - ").Append(Text(app.Name)).Append(" · ").Append(string.Join(" · ", links));
+                sb.AppendLine();
+            }
+
+            foreach (var checksum in group.Checksums)
+            {
+                sb.Append("  - ").Append(Linked($"`{checksum.Name}`", checksum.Url));
+                sb.AppendLine();
+            }
+
+            sb.AppendLine();
+        }
+    }
+
+    private static void AddDownloadLink(List<string> links, string platform, IReadOnlyList<OrgStatusAsset> assets)
+    {
+        foreach (var asset in assets)
+        {
+            var size = OrgDownloadCatalog.FormatSize(asset.Size);
+            var label = string.IsNullOrEmpty(size) ? platform : platform + " " + size;
+            links.Add(Linked(label, asset.Url));
         }
     }
 

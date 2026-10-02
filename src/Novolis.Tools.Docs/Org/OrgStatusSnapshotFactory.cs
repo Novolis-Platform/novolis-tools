@@ -56,6 +56,14 @@ internal static class OrgStatusSnapshotFactory
                         Published = row.ReleasePublished,
                         Url = release.HtmlUrl,
                         Channel = Channel(release),
+                        Assets = (release.Assets ?? [])
+                            .Select(static asset => new OrgStatusAsset
+                            {
+                                Name = asset.Name,
+                                Size = asset.Size,
+                                Url = asset.DownloadUrl,
+                            })
+                            .ToList(),
                     });
                 }
             }
@@ -115,10 +123,16 @@ internal static class OrgStatusSnapshotFactory
 
     /// <summary>A library tag with no uploaded APKs or installers did not ship.</summary>
     private static bool CountsAsShipped(OrgRepoFacts repo, OrgReleaseFact release) =>
-        OrgShipPath.PublishesInstallers(repo.Name) && release.AssetCount > 0;
+        OrgShipPath.PublishesInstallers(repo.Name) && CountAssets(release) > 0;
 
-    private static string Channel(OrgReleaseFact release) =>
-        release.AssetCount == 1 ? "1 release asset" : $"{release.AssetCount} release assets";
+    private static string Channel(OrgReleaseFact release)
+    {
+        var count = CountAssets(release);
+        return count == 1 ? "1 release asset" : $"{count} release assets";
+    }
+
+    private static int CountAssets(OrgReleaseFact release) =>
+        release.Assets is { Count: > 0 } ? release.Assets.Count : release.AssetCount;
 
     /// <summary>Formats a GitHub timestamp as UTC. Unparseable values pass through.</summary>
     public static string FormatWhen(string? iso)

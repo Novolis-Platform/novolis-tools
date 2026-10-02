@@ -113,20 +113,40 @@ public static partial class OrgLandingStatusUpdater
                 continue;
             }
 
-            var assets = 0;
-            if (release.TryGetProperty("assets", out var assetEl) && assetEl.ValueKind == JsonValueKind.Array)
-            {
-                assets = assetEl.GetArrayLength();
-            }
-
+            var assets = ReadAssets(release);
             return new OrgReleaseFact(
                 StringProp(release, "tag_name"),
                 published,
                 StringProp(release, "html_url"),
+                assets.Count,
                 assets);
         }
 
         return null;
+    }
+
+    private static List<OrgReleaseAsset> ReadAssets(JsonElement release)
+    {
+        var assets = new List<OrgReleaseAsset>();
+        if (!release.TryGetProperty("assets", out var assetEl) || assetEl.ValueKind != JsonValueKind.Array)
+        {
+            return assets;
+        }
+
+        foreach (var asset in assetEl.EnumerateArray())
+        {
+            var name = StringProp(asset, "name");
+            var url = StringProp(asset, "browser_download_url");
+            if (string.IsNullOrWhiteSpace(name) || string.IsNullOrWhiteSpace(url))
+            {
+                continue;
+            }
+
+            var size = asset.TryGetProperty("size", out var sizeEl) && sizeEl.TryGetInt64(out var bytes) ? bytes : 0L;
+            assets.Add(new OrgReleaseAsset(name, size, url));
+        }
+
+        return assets;
     }
 
     private static string? FirstFailureAnnotation(string org, string repo, long runId)

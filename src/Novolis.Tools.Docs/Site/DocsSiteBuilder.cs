@@ -180,7 +180,10 @@ public static class DocsSiteBuilder
             var tag = !string.IsNullOrWhiteSpace(meta?.Tag) ? meta!.Tag : repo;
             var topics = TopicsHtml(meta?.Topics);
             repoStatus.TryGetValue(repo, out var repoFacts);
-            var factHtml = OrgStatusHtml.CardFacts(repoFacts);
+            var factHtml = OrgStatusHtml.CardFacts(repoFacts, options.Org);
+            var latestRelease = string.IsNullOrWhiteSpace(repoFacts?.ReleaseUrl)
+                ? ""
+                : $"""<a class="btn-secondary" href="{Html(repoFacts!.ReleaseUrl)}">Latest release</a>""";
             var search = string.Join(' ', new[] { repo, tag, blurb, repoFacts?.GprVersion, repoFacts?.ReleaseTag }
                     .Concat(meta?.Topics ?? Array.Empty<string>())
                     .Where(static s => !string.IsNullOrWhiteSpace(s)))
@@ -202,6 +205,7 @@ public static class DocsSiteBuilder
                     <div class="card-actions">
                       <a class="btn-primary" href="{Html(landing.OutputRelativePath)}">Docs</a>
                       <a class="btn-secondary" href="https://github.com/{Html(options.Org)}/{Html(repo)}">Source</a>
+                      {latestRelease}
                     </div>
                   </div>
                 </article>
@@ -216,10 +220,10 @@ public static class DocsSiteBuilder
         var statusHtml = status is null ? "" : OrgStatusHtml.Bands(status);
         var navStatus = status is null
             ? ""
-            : $"""<a class="mark-fail" href="#failed">{OrgStatusMarks.Svg("fail")} Failed</a><a class="mark-ship" href="#shipped">{OrgStatusMarks.Svg("ship")} Shipped</a>""";
+            : $"""<a href="#downloads">Downloads</a><a class="mark-fail" href="#failed">{OrgStatusMarks.Svg("fail")} Failed</a><a class="mark-ship" href="#shipped">{OrgStatusMarks.Svg("ship")} Shipped</a>""";
         var heroText = status is null
             ? """<p class="eyebrow">Documentation site</p><h1>Every library. One docs home.</h1><p class="hero-copy">Each card opens that repository's <code>docs/README.md</code> (or a generated overview) with sidebar navigation built from the docs folder layout.</p>"""
-            : """<p class="eyebrow">Release status</p><h1>What failed, what shipped, what we have.</h1><p class="hero-copy">Latest merge and release runs, published GitHub Releases, and the package inventory. Library docs follow.</p>""";
+            : """<p class="eyebrow">Release status</p><h1>What failed, what shipped, what we have.</h1><p class="hero-copy">Latest merge and release runs, app downloads, and the package inventory. Each library card links that repository's latest GitHub Release.</p>""";
         var telemetry = status is null
             ? $"""
                 <div><span>{byRepo.Count}</span><strong>libraries</strong></div>

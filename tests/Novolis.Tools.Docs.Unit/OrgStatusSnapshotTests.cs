@@ -82,9 +82,12 @@ public sealed class OrgStatusSnapshotTests
         await Assert.That(html).Contains(">Shipped</span>");
         await Assert.That(html).Contains(">failed</span>");
         await Assert.That(html).Contains("2 assets");
-        await Assert.That(OrgStatusHtml.CardFacts(snapshot.Repos.First(r => r.Name == "novolis-physics"))).Contains("Packages");
-        await Assert.That(OrgStatusHtml.CardFacts(snapshot.Repos.First(r => r.Name == "novolis-physics"))).Contains("2026.1.1.41");
-        await Assert.That(OrgStatusHtml.CardFacts(snapshot.Repos.First(r => r.Name == "novolis-physics"))).Contains("2026.1.0.3");
+        var physics = OrgStatusHtml.CardFacts(snapshot.Repos.First(r => r.Name == "novolis-physics"), "Novolis-Platform");
+        await Assert.That(physics).Contains("Packages");
+        await Assert.That(physics).Contains("2026.1.1.41");
+        await Assert.That(physics).Contains("2026.1.0.3");
+        await Assert.That(physics).Contains("https://github.com/Novolis-Platform/novolis-physics/releases/tag/2026.1.0");
+        await Assert.That(physics).Contains("packages?repo_name=novolis-physics");
         await Assert.That(OrgStatusHtml.CardFacts(snapshot.Repos.First(r => r.Name == "novolis-audio"))).Contains("missing");
         await Assert.That(OrgStatusHtml.CardFacts(snapshot.Repos.First(r => r.Name == "novolis-apps"))).DoesNotContain("nuget.org");
         await Assert.That(OrgStatusHtml.CardFacts(snapshot.Repos.First(r => r.Name == "novolis-apps"))).Contains("Release failed");
@@ -145,5 +148,60 @@ public sealed class OrgStatusSnapshotTests
         await Assert.That(snapshot.FailedCount).IsEqualTo(0);
         await Assert.That(snapshot.Repos[0].GprVersion).IsEqualTo("2026.1.6.189");
         await Assert.That(snapshot.Repos[0].ReleaseTag).IsEqualTo("0.1");
+    }
+
+    [Test]
+    public async Task App_Downloads_Group_Installers_And_Link_The_Release()
+    {
+        var apk = "https://github.com/Novolis-Platform/novolis-apps/releases/download/v2026.1.0.45/BooksMobile-2026.1.0.45-android.apk";
+        var exe = "https://github.com/Novolis-Platform/novolis-apps/releases/download/v2026.1.0.45/BooksMobileSetup-2026.1.0.45-win-x64.exe";
+        var sums = "https://github.com/Novolis-Platform/novolis-apps/releases/download/v2026.1.0.45/SHA256SUMS.txt";
+        var snapshot = OrgStatusSnapshotFactory.Create(
+            "Novolis-Platform",
+            "2026-10-02 05:00 UTC",
+            0,
+            [
+                new OrgRepoFacts(
+                    "novolis-apps",
+                    0,
+                    "",
+                    "",
+                    null,
+                    null,
+                    new OrgReleaseFact(
+                        "v2026.1.0.45",
+                        "2026-09-30T18:00:00Z",
+                        "https://github.com/Novolis-Platform/novolis-apps/releases/tag/v2026.1.0.45",
+                        3,
+                        [
+                            new OrgReleaseAsset("BooksMobile-2026.1.0.45-android.apk", 53_394_079, apk),
+                            new OrgReleaseAsset("BooksMobileSetup-2026.1.0.45-win-x64.exe", 70_269_770, exe),
+                            new OrgReleaseAsset("CadStudio3DSetup-2026.1.0.45-win-x64.exe", 58_381_994, "https://example.test/cad.exe"),
+                            new OrgReleaseAsset("SHA256SUMS.txt", 2013, sums),
+                        ])),
+            ]);
+
+        await Assert.That(OrgDownloadCatalog.DisplayName("CadStudio3D")).IsEqualTo("Cad Studio 3D");
+        await Assert.That(OrgDownloadCatalog.DisplayName("NovolisPdfReader")).IsEqualTo("Novolis Pdf Reader");
+        var groups = OrgDownloadCatalog.From(snapshot.Releases);
+        await Assert.That(groups).Count().IsEqualTo(1);
+        await Assert.That(groups[0].Apps.Select(app => app.Name).ToArray()).IsEquivalentTo(new[] { "Books Mobile", "Cad Studio 3D" });
+        await Assert.That(groups[0].Apps[0].Android).Count().IsEqualTo(1);
+        await Assert.That(groups[0].Apps[0].Windows).Count().IsEqualTo(1);
+        await Assert.That(groups[0].Checksums).Count().IsEqualTo(1);
+
+        var html = OrgStatusHtml.Bands(snapshot);
+        await Assert.That(html).Contains("id=\"downloads\"");
+        await Assert.That(html).Contains("Latest app downloads");
+        await Assert.That(html).Contains(apk);
+        await Assert.That(html).Contains("Books Mobile");
+        await Assert.That(html).Contains("SHA256SUMS.txt");
+        await Assert.That(html).Contains("href=\"#downloads\"");
+
+        var markdown = OrgStatusMarkdown.Build(snapshot);
+        await Assert.That(markdown).Contains("### Latest app downloads");
+        await Assert.That(markdown).Contains("[Android 50.9 MB](" + apk + ")");
+        await Assert.That(markdown).Contains("[Windows 67 MB](" + exe + ")");
+        await Assert.That(markdown).Contains("SHA256SUMS.txt");
     }
 }

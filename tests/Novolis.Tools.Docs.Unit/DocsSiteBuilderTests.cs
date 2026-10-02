@@ -3,6 +3,7 @@ using Novolis.Tools.Docs.Graph;
 using Novolis.Tools.Docs.Markdown;
 using Novolis.Tools.Docs.Marketing;
 using Novolis.Tools.Docs.Mermaid;
+using Novolis.Tools.Docs.Org;
 using Novolis.Tools.Docs.Seed;
 using Novolis.Tools.Docs.Site;
 
@@ -170,6 +171,82 @@ public sealed class DocsSiteBuilderTests
             var landing = await File.ReadAllTextAsync(Path.Combine(output, "novolis-sample", "index.html"));
             await Assert.That(landing).Contains("og:image");
             await Assert.That(landing).Contains("assets/banners/novolis-sample.svg");
+        }
+        finally
+        {
+            if (Directory.Exists(root))
+            {
+                Directory.Delete(root, recursive: true);
+            }
+        }
+    }
+
+    [Test]
+    public async Task Catalog_Links_Each_Repos_Latest_Release_And_App_Downloads()
+    {
+        var root = Path.Combine(Path.GetTempPath(), "novolis-docs-downloads-" + Guid.NewGuid().ToString("N"));
+        var corpus = Path.Combine(root, "corpus");
+        var output = Path.Combine(root, "site");
+        var statusPath = Path.Combine(root, "status.json");
+        try
+        {
+            var docsDir = Path.Combine(corpus, "novolis-sample", "docs");
+            Directory.CreateDirectory(docsDir);
+            await File.WriteAllTextAsync(Path.Combine(docsDir, "README.md"), "# Sample\n\nHello.\n");
+            var releaseUrl = "https://github.com/Novolis-Platform/novolis-sample/releases/tag/v9";
+            var snapshot = new OrgStatusSnapshot
+            {
+                GeneratedAt = "2026-10-02 05:00 UTC",
+                Org = "Novolis-Platform",
+                Repos =
+                [
+                    new OrgStatusRepo
+                    {
+                        Name = "novolis-sample",
+                        PackageCount = 1,
+                        GprVersion = "2026.1.1.1",
+                        ReleaseTag = "v9",
+                        ReleaseUrl = releaseUrl,
+                    },
+                ],
+                Releases =
+                [
+                    new OrgStatusRelease
+                    {
+                        Repo = "novolis-apps",
+                        Tag = "v2026.1.0.45",
+                        Published = "2026-09-30 18:00 UTC",
+                        Url = "https://github.com/Novolis-Platform/novolis-apps/releases/tag/v2026.1.0.45",
+                        Channel = "1 release asset",
+                        Assets =
+                        [
+                            new OrgStatusAsset
+                            {
+                                Name = "ReachSetup-2026.1.0.45-win-x64.exe",
+                                Size = 74_521_335,
+                                Url = "https://github.com/Novolis-Platform/novolis-apps/releases/download/v2026.1.0.45/ReachSetup-2026.1.0.45-win-x64.exe",
+                            },
+                        ],
+                    },
+                ],
+            };
+            await File.WriteAllTextAsync(statusPath, System.Text.Json.JsonSerializer.Serialize(snapshot, OrgStatusJson.Options));
+
+            DocsSiteBuilder.Build(new DocsSiteOptions
+            {
+                CorpusDirectory = corpus,
+                OutputDirectory = output,
+                Org = "Novolis-Platform",
+                StatusPath = statusPath,
+                BaseUrl = "https://novolis-platform.github.io/.github/",
+            });
+
+            var catalog = await File.ReadAllTextAsync(Path.Combine(output, "index.html"));
+            await Assert.That(catalog).Contains($"""href="{releaseUrl}">Latest release</a>""");
+            await Assert.That(catalog).Contains("id=\"downloads\"");
+            await Assert.That(catalog).Contains("ReachSetup-2026.1.0.45-win-x64.exe");
+            await Assert.That(catalog).Contains("packages?repo_name=novolis-sample");
+            await Assert.That(catalog).Contains("href=\"#downloads\">Downloads</a>");
         }
         finally
         {

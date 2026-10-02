@@ -5,7 +5,7 @@ using Novolis.Tools.Docs.Org;
 namespace Novolis.Tools.Docs.Site;
 
 /// <summary>Renders release status bands for the portfolio docs home.</summary>
-public static class OrgStatusHtml
+public static partial class OrgStatusHtml
 {
     /// <summary>Failed runs, shipped releases. Empty when the snapshot has neither list to introduce.</summary>
     public static string Bands(OrgStatusSnapshot status)
@@ -54,13 +54,14 @@ public static class OrgStatusHtml
             sb.AppendLine("</tbody></table></div>");
         }
 
-        sb.Append("<p class=\"status-stamp\">Snapshot ").Append(Encode(status.GeneratedAt)).AppendLine("</p>");
         sb.AppendLine("</section>");
+        sb.Append(Downloads(status));
+        sb.Append("<p class=\"status-stamp\">Snapshot ").Append(Encode(status.GeneratedAt)).AppendLine("</p>");
         return sb.ToString();
     }
 
     /// <summary>Mono facts for a library card. Empty when the repository is absent from the snapshot.</summary>
-    public static string CardFacts(OrgStatusRepo? repo)
+    public static string CardFacts(OrgStatusRepo? repo, string? org = null)
     {
         if (repo is null)
         {
@@ -70,7 +71,10 @@ public static class OrgStatusHtml
         var sb = new StringBuilder();
         if (!string.IsNullOrWhiteSpace(repo.GprVersion))
         {
-            sb.Append(VersionChip("package", "Packages", repo.GprVersion));
+            var packagesUrl = string.IsNullOrWhiteSpace(org) || repo.PackageCount <= 0
+                ? null
+                : $"https://github.com/orgs/{org}/packages?repo_name={Uri.EscapeDataString(repo.Name)}";
+            sb.Append(VersionChip("package", "Packages", repo.GprVersion, packagesUrl));
         }
 
         if (repo.PackageCount > 0)
@@ -81,7 +85,8 @@ public static class OrgStatusHtml
 
         if (!string.IsNullOrWhiteSpace(repo.ReleaseTag))
         {
-            sb.Append(VersionChip("ship", "Release", repo.ReleaseTag));
+            var releaseUrl = string.IsNullOrWhiteSpace(repo.ReleaseUrl) ? null : repo.ReleaseUrl;
+            sb.Append(VersionChip("ship", "Release", repo.ReleaseTag, releaseUrl));
         }
 
         if (repo.MergeConclusion is "failure" or "cancelled")
@@ -98,8 +103,14 @@ public static class OrgStatusHtml
         return sb.ToString();
     }
 
-    private static string VersionChip(string kind, string label, string version) =>
-        $"""<span class="status-chip mark-{Encode(kind)}">{OrgStatusMarks.Svg(kind)}<span>{Encode(label)}</span><span class="status-mono">{Encode(version)}</span></span>""";
+    private static string VersionChip(string kind, string label, string version, string? href = null)
+    {
+        var body = $"""{OrgStatusMarks.Svg(kind)}<span>{Encode(label)}</span><span class="status-mono">{Encode(version)}</span>""";
+        var css = $"status-chip mark-{Encode(kind)}";
+        return string.IsNullOrWhiteSpace(href)
+            ? $"""<span class="{css}">{body}</span>"""
+            : $"""<a class="{css}" href="{Encode(href)}">{body}</a>""";
+    }
 
     private static string WorkflowName(string workflow) =>
         workflow.Contains("release", StringComparison.OrdinalIgnoreCase) ? "release" : "merge";
@@ -144,7 +155,8 @@ public static class OrgStatusHtml
             channel.EndsWith("release assets", StringComparison.Ordinal))
         {
             var count = channel.Split(' ')[0];
-            return OrgStatusMarks.Label("ship", count + " assets");
+            var label = count + " assets";
+            return $"""<a class="status-label mark-ship" href="#downloads">{OrgStatusMarks.Svg("ship")}<span>{Encode(label)}</span></a>""";
         }
 
         if (channel == "GitHub Release")
