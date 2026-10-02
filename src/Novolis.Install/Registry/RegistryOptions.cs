@@ -9,5 +9,5 @@ public static class RegistryOptions
     /// HTTPS URL of the default registry <c>index.json</c>.
     /// </summary>
     public const string DefaultIndexUrl =
-        "https://raw.githubusercontent.com/Novolis-Platform/novolis-registry/main/index.json";
+        "https://raw.githubusercontent.com/Novolis-Platform/novolis-governance/main/registry/index.json";
 }

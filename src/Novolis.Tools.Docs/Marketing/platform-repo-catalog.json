@@ -216,10 +216,10 @@
     "topics": ["dotnet", "raylib", "gamedev", "novolis"]
   },
   "novolis-registry": {
-    "tag": "Static package & app catalog",
-    "blurb": "Static registry of Novolis packages and apps.",
-    "desc": "Static package and app registry for the Novolis ecosystem.",
-    "topics": ["dotnet", "nuget", "registry", "novolis"]
+    "tag": "Registry contracts and providers",
+    "blurb": "Provider-neutral catalog primitives, services, and GitHub integration.",
+    "desc": "Registry contracts and provider adapters for Novolis package and application catalogs.",
+    "topics": ["dotnet", "nuget", "registry", "github", "novolis"]
   },
   "novolis-rendering": {
     "tag": "Compile-time friendly rendering",
