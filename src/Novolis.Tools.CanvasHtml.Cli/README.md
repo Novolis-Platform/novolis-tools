@@ -1,4 +1,4 @@
-# novolis-canvas-html
+# Novolis.Tools.CanvasHtml.Cli
 
 Render Cursor `.canvas.tsx` files to self-contained HTML.
 
