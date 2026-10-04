@@ -1,0 +1,15 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <PackageId>Novolis.Tools.CanvasHtml</PackageId>
+    <Description>Render Cursor .canvas.tsx files to self-contained HTML.</Description>
+    <IsPackable>true</IsPackable>
+    <RootNamespace>Novolis.Tools.CanvasHtml</RootNamespace>
+    <PackageTags>novolis;canvas;html;tsx;tooling</PackageTags>
+  </PropertyGroup>
+  <ItemGroup>
+    <PackageReference Include="Jint" />
+  </ItemGroup>
+  <ItemGroup>
+    <InternalsVisibleTo Include="Novolis.Tools.CanvasHtml.Unit" />
+  </ItemGroup>
+</Project>

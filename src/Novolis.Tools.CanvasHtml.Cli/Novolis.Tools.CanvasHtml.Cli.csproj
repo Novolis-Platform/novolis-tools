@@ -1,0 +1,17 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+    <PackageId>Novolis.Tools.CanvasHtml.Cli</PackageId>
+    <Description>dotnet tool novolis-canvas-html — render Cursor .canvas.tsx files to self-contained HTML.</Description>
+    <IsPackable>true</IsPackable>
+    <PackAsTool>true</PackAsTool>
+    <ToolCommandName>novolis-canvas-html</ToolCommandName>
+    <RootNamespace>Novolis.Tools.CanvasHtml.Cli</RootNamespace>
+    <PackageTags>novolis;canvas;html;tsx;cli;dotnet-tool</PackageTags>
+    <PackageReadmeFile>README.md</PackageReadmeFile>
+  </PropertyGroup>
+  <ItemGroup>
+    <PackageReference Include="System.CommandLine" />
+    <ProjectReference Include="..\Novolis.Tools.CanvasHtml\Novolis.Tools.CanvasHtml.csproj" />
+  </ItemGroup>
+</Project>
