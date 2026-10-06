@@ -196,7 +196,9 @@ public sealed class OrgStatusSnapshotTests
         var html = OrgStatusHtml.Bands(snapshot);
         await Assert.That(html).Contains("id=\"downloads\"");
         await Assert.That(html).Contains("Latest app downloads");
-        await Assert.That(html).Contains(apk);
+        await Assert.That(html).Contains("href=\"" + apk + "\" title=\"BooksMobile-2026.1.0.45-android.apk\"");
+        await Assert.That(html).DoesNotContain("href=" + apk + "\"");
+        await Assert.That(html).Contains("href=\"" + sums + "\">SHA256SUMS.txt");
         await Assert.That(html).Contains("Books Mobile");
         await Assert.That(html).Contains("SHA256SUMS.txt");
         await Assert.That(html).Contains("href=\"#downloads\"");

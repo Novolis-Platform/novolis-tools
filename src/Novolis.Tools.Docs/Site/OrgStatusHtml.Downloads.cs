@@ -24,7 +24,8 @@ public static partial class OrgStatusHtml
                 foreach (var release in status.Releases)
                 {
                     sb.Append("<p><a href=\"https://github.com/").Append(Encode(status.Org)).Append('/').Append(Encode(release.Repo)).Append("\">").Append(Encode(release.Repo)).Append("</a> ");
-                    sb.Append("""<a href=""").Append(Encode(release.Url)).Append("\">").Append(Encode(release.Tag)).AppendLine("</a></p>");
+                    AppendAnchor(sb, release.Url, release.Tag);
+                    sb.AppendLine("</p>");
                 }
             }
 
@@ -77,7 +78,7 @@ public static partial class OrgStatusHtml
                     }
 
                     var asset = group.Checksums[i];
-                    sb.Append("""<a href=""").Append(Encode(asset.Url)).Append("\">").Append(Encode(asset.Name)).Append("</a>");
+                    AppendAnchor(sb, asset.Url, asset.Name);
                 }
 
                 sb.AppendLine("</p>");
@@ -86,6 +87,18 @@ public static partial class OrgStatusHtml
 
         sb.AppendLine("</section>");
         return sb.ToString();
+    }
+
+    /// <summary>Quoted href so a raw-string closer cannot swallow the opening quote and leave it inside the URL.</summary>
+    private static void AppendAnchor(StringBuilder sb, string url, string text, string? title = null)
+    {
+        sb.Append("<a href=\"").Append(Encode(url)).Append('"');
+        if (!string.IsNullOrEmpty(title))
+        {
+            sb.Append(" title=\"").Append(Encode(title)).Append('"');
+        }
+
+        sb.Append('>').Append(Encode(text)).Append("</a>");
     }
 
     private static string AssetCell(IReadOnlyList<OrgStatusAsset> assets, string platform)
@@ -111,8 +124,7 @@ public static partial class OrgStatusHtml
             var asset = assets[i];
             var size = OrgDownloadCatalog.FormatSize(asset.Size);
             var label = string.IsNullOrEmpty(size) ? platform : platform + " · " + size;
-            sb.Append("""<a href=""").Append(Encode(asset.Url)).Append("\" title=\"").Append(Encode(asset.Name)).Append("\">");
-            sb.Append(Encode(label)).Append("</a>");
+            AppendAnchor(sb, asset.Url, label, asset.Name);
         }
 
         return sb.ToString();
