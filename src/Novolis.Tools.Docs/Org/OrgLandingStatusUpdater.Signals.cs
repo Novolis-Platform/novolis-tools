@@ -38,9 +38,10 @@ public static partial class OrgLandingStatusUpdater
 
     private static OrgWorkflowFact? ReadLatestRun(string org, string repo, string workflowFile, bool preferMain)
     {
+        // status=completed uses a separate index that can return an old run ahead of today's.
         var qs = preferMain
-            ? "per_page=8&branch=main&status=completed"
-            : "per_page=8&status=completed";
+            ? "per_page=8&branch=main"
+            : "per_page=8";
         var json = GhProcess.RunGh(
             ["api", $"repos/{org}/{repo}/actions/workflows/{workflowFile}/runs?{qs}"],
             ignoreFailure: true);
@@ -59,6 +60,12 @@ public static partial class OrgLandingStatusUpdater
 
         foreach (var run in runs.EnumerateArray())
         {
+            var runStatus = StringProp(run, "status");
+            if (!string.IsNullOrEmpty(runStatus) && runStatus != "completed")
+            {
+                continue;
+            }
+
             var conclusion = StringProp(run, "conclusion");
             var runId = run.TryGetProperty("id", out var idEl) && idEl.TryGetInt64(out var id) ? id : 0L;
             string? error = null;
