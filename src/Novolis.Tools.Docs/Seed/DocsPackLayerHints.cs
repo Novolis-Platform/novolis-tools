@@ -25,11 +25,11 @@ public static class DocsPackLayerHints
                    repoName.StartsWith("novolis-markup", StringComparison.Ordinal) ||
                    repoName.StartsWith("novolis-manuscript", StringComparison.Ordinal) =>
                 "Documents/Markup island — Avalonia/MAUI hosts may call PDF/HTML helpers; do not pull Avalonia or MAUI into these packages.",
-            _ when repoName.StartsWith("novolis-3d", StringComparison.Ordinal) =>
-                "Avalonia-free renderer-neutral ThreeD scene documents and asset import over `Novolis.Math.Geometry`.",
+            _ when repoName.StartsWith("novolis-modeling", StringComparison.Ordinal) =>
+                "Avalonia-free renderer-neutral modeling scene documents and asset import over `Novolis.Math.Geometry`.",
             _ when repoName.StartsWith("novolis-cad", StringComparison.Ordinal) ||
                    repoName.StartsWith("novolis-ship", StringComparison.Ordinal) =>
-                "CAD / ship domain DTOs and validation — Avalonia-free; UI chrome lives in `Novolis.Avalonia.*`. Generic scene graphs live in `novolis-3d`.",
+                "CAD / ship domain DTOs and validation — Avalonia-free; UI chrome lives in `Novolis.Avalonia.*`. Generic scene graphs live in `novolis-modeling`.",
             _ when repoName.StartsWith("novolis-os", StringComparison.Ordinal) =>
                 "Runtime images / appliances — not a NuGet library spine package.",
             _ when repoName.StartsWith("novolis-governance", StringComparison.Ordinal) ||
