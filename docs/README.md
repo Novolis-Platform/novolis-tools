@@ -27,6 +27,7 @@ Published docs: [https://novolis-platform.github.io/.github/novolis-tools/](http
 | `Novolis.Tools.LiteDb.Cli` |
 | `Novolis.Tools.MarkdownPdf` |
 | `Novolis.Tools.MarkdownPdf.Cli` |
+| `Novolis.Tools.NetworkPath.Cli` |
 | `Novolis.Tools.Sqlite` |
 | `Novolis.Tools.Sqlite.Cli` |
 

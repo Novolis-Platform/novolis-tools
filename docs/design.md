@@ -8,6 +8,7 @@
 2. **Coverage** — MTP Cobertura collection across Platform.slnx / `novolis-*` hosts with ReportGenerator HTML merge.
 3. **SQLite** — a lightweight REPL over the same engine as `Novolis.Storage.Sqlite`, for local inspection and scripting.
 4. **LiteDB** — the document-store twin: shell SQL over the same engine as `Novolis.Storage.LiteDb`.
+5. **Network path** — a cross-platform adapter and bound TCP-path inspection tool over `Novolis.Transports.NetworkPath`.
 
 ```mermaid
 flowchart LR
@@ -15,6 +16,7 @@ flowchart LR
   covCli["novolis-coverage"] --> covLib["Novolis.Tools.Coverage"]
   sqliteCli["novolis-sqlite"] --> sqliteLib["Novolis.Tools.Sqlite"]
   liteCli["novolis-litedb"] --> liteLib["Novolis.Tools.LiteDb"]
+  networkCli["novolis-network-path"] --> networkPath["Novolis.Transports.NetworkPath"]
   sqliteCli --> cliLib["Novolis.Tools.Cli"]
   liteCli --> cliLib
   docsLib --> md["MarkdownDocument"]

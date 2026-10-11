@@ -55,6 +55,7 @@
 | `Novolis.Tools.LiteDb.Cli` | `dotnet add package Novolis.Tools.LiteDb.Cli` | [README](https://github.com/Novolis-Platform/novolis-tools/blob/main/src/Novolis.Tools.LiteDb.Cli/README.md) |
 | `Novolis.Tools.MarkdownPdf` | `dotnet add package Novolis.Tools.MarkdownPdf` | [README](https://github.com/Novolis-Platform/novolis-tools/blob/main/src/Novolis.Tools.MarkdownPdf/README.md) |
 | `Novolis.Tools.MarkdownPdf.Cli` | `dotnet add package Novolis.Tools.MarkdownPdf.Cli` | [README](https://github.com/Novolis-Platform/novolis-tools/blob/main/src/Novolis.Tools.MarkdownPdf.Cli/README.md) |
+| `Novolis.Tools.NetworkPath.Cli` | `dotnet tool install --global Novolis.Tools.NetworkPath.Cli` | [README](https://github.com/Novolis-Platform/novolis-tools/blob/main/src/Novolis.Tools.NetworkPath.Cli/README.md) |
 | `Novolis.Tools.Sqlite` | `dotnet add package Novolis.Tools.Sqlite` | [README](https://github.com/Novolis-Platform/novolis-tools/blob/main/src/Novolis.Tools.Sqlite/README.md) |
 | `Novolis.Tools.Sqlite.Cli` | `dotnet add package Novolis.Tools.Sqlite.Cli` | [README](https://github.com/Novolis-Platform/novolis-tools/blob/main/src/Novolis.Tools.Sqlite.Cli/README.md) |
 | `Novolis.Xsd.Tool` | `dotnet add package Novolis.Xsd.Tool` | [README](https://github.com/Novolis-Platform/novolis-tools/blob/main/src/Novolis.Xsd.Cli/README.md) |
@@ -102,6 +103,7 @@ flowchart TB
 | `Novolis.Tools.LiteDb.Cli` | `novolis-litedb` Spectre REPL |
 | `Novolis.Tools.MarkdownPdf` | Markdown → PDF themes over Documents.Skia |
 | `Novolis.Tools.MarkdownPdf.Cli` | `novolis-mdpdf` tool (`themes` / `convert`) |
+| `Novolis.Tools.NetworkPath.Cli` | `novolis-network-path` adapter and path probe tool |
 | `Novolis.Manuscript.Cli` | `novolis-manuscript` manuscript surgery, metrics, print, and audiobook commands |
 | `Novolis.Solution.Tool` | `novolis-solution` typed SLNX topology and catalog queries |
 | `Novolis.Xsd.Tool` | `novolis-xsd` XSD / UBL / Peppol source generation |
@@ -118,6 +120,7 @@ dotnet run --project d:\novolis\novolis-tools\src\Novolis.Tools.Coverage.Cli -- 
 dotnet run --project d:\novolis\novolis-tools\src\Novolis.Tools.CodeLayout.Cli -- detect d:\novolis\Novolis.Platform.slnx
 dotnet run --project d:\novolis\novolis-tools\src\Novolis.Tools.CodeLayout.Cli -- detect-and-fix d:\novolis\Novolis.Platform.slnx --delete
 dotnet run --project d:\novolis\novolis-tools\src\Novolis.Tools.Sqlite.Cli -- :memory: -c "SELECT 'ok' AS status;"
+dotnet run --project d:\novolis\novolis-tools\src\Novolis.Tools.NetworkPath.Cli -- inspect --target example.com:443
 dotnet run --project d:\novolis\novolis-tools\src\Novolis.Tools.LiteDb.Cli -- :memory: -c "INSERT INTO t VALUES {_id: 1, status: \"ok\"}; SELECT $ FROM t;"
 dotnet run --project d:\novolis\novolis-tools\src\Novolis.Manuscript.Cli -- book list-books --workspace D:\repos\books
 dotnet run --project d:\novolis\novolis-tools\src\Novolis.Xsd.Cli -- --help

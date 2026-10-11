@@ -19,6 +19,7 @@
     <Project Path="src/Novolis.Tools.LiteDb/Novolis.Tools.LiteDb.csproj" />
     <Project Path="src/Novolis.Tools.MarkdownPdf.Cli/Novolis.Tools.MarkdownPdf.Cli.csproj" />
     <Project Path="src/Novolis.Tools.MarkdownPdf/Novolis.Tools.MarkdownPdf.csproj" />
+    <Project Path="src/Novolis.Tools.NetworkPath.Cli/Novolis.Tools.NetworkPath.Cli.csproj" />
     <Project Path="src/Novolis.Tools.Sqlite.Cli/Novolis.Tools.Sqlite.Cli.csproj" />
     <Project Path="src/Novolis.Tools.Sqlite/Novolis.Tools.Sqlite.csproj" />
   </Folder>

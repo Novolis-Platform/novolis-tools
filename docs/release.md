@@ -24,3 +24,4 @@ Consumer float for packages in this repo: **`2026.1.*`**.
 | `Novolis.Tools.Sqlite.Cli` | `dotnet tool` (`novolis-sqlite`) |
 | `Novolis.Tools.LiteDb` | Library (depends on `Novolis.Storage.LiteDb`) |
 | `Novolis.Tools.LiteDb.Cli` | `dotnet tool` (`novolis-litedb`) |
+| `Novolis.Tools.NetworkPath.Cli` | `dotnet tool` (`novolis-network-path`) |
