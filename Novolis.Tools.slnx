@@ -40,13 +40,4 @@
   <Folder Name="/tools/">
     <Project Path="tools/ToolsManifest/ToolsManifest.csproj" />
   </Folder>
-  <Project Path="../novolis-analyzers/src/Novolis.Analyzers.OneTypePerFile/Novolis.Analyzers.OneTypePerFile.csproj" />
-  <Project Path="../novolis-visual/src/Novolis.AssetStudio.Core/Novolis.AssetStudio.Core.csproj" />
-  <Project Path="../novolis-visual/src/Novolis.AssetStudio.Import/Novolis.AssetStudio.Import.csproj" />
-  <Project Path="../novolis-visual/src/Novolis.Visual.Assets/Novolis.Visual.Assets.csproj" />
-  <Project Path="../novolis-visual/src/Novolis.Visual.Baking/Novolis.Visual.Baking.csproj" />
-  <Project Path="../novolis-visual/src/Novolis.Visual.Compile/Novolis.Visual.Compile.csproj" />
-  <Project Path="../novolis-visual/src/Novolis.Visual.Definitions/Novolis.Visual.Definitions.csproj" />
-  <Project Path="../novolis-visual/src/Novolis.Visual.Evaluation/Novolis.Visual.Evaluation.csproj" />
-  <Project Path="../novolis-visual/src/Novolis.Visual.Materials/Novolis.Visual.Materials.csproj" />
 </Solution>
