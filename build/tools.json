@@ -159,6 +159,21 @@
         "tests/Novolis.AssetStudio.Unit/**",
         "Directory.Packages.props"
       ]
+    },
+    {
+      "key": "doom",
+      "displayName": "Novolis Doom",
+      "project": "src/Novolis.Tools.Doom.Cli/Novolis.Tools.Doom.Cli.csproj",
+      "packageId": "Novolis.Tools.Doom.Cli",
+      "command": "novolis-doom",
+      "tests": [
+        "tests/Novolis.Tools.Doom.Unit/Novolis.Tools.Doom.Unit.csproj"
+      ],
+      "changedPathGlobs": [
+        "src/Novolis.Tools.Doom.Cli/**",
+        "tests/Novolis.Tools.Doom.Unit/**",
+        "Directory.Packages.props"
+      ]
     }
   ]
 }

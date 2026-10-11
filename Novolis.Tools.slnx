@@ -15,6 +15,7 @@
     <Project Path="src/Novolis.Tools.CodeLayout.Cli/Novolis.Tools.CodeLayout.Cli.csproj" />
     <Project Path="src/Novolis.Tools.CodeLayout/Novolis.Tools.CodeLayout.csproj" />
     <Project Path="src/Novolis.AssetStudio/Novolis.AssetStudio.csproj" />
+    <Project Path="src/Novolis.Tools.Doom.Cli/Novolis.Tools.Doom.Cli.csproj" />
     <Project Path="src/Novolis.Tools.LiteDb.Cli/Novolis.Tools.LiteDb.Cli.csproj" />
     <Project Path="src/Novolis.Tools.LiteDb/Novolis.Tools.LiteDb.csproj" />
     <Project Path="src/Novolis.Tools.MarkdownPdf.Cli/Novolis.Tools.MarkdownPdf.Cli.csproj" />
@@ -30,6 +31,7 @@
     <Project Path="tests/Novolis.Tools.CanvasHtml.Unit/Novolis.Tools.CanvasHtml.Unit.csproj" />
     <Project Path="tests/Novolis.Tools.CodeLayout.Unit/Novolis.Tools.CodeLayout.Unit.csproj" />
     <Project Path="tests/Novolis.Tools.Docs.Unit/Novolis.Tools.Docs.Unit.csproj" />
+    <Project Path="tests/Novolis.Tools.Doom.Unit/Novolis.Tools.Doom.Unit.csproj" />
     <Project Path="tests/Novolis.Tools.LiteDb.Unit/Novolis.Tools.LiteDb.Unit.csproj" />
     <Project Path="tests/Novolis.Tools.MarkdownPdf.Unit/Novolis.Tools.MarkdownPdf.Unit.csproj" />
     <Project Path="tests/Novolis.AssetStudio.Unit/Novolis.AssetStudio.Unit.csproj" />
@@ -38,4 +40,13 @@
   <Folder Name="/tools/">
     <Project Path="tools/ToolsManifest/ToolsManifest.csproj" />
   </Folder>
+  <Project Path="../novolis-analyzers/src/Novolis.Analyzers.OneTypePerFile/Novolis.Analyzers.OneTypePerFile.csproj" />
+  <Project Path="../novolis-visual/src/Novolis.AssetStudio.Core/Novolis.AssetStudio.Core.csproj" />
+  <Project Path="../novolis-visual/src/Novolis.AssetStudio.Import/Novolis.AssetStudio.Import.csproj" />
+  <Project Path="../novolis-visual/src/Novolis.Visual.Assets/Novolis.Visual.Assets.csproj" />
+  <Project Path="../novolis-visual/src/Novolis.Visual.Baking/Novolis.Visual.Baking.csproj" />
+  <Project Path="../novolis-visual/src/Novolis.Visual.Compile/Novolis.Visual.Compile.csproj" />
+  <Project Path="../novolis-visual/src/Novolis.Visual.Definitions/Novolis.Visual.Definitions.csproj" />
+  <Project Path="../novolis-visual/src/Novolis.Visual.Evaluation/Novolis.Visual.Evaluation.csproj" />
+  <Project Path="../novolis-visual/src/Novolis.Visual.Materials/Novolis.Visual.Materials.csproj" />
 </Solution>
