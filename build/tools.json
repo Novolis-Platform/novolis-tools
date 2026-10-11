@@ -144,6 +144,21 @@
         "src/Novolis.Install/**",
         "Directory.Packages.props"
       ]
+    },
+    {
+      "key": "assetstudio",
+      "displayName": "Novolis Asset Studio",
+      "project": "src/Novolis.AssetStudio/Novolis.AssetStudio.csproj",
+      "packageId": "Novolis.AssetStudio",
+      "command": "novolis-assetstudio",
+      "tests": [
+        "tests/Novolis.AssetStudio.Unit/Novolis.AssetStudio.Unit.csproj"
+      ],
+      "changedPathGlobs": [
+        "src/Novolis.AssetStudio/**",
+        "tests/Novolis.AssetStudio.Unit/**",
+        "Directory.Packages.props"
+      ]
     }
   ]
 }

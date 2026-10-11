@@ -14,6 +14,7 @@
     <Project Path="src/Novolis.Tools.CanvasHtml/Novolis.Tools.CanvasHtml.csproj" />
     <Project Path="src/Novolis.Tools.CodeLayout.Cli/Novolis.Tools.CodeLayout.Cli.csproj" />
     <Project Path="src/Novolis.Tools.CodeLayout/Novolis.Tools.CodeLayout.csproj" />
+    <Project Path="src/Novolis.AssetStudio/Novolis.AssetStudio.csproj" />
     <Project Path="src/Novolis.Tools.LiteDb.Cli/Novolis.Tools.LiteDb.Cli.csproj" />
     <Project Path="src/Novolis.Tools.LiteDb/Novolis.Tools.LiteDb.csproj" />
     <Project Path="src/Novolis.Tools.MarkdownPdf.Cli/Novolis.Tools.MarkdownPdf.Cli.csproj" />
@@ -30,6 +31,7 @@
     <Project Path="tests/Novolis.Tools.Docs.Unit/Novolis.Tools.Docs.Unit.csproj" />
     <Project Path="tests/Novolis.Tools.LiteDb.Unit/Novolis.Tools.LiteDb.Unit.csproj" />
     <Project Path="tests/Novolis.Tools.MarkdownPdf.Unit/Novolis.Tools.MarkdownPdf.Unit.csproj" />
+    <Project Path="tests/Novolis.AssetStudio.Unit/Novolis.AssetStudio.Unit.csproj" />
     <Project Path="tests/Novolis.Tools.Sqlite.Unit/Novolis.Tools.Sqlite.Unit.csproj" />
   </Folder>
   <Folder Name="/tools/">

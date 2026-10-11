@@ -1,0 +1,28 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+    <PackageId>Novolis.AssetStudio</PackageId>
+    <Description>dotnet tool novolis-assetstudio — headless visual recipe validation, inspection, graph export, generation, baking, and builds.</Description>
+    <IsPackable>true</IsPackable>
+    <PackAsTool>true</PackAsTool>
+    <ToolCommandName>novolis-assetstudio</ToolCommandName>
+    <RootNamespace>Novolis.AssetStudio.Cli</RootNamespace>
+    <PackageTags>novolis;assetstudio;visual;recipe;graph;codegen;bake;cli;dotnet-tool</PackageTags>
+    <PackageReadmeFile>README.md</PackageReadmeFile>
+  </PropertyGroup>
+  <ItemGroup>
+    <LibraryReference Include="Novolis.AssetStudio.Core" />
+    <LibraryReference Include="Novolis.AssetStudio.Export" />
+    <LibraryReference Include="Novolis.AssetStudio.Import" />
+    <LibraryReference Include="Novolis.Visual.Baking" />
+    <LibraryReference Include="Novolis.Visual.CodeGen" />
+    <LibraryReference Include="Novolis.Visual.Compile" />
+    <LibraryReference Include="Novolis.Visual.Definitions" />
+    <LibraryReference Include="Novolis.WorkflowEngine.Graph" />
+    <LibraryReference Include="Novolis.WorkflowEngine.Graph.Export.Mermaid" />
+    <LibraryReference Include="Novolis.WorkflowEngine.Graph.Export.Svg" />
+    <LibraryReference Include="Novolis.WorkflowEngine.Graph.Layout" />
+    <PackageReference Include="System.CommandLine" />
+    <None Include="README.md" Pack="true" PackagePath="\" />
+  </ItemGroup>
+</Project>
