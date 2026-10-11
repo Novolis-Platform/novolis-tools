@@ -46,7 +46,7 @@ foreach (var theme in MarkdownPdfThemes.All)
 |---------|-------------|
 | `Novolis.Tools.MarkdownPdf.Cli` | `novolis-mdpdf` global tool |
 | `Novolis.Markup.Markdown.Documents` | Fluent / mapper APIs without themes |
-| `Novolis.Documents.Skia` | Direct `PagedDocument` → PDF |
+| `Novolis.Documents.Skia` | Direct semantic `Document` → PDF |
 
 ## Support
 
