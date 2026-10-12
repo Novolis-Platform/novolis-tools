@@ -1,4 +1,4 @@
-# Novolis Doom
+# Novolis.Tools.Doom.Cli
 
 `novolis-doom` extracts classic Doom-format WAD maps and resources into a
 neutral JSON and PNG package for Novolis labs.
