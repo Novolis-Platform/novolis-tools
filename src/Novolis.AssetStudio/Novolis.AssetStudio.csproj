@@ -18,6 +18,9 @@
     <LibraryReference Include="Novolis.Visual.CodeGen" />
     <LibraryReference Include="Novolis.Visual.Compile" />
     <LibraryReference Include="Novolis.Visual.Definitions" />
+    <LibraryReference Include="Novolis.Visual.Assets" />
+    <LibraryReference Include="Novolis.Visual.Materials" />
+    <LibraryReference Include="Novolis.Visual.Presets" />
     <LibraryReference Include="Novolis.WorkflowEngine.Graph" />
     <LibraryReference Include="Novolis.WorkflowEngine.Graph.Export.Mermaid" />
     <LibraryReference Include="Novolis.WorkflowEngine.Graph.Export.Svg" />

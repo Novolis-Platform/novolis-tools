@@ -4,10 +4,14 @@ using System.Text;
 using System.Text.Encodings.Web;
 using System.Text.Json;
 using Novolis.AssetStudio.Core;
+using Novolis.AssetStudio.Export;
 using Novolis.Visual.Baking;
 using Novolis.Visual.CodeGen;
 using Novolis.Visual.Compile;
 using Novolis.Visual.Definitions;
+using Novolis.Visual.Assets;
+using Novolis.Visual.Materials;
+using Novolis.Visual.Presets;
 using Novolis.AssetStudio.Import;
 using Novolis.WorkflowEngine.Graph.Export.Mermaid;
 using Novolis.WorkflowEngine.Graph.Export.Svg;
@@ -169,6 +173,289 @@ internal static class AssetStudioOperations
             report,
             () => WriteInspectText(report));
         return report.Ok ? Success : DiagnosticFailure;
+    }
+
+    public static int NewTemplate(
+        ParseResult parseResult,
+        Argument<string> templateArgument,
+        Option<string> outputOption,
+        bool json)
+    {
+        var id = parseResult.GetValue(templateArgument);
+        var template = VisualPresetCatalog.CreateDefault().Find(id ?? string.Empty);
+        if (template is null)
+        {
+            throw new CliInputException(
+                $"Unknown template '{id}'. Use lightsaber-blade, neon-sign, glass, or orbital-reusable-rocket.");
+        }
+
+        var output = RequireOutputFile(parseResult.GetValue(outputOption));
+        WriteUtf8(output, AssetRecipeSerializer.Serialize(template.Asset));
+        var report = new NewTemplateReport(
+            true,
+            template.Id,
+            template.Asset.AssetId,
+            Path.GetFileName(output),
+            template.Asset.Parameters.Length,
+            template.Materials.Length);
+        WriteResult(
+            json,
+            report,
+            () =>
+            {
+                Console.WriteLine($"template     {report.TemplateId}");
+                Console.WriteLine($"asset        {report.AssetId}");
+                Console.WriteLine($"output       {report.OutputFile}");
+                Console.WriteLine($"parameters   {report.ParameterCount.ToString(CultureInfo.InvariantCulture)}");
+            });
+        return Success;
+    }
+
+    public static int InspectParameters(
+        ParseResult parseResult,
+        Argument<string> sourceArgument,
+        bool json)
+    {
+        var path = RequireInputFile(
+            parseResult.GetValue(sourceArgument),
+            "material or asset",
+            ".json",
+            ".novasset.json",
+            ".novmaterial.json");
+        var source = File.ReadAllText(path, Encoding.UTF8);
+        using var document = JsonDocument.Parse(source);
+        var root = document.RootElement;
+        IReadOnlyList<ParameterReport> parameters;
+        string kind;
+        string id;
+        if (root.TryGetProperty("assetId", out _))
+        {
+            var asset = AssetRecipeSerializer.Deserialize(
+                source,
+                VisualCompiler.CreateDefaultRegistry());
+            kind = "asset";
+            id = asset.AssetId;
+            parameters = asset.Parameters
+                .Select(parameter => new ParameterReport(
+                    parameter.Id,
+                    parameter.Name,
+                    parameter.Editor.Group,
+                    parameter.Editor.Control.ToString(),
+                    parameter.DefaultValue.Kind.ToString(),
+                    parameter.Editor.UnitLabel))
+                .ToArray();
+        }
+        else if (root.TryGetProperty("materialId", out _))
+        {
+            var material = MaterialGraphSerializer.Deserialize(
+                source,
+                VisualCompiler.CreateDefaultRegistry());
+            kind = "material";
+            id = material.MaterialId;
+            parameters = material.Parameters
+                .Select(parameter => new ParameterReport(
+                    parameter.Id,
+                    parameter.Name,
+                    parameter.Editor.Group,
+                    parameter.Editor.Control.ToString(),
+                    parameter.DefaultValue.Kind.ToString(),
+                    parameter.Editor.UnitLabel))
+                .ToArray();
+        }
+        else
+        {
+            throw new CliInputException(
+                "The source must contain either an assetId or materialId.");
+        }
+
+        var report = new ParametersReport(
+            true,
+            kind,
+            id,
+            parameters);
+        WriteResult(
+            json,
+            report,
+            () =>
+            {
+                Console.WriteLine($"kind         {report.Kind}");
+                Console.WriteLine($"id           {report.Id}");
+                foreach (var parameter in report.Parameters)
+                {
+                    Console.WriteLine(
+                        $"parameter    {parameter.Id} · {parameter.Name} · " +
+                        $"{parameter.Control} · {parameter.Kind}");
+                }
+            });
+        return Success;
+    }
+
+    public static int Preview(
+        ParseResult parseResult,
+        Argument<string> recipeArgument,
+        Option<string> targetOption,
+        Option<string> outputOption,
+        Option<int> widthOption,
+        Option<int> heightOption,
+        Option<bool> strictOption,
+        bool json)
+    {
+        var loaded = LoadRecipe(parseResult.GetValue(recipeArgument));
+        var target = ParseTarget(parseResult.GetValue(targetOption));
+        var strict = parseResult.GetValue(strictOption);
+        var compilation = Compile(loaded.Recipe, target, strict);
+        var outputDirectory = RequireOutputDirectory(
+            parseResult.GetValue(outputOption));
+        var width = parseResult.GetValue(widthOption);
+        var height = parseResult.GetValue(heightOption);
+        ValidateDimensions(width, height);
+        var diagnostics = MapDiagnostics(compilation);
+        if (HasFailure(compilation, strict))
+        {
+            var failed = new PreviewReport(
+                false,
+                loaded.Recipe.RecipeId,
+                target.Name,
+                null,
+                null,
+                diagnostics);
+            WriteResult(
+                json,
+                failed,
+                () => WriteDiagnosticsText(diagnostics));
+            return DiagnosticFailure;
+        }
+
+        var result = new VisualBaker().Bake(
+            compilation,
+            new VisualBakeOptions
+            {
+                Height = height,
+                Target = VisualBakeTarget.SurfaceColor,
+                Width = width,
+            });
+        WriteBytes(Path.Combine(outputDirectory, "preview.png"), result.PngBytes);
+        WriteJson(
+            Path.Combine(outputDirectory, "preview.json"),
+            result.Manifest);
+        var report = new PreviewReport(
+            true,
+            loaded.Recipe.RecipeId,
+            target.Name,
+            "preview.png",
+            result.Manifest.ContentSha256,
+            diagnostics);
+        WriteResult(
+            json,
+            report,
+            () =>
+            {
+                Console.WriteLine($"recipe       {report.RecipeId}");
+                Console.WriteLine($"target       {report.Target}");
+                Console.WriteLine($"preview      {report.PreviewFile}");
+                Console.WriteLine($"sha256       {report.ContentSha256}");
+                WriteDiagnosticsText(report.Diagnostics);
+            });
+        return Success;
+    }
+
+    public static int Export(
+        ParseResult parseResult,
+        Argument<string> recipeArgument,
+        Option<string> profileOption,
+        Option<string> outputOption,
+        Option<bool> strictOption,
+        bool json)
+    {
+        var path = RequireInputFile(
+            parseResult.GetValue(recipeArgument),
+            "recipe or module",
+            ".json",
+            ".novvisual.json",
+            ".novasset.json",
+            ".novmaterial.json");
+        var source = File.ReadAllText(path, Encoding.UTF8);
+        using var sourceDocument = JsonDocument.Parse(source);
+        var root = sourceDocument.RootElement;
+        AssetRecipe? asset = null;
+        MaterialGraph? material = null;
+        VisualRecipe recipe;
+        if (root.TryGetProperty("assetId", out _))
+        {
+            asset = AssetRecipeSerializer.Deserialize(
+                source,
+                VisualCompiler.CreateDefaultRegistry());
+            recipe = asset.Graph;
+        }
+        else if (root.TryGetProperty("materialId", out _))
+        {
+            material = MaterialGraphSerializer.Deserialize(
+                source,
+                VisualCompiler.CreateDefaultRegistry());
+            recipe = material.Recipe;
+        }
+        else
+        {
+            recipe = VisualRecipeSerializer.Deserialize(
+                source,
+                VisualCompiler.CreateDefaultRegistry());
+        }
+
+        var loaded = new LoadedRecipe(
+            path,
+            recipe,
+            new AssetStudioSemanticState(recipe));
+        var profile = ParseExportProfile(
+            parseResult.GetValue(profileOption));
+        var outputDirectory = RequireOutputDirectory(
+            parseResult.GetValue(outputOption));
+        var exporter = new AssetStudioExporter();
+        var result = exporter.Export(
+            new AssetStudioExportRequest(
+                AssetStudioDocument.Create(loaded.Recipe),
+                profile,
+                new AssetStudioExportOptions
+                {
+                    Bake = new VisualBakeOptions
+                    {
+                        Target = VisualBakeTarget.SurfaceColor,
+                    },
+                },
+                material,
+                asset));
+        foreach (var artifact in result.Artifacts)
+        {
+            WriteBytes(
+                Path.Combine(
+                    outputDirectory,
+                    artifact.LogicalPath.Replace(
+                        '/',
+                        Path.DirectorySeparatorChar)),
+                artifact.Content.ToArray());
+        }
+
+        WriteUtf8(
+            Path.Combine(outputDirectory, "assetstudio-export.json"),
+            result.Manifest.ToCanonicalJson());
+        var report = new ExportReport(
+            result.Success,
+            loaded.Recipe.RecipeId,
+            profile.ToString(),
+            result.Artifacts.Length,
+            result.Manifest.Sha256,
+            MapExportDiagnostics(result.Report));
+        WriteResult(
+            json,
+            report,
+            () =>
+            {
+                Console.WriteLine($"recipe       {report.RecipeId}");
+                Console.WriteLine($"profile      {report.Profile}");
+                Console.WriteLine($"artifacts    {report.ArtifactCount.ToString(CultureInfo.InvariantCulture)}");
+                Console.WriteLine($"manifest     {report.ManifestSha256}");
+                WriteDiagnosticsText(report.Diagnostics);
+            });
+        return result.Success ? Success : DiagnosticFailure;
     }
 
     public static int Graph(
@@ -784,6 +1071,17 @@ internal static class AssetStudioOperations
                 result.Message))
             .ToArray();
 
+    private static IReadOnlyList<DiagnosticReport> MapExportDiagnostics(
+        AssetStudioBuildReport report) =>
+        report.Diagnostics
+            .Select(diagnostic => new DiagnosticReport(
+                diagnostic.Severity.ToString().ToLowerInvariant(),
+                diagnostic.Code,
+                diagnostic.Message,
+                diagnostic.NodeId?.ToString(),
+                diagnostic.ConnectionId?.ToString()))
+            .ToArray();
+
     private static WorkflowGraph.Graph<GraphNodeValue> CreateGraph(
         VisualRecipe recipe)
     {
@@ -871,6 +1169,27 @@ internal static class AssetStudioOperations
                 $"Unknown target '{raw}'. Use cpu, bake, path-trace, raster, planar, or csharp."),
         };
     }
+
+    private static AssetStudioExportProfile ParseExportProfile(string? raw) =>
+        raw?.Trim().ToLowerInvariant() switch
+        {
+            "definition" => AssetStudioExportProfile.Definition,
+            "material-module" or "material" =>
+                AssetStudioExportProfile.MaterialModule,
+            "asset-package" or "asset" =>
+                AssetStudioExportProfile.AssetPackage,
+            "preview-thumbnail" or "thumbnail" or "preview" =>
+                AssetStudioExportProfile.PreviewThumbnail,
+            "code" or "csharp" => AssetStudioExportProfile.Code,
+            "bake" => AssetStudioExportProfile.Bake,
+            "packed" or "pack" => AssetStudioExportProfile.Packed,
+            "build" => AssetStudioExportProfile.Build,
+            "documentation" or "docs" =>
+                AssetStudioExportProfile.Documentation,
+            _ => throw new CliInputException(
+                "Unknown export profile. Use definition, material-module, " +
+                "asset-package, preview-thumbnail, code, bake, packed, or build."),
+        };
 
     private static GraphFormat ParseGraphFormat(string? raw) =>
         raw?.Trim().ToLowerInvariant() switch
@@ -1248,7 +1567,18 @@ internal static class AssetStudioOperations
             new UTF8Encoding(encoderShouldEmitUTF8Identifier: false));
 
     private static void WriteBytes(string path, byte[] bytes) =>
+        WriteBytesToDisk(path, bytes);
+
+    private static void WriteBytesToDisk(string path, byte[] bytes)
+    {
+        var directory = Path.GetDirectoryName(path);
+        if (!string.IsNullOrWhiteSpace(directory))
+        {
+            Directory.CreateDirectory(directory);
+        }
+
         File.WriteAllBytes(path, bytes);
+    }
 
     private sealed class CliInputException : Exception
     {
@@ -1330,6 +1660,44 @@ internal static class AssetStudioOperations
         IReadOnlyList<OutputReport> Outputs,
         IReadOnlyList<CapabilityReport> Capabilities,
         bool CapabilitiesIncluded,
+        IReadOnlyList<DiagnosticReport> Diagnostics);
+
+    private sealed record NewTemplateReport(
+        bool Ok,
+        string TemplateId,
+        string AssetId,
+        string OutputFile,
+        int ParameterCount,
+        int MaterialCount);
+
+    private sealed record ParameterReport(
+        string Id,
+        string Name,
+        string? Group,
+        string Control,
+        string Kind,
+        string? Unit);
+
+    private sealed record ParametersReport(
+        bool Ok,
+        string Kind,
+        string Id,
+        IReadOnlyList<ParameterReport> Parameters);
+
+    private sealed record PreviewReport(
+        bool Ok,
+        string RecipeId,
+        string Target,
+        string? PreviewFile,
+        string? ContentSha256,
+        IReadOnlyList<DiagnosticReport> Diagnostics);
+
+    private sealed record ExportReport(
+        bool Ok,
+        string RecipeId,
+        string Profile,
+        int ArtifactCount,
+        string ManifestSha256,
         IReadOnlyList<DiagnosticReport> Diagnostics);
 
     private sealed record GraphReport(

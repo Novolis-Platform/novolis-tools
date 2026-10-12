@@ -79,6 +79,127 @@ internal static class AssetStudioCommandLine
                 .ConfigureAwait(false));
         root.Subcommands.Add(inspect);
 
+        var newCommand = new Command(
+            "new",
+            "Create a no-code material or asset from the built-in catalog.");
+        var templateCommand = new Command(
+            "template",
+            "Write a built-in template as canonical asset JSON.");
+        var templateId = new Argument<string>("template")
+        {
+            Description =
+                "Template id: lightsaber-blade, neon-sign, glass, or orbital-reusable-rocket.",
+        };
+        var templateOut = RequiredOption(
+            "--out",
+            "Output .novasset.json file.");
+        templateCommand.Arguments.Add(templateId);
+        templateCommand.Options.Add(templateOut);
+        templateCommand.SetAction(async (parseResult, cancellationToken) =>
+            await AssetStudioOperations.RunSafeAsync(
+                    parseResult,
+                    jsonOption,
+                    cancellationToken,
+                    () => AssetStudioOperations.NewTemplate(
+                        parseResult,
+                        templateId,
+                        templateOut,
+                        parseResult.GetValue(jsonOption)))
+                .ConfigureAwait(false));
+        newCommand.Subcommands.Add(templateCommand);
+        root.Subcommands.Add(newCommand);
+
+        var parameters = new Command(
+            "inspect-parameters",
+            "List the exposed controls in a material or asset module.");
+        var parametersSource = new Argument<string>("source")
+        {
+            Description = "Path to canonical material or asset JSON.",
+        };
+        parameters.Arguments.Add(parametersSource);
+        parameters.SetAction(async (parseResult, cancellationToken) =>
+            await AssetStudioOperations.RunSafeAsync(
+                    parseResult,
+                    jsonOption,
+                    cancellationToken,
+                    () => AssetStudioOperations.InspectParameters(
+                        parseResult,
+                        parametersSource,
+                        parseResult.GetValue(jsonOption)))
+                .ConfigureAwait(false));
+        inspect.Subcommands.Add(parameters);
+
+        var preview = new Command(
+            "preview",
+            "Bake a deterministic preview thumbnail for a visual recipe.");
+        var previewRecipe = RecipeArgument();
+        var previewTarget = TargetOption(
+            "Preview target used for capability negotiation.",
+            required: false,
+            defaultValue: "cpu");
+        var previewOut = RequiredOption(
+            "--out",
+            "Output directory for preview.png and preview.json.");
+        var previewWidth = new Option<int>("--width")
+        {
+            Description = "Preview width in pixels.",
+            DefaultValueFactory = _ => 512,
+        };
+        var previewHeight = new Option<int>("--height")
+        {
+            Description = "Preview height in pixels.",
+            DefaultValueFactory = _ => 512,
+        };
+        preview.Arguments.Add(previewRecipe);
+        preview.Options.Add(previewTarget);
+        preview.Options.Add(previewOut);
+        preview.Options.Add(previewWidth);
+        preview.Options.Add(previewHeight);
+        preview.SetAction(async (parseResult, cancellationToken) =>
+            await AssetStudioOperations.RunSafeAsync(
+                    parseResult,
+                    jsonOption,
+                    cancellationToken,
+                    () => AssetStudioOperations.Preview(
+                        parseResult,
+                        previewRecipe,
+                        previewTarget,
+                        previewOut,
+                        previewWidth,
+                        previewHeight,
+                        strictOption,
+                        parseResult.GetValue(jsonOption)))
+                .ConfigureAwait(false));
+        root.Subcommands.Add(preview);
+
+        var export = new Command(
+            "export",
+            "Export a recipe through a deterministic Asset Studio profile.");
+        var exportRecipe = RecipeArgument();
+        var exportProfile = RequiredOption(
+            "--profile",
+            "Profile: definition, material-module, asset-package, preview-thumbnail, code, bake, packed, or build.");
+        var exportOut = RequiredOption(
+            "--out",
+            "Output directory for export artifacts.");
+        export.Arguments.Add(exportRecipe);
+        export.Options.Add(exportProfile);
+        export.Options.Add(exportOut);
+        export.SetAction(async (parseResult, cancellationToken) =>
+            await AssetStudioOperations.RunSafeAsync(
+                    parseResult,
+                    jsonOption,
+                    cancellationToken,
+                    () => AssetStudioOperations.Export(
+                        parseResult,
+                        exportRecipe,
+                        exportProfile,
+                        exportOut,
+                        strictOption,
+                        parseResult.GetValue(jsonOption)))
+                .ConfigureAwait(false));
+        root.Subcommands.Add(export);
+
         var graph = new Command("graph", "Export the semantic recipe graph as Mermaid or SVG.");
         var graphRecipe = RecipeArgument();
         var graphFormat = new Option<string>("--format")

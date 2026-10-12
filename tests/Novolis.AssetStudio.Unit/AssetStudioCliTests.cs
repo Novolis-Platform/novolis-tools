@@ -19,5 +19,9 @@ public sealed class AssetStudioCliTests
             .Contains("path-trace");
         await Assert.That(AssetStudioCliInfo.SupportedTargets)
             .Contains("csharp");
+        await Assert.That(AssetStudioCliInfo.SupportedWorkflows)
+            .Contains("preview");
+        await Assert.That(AssetStudioCliInfo.SupportedWorkflows)
+            .Contains("export");
     }
 }
