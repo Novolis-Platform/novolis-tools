@@ -11,9 +11,9 @@
     <PackageReadmeFile>README.md</PackageReadmeFile>
   </PropertyGroup>
   <ItemGroup>
-    <LibraryReference Include="Novolis.AssetStudio.Core" />
-    <LibraryReference Include="Novolis.AssetStudio.Export" />
-    <LibraryReference Include="Novolis.AssetStudio.Import" />
+    <ProjectReference Include="..\Novolis.AssetStudio.Authoring\Novolis.AssetStudio.Authoring.csproj" />
+    <ProjectReference Include="..\Novolis.AssetStudio.Export\Novolis.AssetStudio.Export.csproj" />
+    <ProjectReference Include="..\Novolis.AssetStudio.Import\Novolis.AssetStudio.Import.csproj" />
     <LibraryReference Include="Novolis.Visual.Baking" />
     <LibraryReference Include="Novolis.Visual.CodeGen" />
     <LibraryReference Include="Novolis.Visual.Compile" />

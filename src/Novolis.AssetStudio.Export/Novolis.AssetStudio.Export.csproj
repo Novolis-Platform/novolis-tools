@@ -1,0 +1,22 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <PackageId>Novolis.AssetStudio.Export</PackageId>
+    <RootNamespace>Novolis.AssetStudio.Export</RootNamespace>
+    <Description>Deterministic, host-neutral Asset Studio definition, code, packed, bake, documentation, and build exports.</Description>
+    <PackageTags>assetstudio;visual;export;codegen;bake;manifest;deterministic</PackageTags>
+    <IsPackable>true</IsPackable>
+    <GenerateDocumentationFile>true</GenerateDocumentationFile>
+    <NoWarn>$(NoWarn);CS1591</NoWarn>
+    <PackageReadmeFile>README.md</PackageReadmeFile>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\Novolis.AssetStudio.Authoring\Novolis.AssetStudio.Authoring.csproj" />
+    <LibraryReference Include="Novolis.Visual.Assets" />
+    <LibraryReference Include="Novolis.Visual.Compile" />
+    <LibraryReference Include="Novolis.Visual.Baking" />
+    <LibraryReference Include="Novolis.Visual.CodeGen" />
+    <LibraryReference Include="Novolis.Visual.Materials" />
+    <None Include="README.md" Pack="true" PackagePath="\" />
+  </ItemGroup>
+</Project>

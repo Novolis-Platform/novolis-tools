@@ -156,6 +156,9 @@
       ],
       "changedPathGlobs": [
         "src/Novolis.AssetStudio/**",
+        "src/Novolis.AssetStudio.Authoring/**",
+        "src/Novolis.AssetStudio.Export/**",
+        "src/Novolis.AssetStudio.Import/**",
         "tests/Novolis.AssetStudio.Unit/**",
         "Directory.Packages.props"
       ]

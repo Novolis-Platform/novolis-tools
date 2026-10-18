@@ -29,7 +29,7 @@ novolis-assetstudio diff d:\path\left.novvisual.json d:\path\right.novvisual.jso
 ```
 
 The command delegates recipe loading and semantic state to
-`Novolis.AssetStudio.Core`, compilation to the Visual compiler, graph
+`Novolis.AssetStudio.Authoring`, compilation to the Visual compiler, graph
 projection to WorkflowEngine graph packages, and code/bake work to the
 shared Visual code-generation and baking packages. Material and asset modules
 are persisted with their own canonical schema serializers and can be exported

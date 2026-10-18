@@ -12,6 +12,11 @@
     <PackageReference Include="TUnit" />
   </ItemGroup>
   <ItemGroup>
+    <LibraryReference Include="Novolis.Rendering.Materials" />
+    <LibraryReference Include="Novolis.Visual.Adapters.Rendering" />
     <ProjectReference Include="..\..\src\Novolis.AssetStudio\Novolis.AssetStudio.csproj" />
+    <ProjectReference Include="..\..\src\Novolis.AssetStudio.Authoring\Novolis.AssetStudio.Authoring.csproj" />
+    <ProjectReference Include="..\..\src\Novolis.AssetStudio.Export\Novolis.AssetStudio.Export.csproj" />
+    <ProjectReference Include="..\..\src\Novolis.AssetStudio.Import\Novolis.AssetStudio.Import.csproj" />
   </ItemGroup>
 </Project>

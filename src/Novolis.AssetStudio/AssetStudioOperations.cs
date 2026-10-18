@@ -3,7 +3,7 @@ using System.Globalization;
 using System.Text;
 using System.Text.Encodings.Web;
 using System.Text.Json;
-using Novolis.AssetStudio.Core;
+using Novolis.AssetStudio.Authoring;
 using Novolis.AssetStudio.Export;
 using Novolis.Visual.Baking;
 using Novolis.Visual.CodeGen;
@@ -207,6 +207,192 @@ internal static class AssetStudioOperations
                 Console.WriteLine($"asset        {report.AssetId}");
                 Console.WriteLine($"output       {report.OutputFile}");
                 Console.WriteLine($"parameters   {report.ParameterCount.ToString(CultureInfo.InvariantCulture)}");
+            });
+        return Success;
+    }
+
+    public static int NewMaterial(
+        ParseResult parseResult,
+        Option<string> outputOption,
+        bool json)
+    {
+        var output = RequireOutputFile(parseResult.GetValue(outputOption));
+        var document = AssetStudioBlankDocumentFactory.CreateMaterialDocument();
+        WriteUtf8(
+            output,
+            AssetStudioModulePersistence.SerializeDocument(document));
+        var report = new NewDocumentReport(
+            true,
+            "material",
+            document.Material!.MaterialId,
+            Path.GetFileName(output),
+            document.ContextFingerprint);
+        WriteResult(
+            json,
+            report,
+            () =>
+            {
+                Console.WriteLine($"kind         {report.Kind}");
+                Console.WriteLine($"id           {report.Id}");
+                Console.WriteLine($"output       {report.OutputFile}");
+                Console.WriteLine($"fingerprint  {report.Fingerprint}");
+            });
+        return Success;
+    }
+
+    public static int NewAsset(
+        ParseResult parseResult,
+        Option<string> outputOption,
+        bool json)
+    {
+        var output = RequireOutputFile(parseResult.GetValue(outputOption));
+        var document = AssetStudioBlankDocumentFactory.CreateAssetDocument();
+        WriteUtf8(
+            output,
+            AssetStudioModulePersistence.SerializeDocument(document));
+        var report = new NewDocumentReport(
+            true,
+            "asset",
+            document.Asset!.AssetId,
+            Path.GetFileName(output),
+            document.ContextFingerprint);
+        WriteResult(
+            json,
+            report,
+            () =>
+            {
+                Console.WriteLine($"kind         {report.Kind}");
+                Console.WriteLine($"id           {report.Id}");
+                Console.WriteLine($"output       {report.OutputFile}");
+                Console.WriteLine($"fingerprint  {report.Fingerprint}");
+            });
+        return Success;
+    }
+
+    public static int Open(
+        ParseResult parseResult,
+        Argument<string> sourceArgument,
+        bool json)
+    {
+        var path = RequireInputFile(
+            parseResult.GetValue(sourceArgument),
+            "Asset Studio document",
+            ".json",
+            ".novvisual.json",
+            ".novasset.json",
+            ".novmaterial.json",
+            ".instance.json");
+        var document = LoadDocumentFromPath(path);
+        var report = CreateDocumentReport(
+            document,
+            Path.GetFileName(path));
+        WriteResult(
+            json,
+            report,
+            () =>
+            {
+                Console.WriteLine($"kind         {report.Kind}");
+                Console.WriteLine($"id           {report.Id}");
+                Console.WriteLine($"source       {report.OutputFile}");
+                Console.WriteLine($"fingerprint  {report.Fingerprint}");
+            });
+        return Success;
+    }
+
+    public static int Save(
+        ParseResult parseResult,
+        Argument<string> sourceArgument,
+        Option<string> outputOption,
+        bool json)
+    {
+        var source = RequireInputFile(
+            parseResult.GetValue(sourceArgument),
+            "Asset Studio document",
+            ".json",
+            ".novvisual.json",
+            ".novasset.json",
+            ".novmaterial.json");
+        var output = RequireOutputFile(parseResult.GetValue(outputOption));
+        var document = LoadDocumentFromPath(source);
+        WriteUtf8(
+            output,
+            AssetStudioModulePersistence.SerializeDocument(document));
+        var report = CreateDocumentReport(
+            document,
+            Path.GetFileName(output));
+        WriteResult(
+            json,
+            report,
+            () =>
+            {
+                Console.WriteLine($"kind         {report.Kind}");
+                Console.WriteLine($"id           {report.Id}");
+                Console.WriteLine($"output       {report.OutputFile}");
+                Console.WriteLine($"fingerprint  {report.Fingerprint}");
+            });
+        return Success;
+    }
+
+    public static int CreateInstance(
+        ParseResult parseResult,
+        Argument<string> sourceArgument,
+        Option<string?> instanceIdOption,
+        Option<string> outputOption,
+        bool json)
+    {
+        var source = RequireInputFile(
+            parseResult.GetValue(sourceArgument),
+            "material or asset module",
+            ".json",
+            ".novasset.json",
+            ".novmaterial.json");
+        var output = RequireOutputFile(parseResult.GetValue(outputOption));
+        var document = LoadDocumentFromPath(source);
+        string content;
+        string kind;
+        string id;
+        if (document.Material is { } material)
+        {
+            var instance = new MaterialInstance(
+                parseResult.GetValue(instanceIdOption) ??
+                material.MaterialId + ".instance",
+                material);
+            content = AssetStudioModulePersistence.SerializeMaterialInstance(
+                instance);
+            kind = "material";
+            id = instance.InstanceId;
+        }
+        else if (document.Asset is { } asset)
+        {
+            var instance = new AssetInstance(
+                parseResult.GetValue(instanceIdOption) ??
+                asset.AssetId + ".instance",
+                asset);
+            content = AssetStudioModulePersistence.SerializeAssetInstance(
+                instance);
+            kind = "asset";
+            id = instance.InstanceId;
+        }
+        else
+        {
+            throw new CliInputException(
+                "Only material and asset modules can create instances.");
+        }
+
+        WriteUtf8(output, content);
+        var report = new InstanceReport(
+            true,
+            kind,
+            id,
+            Path.GetFileName(output));
+        WriteResult(
+            json,
+            report,
+            () =>
+            {
+                Console.WriteLine($"kind         {report.Kind}");
+                Console.WriteLine($"instance     {report.InstanceId}");
+                Console.WriteLine($"output       {report.OutputFile}");
             });
         return Success;
     }
@@ -914,6 +1100,31 @@ internal static class AssetStudioOperations
             ".json");
         return LoadRecipeFromPath(path);
     }
+
+    private static AssetStudioDocument LoadDocumentFromPath(string path)
+    {
+        var json = File.ReadAllText(path, Encoding.UTF8);
+        return AssetStudioModulePersistence.DeserializeDocument(
+            json,
+            registry: VisualCompiler.CreateDefaultRegistry());
+    }
+
+    private static DocumentReport CreateDocumentReport(
+        AssetStudioDocument document,
+        string outputFile) =>
+        new(
+            true,
+            document.DocumentKind switch
+            {
+                AssetStudioDocumentKind.Material => "material",
+                AssetStudioDocumentKind.Asset => "asset",
+                _ => "recipe",
+            },
+            document.Material?.MaterialId ??
+            document.Asset?.AssetId ??
+            document.Recipe.RecipeId,
+            outputFile,
+            document.ContextFingerprint);
 
     private static LoadedRecipe LoadRecipeFromPath(string path)
     {
@@ -1669,6 +1880,26 @@ internal static class AssetStudioOperations
         string OutputFile,
         int ParameterCount,
         int MaterialCount);
+
+    private sealed record NewDocumentReport(
+        bool Ok,
+        string Kind,
+        string Id,
+        string OutputFile,
+        string Fingerprint);
+
+    private sealed record DocumentReport(
+        bool Ok,
+        string Kind,
+        string Id,
+        string OutputFile,
+        string Fingerprint);
+
+    private sealed record InstanceReport(
+        bool Ok,
+        string Kind,
+        string InstanceId,
+        string OutputFile);
 
     private sealed record ParameterReport(
         string Id,

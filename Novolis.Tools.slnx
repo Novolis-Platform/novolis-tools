@@ -15,6 +15,9 @@
     <Project Path="src/Novolis.Tools.CodeLayout.Cli/Novolis.Tools.CodeLayout.Cli.csproj" />
     <Project Path="src/Novolis.Tools.CodeLayout/Novolis.Tools.CodeLayout.csproj" />
     <Project Path="src/Novolis.AssetStudio/Novolis.AssetStudio.csproj" />
+    <Project Path="src/Novolis.AssetStudio.Authoring/Novolis.AssetStudio.Authoring.csproj" />
+    <Project Path="src/Novolis.AssetStudio.Export/Novolis.AssetStudio.Export.csproj" />
+    <Project Path="src/Novolis.AssetStudio.Import/Novolis.AssetStudio.Import.csproj" />
     <Project Path="src/Novolis.Tools.Doom.Cli/Novolis.Tools.Doom.Cli.csproj" />
     <Project Path="src/Novolis.Tools.LiteDb.Cli/Novolis.Tools.LiteDb.Cli.csproj" />
     <Project Path="src/Novolis.Tools.LiteDb/Novolis.Tools.LiteDb.csproj" />

@@ -107,7 +107,121 @@ internal static class AssetStudioCommandLine
                         parseResult.GetValue(jsonOption)))
                 .ConfigureAwait(false));
         newCommand.Subcommands.Add(templateCommand);
+
+        var materialCommand = new Command(
+            "material",
+            "Create a blank generic material module.");
+        var materialOut = RequiredOption(
+            "--out",
+            "Output .novmaterial.json file.");
+        materialCommand.Options.Add(materialOut);
+        materialCommand.SetAction(async (parseResult, cancellationToken) =>
+            await AssetStudioOperations.RunSafeAsync(
+                    parseResult,
+                    jsonOption,
+                    cancellationToken,
+                    () => AssetStudioOperations.NewMaterial(
+                        parseResult,
+                        materialOut,
+                        parseResult.GetValue(jsonOption)))
+                .ConfigureAwait(false));
+        newCommand.Subcommands.Add(materialCommand);
+
+        var assetCommand = new Command(
+            "asset",
+            "Create a blank generic asset assembly.");
+        var assetOut = RequiredOption(
+            "--out",
+            "Output .novasset.json file.");
+        assetCommand.Options.Add(assetOut);
+        assetCommand.SetAction(async (parseResult, cancellationToken) =>
+            await AssetStudioOperations.RunSafeAsync(
+                    parseResult,
+                    jsonOption,
+                    cancellationToken,
+                    () => AssetStudioOperations.NewAsset(
+                        parseResult,
+                        assetOut,
+                        parseResult.GetValue(jsonOption)))
+                .ConfigureAwait(false));
+        newCommand.Subcommands.Add(assetCommand);
         root.Subcommands.Add(newCommand);
+
+        var open = new Command(
+            "open",
+            "Load one material, asset, or recipe document and report its canonical identity.");
+        var openSource = new Argument<string>("source")
+        {
+            Description = "Path to a canonical material, asset, or recipe document.",
+        };
+        open.Arguments.Add(openSource);
+        open.SetAction(async (parseResult, cancellationToken) =>
+            await AssetStudioOperations.RunSafeAsync(
+                    parseResult,
+                    jsonOption,
+                    cancellationToken,
+                    () => AssetStudioOperations.Open(
+                        parseResult,
+                        openSource,
+                        parseResult.GetValue(jsonOption)))
+                .ConfigureAwait(false));
+        root.Subcommands.Add(open);
+
+        var save = new Command(
+            "save",
+            "Normalize and save one material, asset, or recipe document.");
+        var saveSource = new Argument<string>("source")
+        {
+            Description = "Path to a canonical material, asset, or recipe document.",
+        };
+        var saveOut = RequiredOption(
+            "--out",
+            "Output path for the canonical document.");
+        save.Arguments.Add(saveSource);
+        save.Options.Add(saveOut);
+        save.SetAction(async (parseResult, cancellationToken) =>
+            await AssetStudioOperations.RunSafeAsync(
+                    parseResult,
+                    jsonOption,
+                    cancellationToken,
+                    () => AssetStudioOperations.Save(
+                        parseResult,
+                        saveSource,
+                        saveOut,
+                        parseResult.GetValue(jsonOption)))
+                .ConfigureAwait(false));
+        root.Subcommands.Add(save);
+
+        var instance = new Command(
+            "instance",
+            "Create a serialized child instance from a material or asset module.");
+        var instanceSource = new Argument<string>("source")
+        {
+            Description = "Path to a canonical material or asset module.",
+        };
+        var instanceId = new Option<string?>("--id")
+        {
+            Description = "Optional child instance identifier.",
+        };
+        var instanceOut = RequiredOption(
+            "--out",
+            "Output path for the instance document.");
+        instance.Arguments.Add(instanceSource);
+        instance.Options.Add(instanceId);
+        instance.Options.Add(instanceOut);
+        instance.SetAction(async (parseResult, cancellationToken) =>
+            await AssetStudioOperations.RunSafeAsync(
+                    parseResult,
+                    jsonOption,
+                    cancellationToken,
+                    () => AssetStudioOperations.CreateInstance(
+                        parseResult,
+                        instanceSource,
+                        instanceId,
+                        instanceOut,
+                        parseResult.GetValue(jsonOption)))
+                .ConfigureAwait(false));
+        root.Subcommands.Add(instance);
 
         var parameters = new Command(
             "inspect-parameters",

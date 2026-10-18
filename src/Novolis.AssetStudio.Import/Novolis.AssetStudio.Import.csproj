@@ -1,0 +1,22 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <PackageId>Novolis.AssetStudio.Import</PackageId>
+    <RootNamespace>Novolis.AssetStudio.Import</RootNamespace>
+    <Description>Bounded, host-neutral Asset Studio recipe import contracts.</Description>
+    <PackageTags>assetstudio;visual;import;safe;bounded;json</PackageTags>
+    <IsPackable>true</IsPackable>
+    <GenerateDocumentationFile>true</GenerateDocumentationFile>
+    <NoWarn>$(NoWarn);CS1591</NoWarn>
+    <PackageReadmeFile>README.md</PackageReadmeFile>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\Novolis.AssetStudio.Authoring\Novolis.AssetStudio.Authoring.csproj" />
+    <LibraryReference Include="Novolis.Visual.Definitions" />
+    <PackageReference Include="SkiaSharp" />
+    <PackageReference Include="SkiaSharp.NativeAssets.Linux" />
+    <PackageReference Include="SkiaSharp.NativeAssets.macOS" />
+    <PackageReference Include="SkiaSharp.NativeAssets.Win32" />
+    <None Include="README.md" Pack="true" PackagePath="\" />
+  </ItemGroup>
+</Project>

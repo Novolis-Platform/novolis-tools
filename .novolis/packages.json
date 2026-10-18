@@ -43,6 +43,18 @@
     "Novolis.Tools.SystemMetrics.Cli": {
       "path": "src/Novolis.Tools.SystemMetrics.Cli",
       "description": "dotnet tool novolis-system-metrics — Spectre.Console system resource capture"
+    },
+    "Novolis.AssetStudio.Authoring": {
+      "path": "src/Novolis.AssetStudio.Authoring",
+      "description": "AssetStudio product authoring session and document implementation"
+    },
+    "Novolis.AssetStudio.Export": {
+      "path": "src/Novolis.AssetStudio.Export",
+      "description": "AssetStudio product export implementation"
+    },
+    "Novolis.AssetStudio.Import": {
+      "path": "src/Novolis.AssetStudio.Import",
+      "description": "AssetStudio product import implementation"
     }
   }
 }
