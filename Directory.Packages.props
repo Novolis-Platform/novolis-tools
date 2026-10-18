@@ -8,6 +8,8 @@
     <PackageVersion Include="Azure.Core" Version="1.63.0" />
     <PackageVersion Include="Jint" Version="4.17.0" />
     <PackageVersion Include="Microsoft.CodeAnalysis.CSharp" Version="5.9.0" />
+    <PackageVersion Include="Microsoft.Build.Framework" Version="18.11.0" />
+    <PackageVersion Include="Microsoft.NET.StringTools" Version="18.11.0" />
     <PackageVersion Include="Microsoft.Data.Sqlite" Version="10.0.13" />
     <PackageVersion Include="Microsoft.SourceLink.GitHub" Version="10.0.402" />
     <PackageVersion Include="SkiaSharp" Version="4.153.1" />

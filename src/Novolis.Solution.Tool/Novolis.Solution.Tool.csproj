@@ -16,6 +16,8 @@
     <LibraryReference Include="Novolis.Workspaces.DotNet.Indexing" />
     <LibraryReference Include="Novolis.Workspaces.DotNet.MSBuild" />
     <LibraryReference Include="Novolis.Workspaces.DotNet.Slnx" />
+    <PackageReference Include="Microsoft.Build.Framework" ExcludeAssets="runtime" PrivateAssets="all" />
+    <PackageReference Include="Microsoft.NET.StringTools" ExcludeAssets="runtime" PrivateAssets="all" />
     <PackageReference Include="System.IO.Abstractions" />
   </ItemGroup>
 </Project>
