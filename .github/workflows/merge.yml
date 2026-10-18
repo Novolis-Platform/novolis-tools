@@ -100,7 +100,7 @@ jobs:
           set -euo pipefail
           while IFS= read -r test; do
             [ -n "$test" ] || continue
-            if ! rg -q '<IsTestProject>\s*true\s*</IsTestProject>' "$test"; then
+            if ! grep -Eq '<IsTestProject>[[:space:]]*true[[:space:]]*</IsTestProject>' "$test"; then
               echo "Skipping disabled test project: $test"
               continue
             fi
