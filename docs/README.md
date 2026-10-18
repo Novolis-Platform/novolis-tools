@@ -30,6 +30,7 @@ Published docs: [https://novolis-platform.github.io/.github/novolis-tools/](http
 | `Novolis.Tools.NetworkPath.Cli` |
 | `Novolis.Tools.Sqlite` |
 | `Novolis.Tools.Sqlite.Cli` |
+| `Novolis.Tools.SystemMetrics.Cli` |
 
 ## More
 

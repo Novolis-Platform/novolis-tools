@@ -25,3 +25,4 @@ Consumer float for packages in this repo: **`2026.1.*`**.
 | `Novolis.Tools.LiteDb` | Library (depends on `Novolis.Storage.LiteDb`) |
 | `Novolis.Tools.LiteDb.Cli` | `dotnet tool` (`novolis-litedb`) |
 | `Novolis.Tools.NetworkPath.Cli` | `dotnet tool` (`novolis-network-path`) |
+| `Novolis.Tools.SystemMetrics.Cli` | `dotnet tool` (`novolis-system-metrics`) |

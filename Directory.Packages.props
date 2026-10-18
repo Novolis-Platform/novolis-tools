@@ -6,10 +6,10 @@
   <ItemGroup>
     <PackageVersion Include="LiteDB" Version="5.0.21" />
     <PackageVersion Include="Azure.Core" Version="1.63.0" />
-    <PackageVersion Include="Jint" Version="4.16.4" />
+    <PackageVersion Include="Jint" Version="4.17.0" />
     <PackageVersion Include="Microsoft.CodeAnalysis.CSharp" Version="5.9.0" />
-    <PackageVersion Include="Microsoft.Data.Sqlite" Version="10.0.12" />
-    <PackageVersion Include="Microsoft.SourceLink.GitHub" Version="10.0.401" />
+    <PackageVersion Include="Microsoft.Data.Sqlite" Version="10.0.13" />
+    <PackageVersion Include="Microsoft.SourceLink.GitHub" Version="10.0.402" />
     <PackageVersion Include="SkiaSharp" Version="4.153.1" />
     <PackageVersion Include="SkiaSharp.NativeAssets.Android" Version="4.153.1" />
     <PackageVersion Include="SkiaSharp.NativeAssets.Linux" Version="4.153.1" />
@@ -24,6 +24,7 @@
     <PackageVersion Include="Novolis.IO.GitHub" Version="2026.1.*" />
     <PackageVersion Include="Novolis.IO.Mobile.Android" Version="2026.1.*" />
     <PackageVersion Include="Novolis.IO.Paths" Version="2026.1.*" />
+    <PackageVersion Include="Novolis.IO.SystemMetrics" Version="2026.1.*" />
     <PackageVersion Include="Novolis.Manuscript" Version="2026.1.*" />
     <PackageVersion Include="Novolis.Manuscript.Editorial" Version="2026.1.*" />
     <PackageVersion Include="Novolis.Manuscript.Export.Audio" Version="2026.1.*" />
@@ -38,10 +39,11 @@
     <PackageVersion Include="Novolis.Storage.LiteDb" Version="2026.1.*" />
     <PackageVersion Include="Novolis.Storage.Sqlite" Version="2026.1.*" />
     <PackageVersion Include="Spectre.Console" Version="0.57.2" />
+    <PackageVersion Include="Spectre.Console.Testing" Version="0.57.2" />
     <PackageVersion Include="SQLitePCLRaw.bundle_e_sqlite3" Version="3.0.5" />
     <PackageVersion Include="System.IO.Abstractions" Version="22.3.0" />
-    <PackageVersion Include="System.CommandLine" Version="2.0.12" />
-    <PackageVersion Include="TUnit" Version="1.72.16" />
+    <PackageVersion Include="System.CommandLine" Version="2.0.13" />
+    <PackageVersion Include="TUnit" Version="1.75.0" />
     <PackageVersion Include="Novolis.Xsd.Generator" Version="2026.1.*" />
     <PackageVersion Include="Novolis.Workspaces.DotNet.Abstractions" Version="2026.1.*" />
     <PackageVersion Include="Novolis.Workspaces.DotNet.Indexing" Version="2026.1.*" />

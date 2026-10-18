@@ -39,6 +39,10 @@
     "Novolis.Tools.Sqlite.Cli": {
       "path": "src/Novolis.Tools.Sqlite.Cli",
       "description": "dotnet tool novolis-sqlite — Spectre SQLite REPL"
+    },
+    "Novolis.Tools.SystemMetrics.Cli": {
+      "path": "src/Novolis.Tools.SystemMetrics.Cli",
+      "description": "dotnet tool novolis-system-metrics — Spectre.Console system resource capture"
     }
   }
 }

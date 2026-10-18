@@ -1,0 +1,14 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+    <RootNamespace>Novolis.Tools.SystemMetrics.Cli.Unit</RootNamespace>
+    <IsPackable>false</IsPackable>
+    <IsTestProject>true</IsTestProject>
+    <GenerateDocumentationFile>false</GenerateDocumentationFile>
+  </PropertyGroup>
+  <ItemGroup>
+    <PackageReference Include="Spectre.Console.Testing" />
+    <PackageReference Include="TUnit" />
+    <ProjectReference Include="..\..\src\Novolis.Tools.SystemMetrics.Cli\Novolis.Tools.SystemMetrics.Cli.csproj" />
+  </ItemGroup>
+</Project>
