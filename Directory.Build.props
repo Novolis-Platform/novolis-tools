@@ -1,6 +1,8 @@
 <Project>
   <PropertyGroup>
     <NovolisGitHubRepository>novolis-tools</NovolisGitHubRepository>
+    <RepositoryUrl>https://github.com/Novolis-Platform/novolis-tools</RepositoryUrl>
+    <RepositoryType>git</RepositoryType>
   </PropertyGroup>
   <Import Project="$(MSBuildThisFileDirectory)build\version.props"
           Condition="Exists('$(MSBuildThisFileDirectory)build\version.props')" />
