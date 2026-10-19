@@ -29,8 +29,13 @@ public static class GhProcess
         var stderr = process.StandardError.ReadToEnd();
         process.WaitForExit();
 
-        if (process.ExitCode != 0 && !ignoreFailure)
+        if (process.ExitCode != 0)
         {
+            if (ignoreFailure)
+            {
+                return string.Empty;
+            }
+
             throw new InvalidOperationException(
                 $"{fileName} {FormatArgs(arguments)} failed ({process.ExitCode}): {stderr}{stdout}".Trim());
         }
