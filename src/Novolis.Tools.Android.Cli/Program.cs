@@ -169,6 +169,111 @@ inventory.SetAction(async (parseResult, cancellationToken) =>
     }));
 root.Subcommands.Add(inventory);
 
+var privacy = new Command("privacy", "Audit accounts, package policy, and network/VPN state.");
+var privacyAudit = new Command(
+    "audit",
+    "Collect a read-only privacy and VPN audit; no device state is changed.")
+{
+    new Argument<string?>("output-directory")
+    {
+        Description = "Optional directory for privacy-audit.json and inventory.json.",
+        Arity = ArgumentArity.ZeroOrOne,
+        DefaultValueFactory = _ => null,
+    },
+};
+privacyAudit.SetAction(async (parseResult, cancellationToken) =>
+    await RunSafeAsync(parseResult, async () =>
+    {
+        var adb = new AndroidDebugBridge();
+        var result = await new AndroidDeviceInventoryCollector(adb).CollectAsync(
+                parseResult.GetValue(serialOption),
+                cancellationToken)
+            .ConfigureAwait(false);
+        if (!result.Ok || result.Inventory is null)
+        {
+            return Fail(
+                parseResult,
+                result.Failure
+                ?? new AndroidFailure(
+                    AndroidFailureKind.Unknown,
+                    "Android privacy audit did not produce a device snapshot.",
+                    parseResult.GetValue(serialOption)));
+        }
+
+        var inventory = parseResult.GetValue(rawOption)
+            ? result.Inventory
+            : AndroidOutputRedactor.RedactInventory(result.Inventory);
+        var outputDirectory = parseResult.GetValue(
+            (Argument<string?>)privacyAudit.Arguments[0]);
+        string? outputPath = null;
+        if (!string.IsNullOrWhiteSpace(outputDirectory))
+        {
+            var directory = Path.GetFullPath(outputDirectory);
+            Directory.CreateDirectory(directory);
+            outputPath = Path.Combine(directory, "privacy-audit.json");
+            await File.WriteAllTextAsync(
+                    outputPath,
+                    JsonSerializer.Serialize(
+                        new
+                        {
+                            collectedAtUtc = inventory.CollectedAtUtc,
+                            accounts = inventory.Accounts,
+                            network = inventory.Network,
+                            packages = inventory.Packages
+                                .Select(package => new
+                                {
+                                    package.PackageName,
+                                    package.IsSystem,
+                                    package.IsEnabled,
+                                })
+                                .ToArray(),
+                            settings = inventory.Settings,
+                        },
+                        new JsonSerializerOptions { WriteIndented = true }),
+                    cancellationToken)
+                .ConfigureAwait(false);
+        }
+
+        var payload = new
+        {
+            ok = true,
+            warnings = result.Warnings,
+            outputPath,
+            accounts = inventory.Accounts,
+            network = inventory.Network,
+            nordVpn = inventory.Packages
+                .FirstOrDefault(package =>
+                    string.Equals(
+                        package.PackageName,
+                        "com.nordvpn.android",
+                        StringComparison.Ordinal)),
+        };
+        WriteResult(parseResult, payload, () =>
+        {
+            Console.WriteLine($"configured accounts: {inventory.Accounts.AccountCount}");
+            Console.WriteLine(
+                $"active transport: {inventory.Network.ActiveTransport ?? "—"} " +
+                $"(VPN: {(inventory.Network.ActiveNetworkIsVpn ? "active" : "not active")})");
+            Console.WriteLine(
+                $"always-on VPN: {inventory.Network.AlwaysOnVpnPackage ?? "not configured"} " +
+                $"(lockdown: {(inventory.Network.AlwaysOnVpnLockdown ? "on" : "off")})");
+            Console.WriteLine(
+                $"NordVPN package: " +
+                $"{(payload.nordVpn is { IsEnabled: true } ? "installed/enabled" : "missing or disabled")}");
+            if (inventory.Network.ObservedDestinations.Count > 0)
+                Console.WriteLine(
+                    "observed connectivity destinations: "
+                    + string.Join(", ", inventory.Network.ObservedDestinations));
+            if (outputPath is not null)
+                Console.WriteLine($"wrote: {outputPath}");
+            foreach (var warning in result.Warnings)
+                Console.WriteLine($"warning: {warning}");
+        });
+        return ExitCodes.Ok;
+    }));
+privacy.Subcommands.Add(privacyAudit);
+root.Subcommands.Add(privacy);
+
 var info = new Command("info", "Print a technical report for one ready device.");
 info.SetAction(async (parseResult, cancellationToken) =>
     await RunSafeAsync(parseResult, async () =>
@@ -236,6 +341,43 @@ appInspect.SetAction(async (parseResult, cancellationToken) =>
         return ExitCodes.Ok;
     }));
 app.Subcommands.Add(appInspect);
+
+var appInspectApk = new Command("inspect-apk", "Inspect a local APK package, ABI, and signing identity.")
+{
+    new Argument<string>("apk") { Description = "Path to the APK." },
+};
+appInspectApk.SetAction(async (parseResult, cancellationToken) =>
+    await RunSafeAsync(parseResult, async () =>
+    {
+        var apk = parseResult.GetValue((Argument<string>)appInspectApk.Arguments[0])!;
+        var inspection = await AndroidApkInspector.InspectAsync(
+                apk,
+                Timeout(parseResult),
+                cancellationToken)
+            .ConfigureAwait(false);
+        if (!inspection.Ok)
+        {
+            return Fail(
+                parseResult,
+                new AndroidFailure(
+                    AndroidFailureKind.VerificationFailed,
+                    string.Join("; ", inspection.Errors)));
+        }
+
+        WriteResult(parseResult, inspection, () =>
+        {
+            Console.WriteLine($"package: {inspection.PackageName ?? "—"}");
+            Console.WriteLine($"version: {inspection.VersionName ?? "—"} ({inspection.VersionCode?.ToString() ?? "—"})");
+            Console.WriteLine(
+                $"native ABIs: {(inspection.NativeAbis.Count == 0 ? "—" : string.Join(", ", inspection.NativeAbis))}");
+            Console.WriteLine(
+                $"signing certificate SHA-256: {inspection.SigningCertificateSha256 ?? "—"}");
+            foreach (var warning in inspection.Warnings)
+                Console.WriteLine($"warning: {warning}");
+        });
+        return ExitCodes.Ok;
+    }));
+app.Subcommands.Add(appInspectApk);
 
 var appInstall = new Command("install", "Validate and install one APK.")
 {
@@ -825,6 +967,10 @@ static async Task<IReadOnlyList<string>> WriteInventoryFilesAsync(
             "settings.json",
             JsonSerializer.Serialize(inventory.Settings, options))
         .ConfigureAwait(false);
+    await WriteTextAsync(
+            "network.json",
+            JsonSerializer.Serialize(inventory.Network, options))
+        .ConfigureAwait(false);
 
     return files;
 }
@@ -846,6 +992,12 @@ static void WriteInventorySummary(
     Console.WriteLine($"launcher activities: {inventory.LauncherActivities.Count}");
     Console.WriteLine($"configured accounts: {inventory.Accounts.AccountCount}");
     Console.WriteLine($"privacy settings: {inventory.Settings.Values.Count}");
+    Console.WriteLine(
+        $"active transport: {inventory.Network.ActiveTransport ?? "—"} " +
+        $"(VPN: {(inventory.Network.ActiveNetworkIsVpn ? "active" : "not active")})");
+    Console.WriteLine(
+        $"always-on VPN: {inventory.Network.AlwaysOnVpnPackage ?? "not configured"} " +
+        $"(lockdown: {(inventory.Network.AlwaysOnVpnLockdown ? "on" : "off")})");
 
     foreach (var warning in warnings)
         Console.WriteLine($"warning: {warning}");
