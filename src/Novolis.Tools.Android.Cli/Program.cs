@@ -103,6 +103,72 @@ devicesCommand.SetAction(async (parseResult, cancellationToken) =>
     }));
 root.Subcommands.Add(devicesCommand);
 
+var inventory = new Command(
+    "inventory",
+    "Collect a read-only device, package, launcher, account, and privacy inventory.")
+{
+    new Argument<string?>("output-directory")
+    {
+        Description = "Optional directory for inventory.json and split evidence files.",
+        Arity = ArgumentArity.ZeroOrOne,
+        DefaultValueFactory = _ => null,
+    },
+};
+inventory.SetAction(async (parseResult, cancellationToken) =>
+    await RunSafeAsync(parseResult, async () =>
+    {
+        var adb = new AndroidDebugBridge();
+        var result = await new AndroidDeviceInventoryCollector(adb).CollectAsync(
+                parseResult.GetValue(serialOption),
+                cancellationToken)
+            .ConfigureAwait(false);
+        if (!result.Ok || result.Inventory is null)
+        {
+            return Fail(
+                parseResult,
+                result.Failure
+                ?? new AndroidFailure(
+                    AndroidFailureKind.Unknown,
+                    "Android inventory did not produce a device snapshot.",
+                    parseResult.GetValue(serialOption)));
+        }
+
+        var inventoryOutput = parseResult.GetValue(rawOption)
+            ? result.Inventory
+            : AndroidOutputRedactor.RedactInventory(result.Inventory);
+        var outputDirectory = parseResult.GetValue(
+            (Argument<string?>)inventory.Arguments[0]);
+        IReadOnlyList<string>? files = null;
+        if (!string.IsNullOrWhiteSpace(outputDirectory))
+        {
+            files = await WriteInventoryFilesAsync(
+                    inventoryOutput,
+                    outputDirectory,
+                    cancellationToken)
+                .ConfigureAwait(false);
+        }
+
+        if (parseResult.GetValue(jsonOption))
+        {
+            Console.WriteLine(
+                JsonSerializer.Serialize(
+                    new
+                    {
+                        ok = true,
+                        warnings = result.Warnings,
+                        files,
+                        inventory = inventoryOutput,
+                    }));
+        }
+        else if (!parseResult.GetValue(quietOption))
+        {
+            WriteInventorySummary(inventoryOutput, result.Warnings, files);
+        }
+
+        return ExitCodes.Ok;
+    }));
+root.Subcommands.Add(inventory);
+
 var info = new Command("info", "Print a technical report for one ready device.");
 info.SetAction(async (parseResult, cancellationToken) =>
     await RunSafeAsync(parseResult, async () =>
@@ -717,6 +783,78 @@ void WriteResult<T>(
         Console.WriteLine(JsonSerializer.Serialize(payload));
     else if (!parseResult.GetValue(quietOption))
         humanWriter();
+}
+
+static async Task<IReadOnlyList<string>> WriteInventoryFilesAsync(
+    AndroidDeviceInventory inventory,
+    string outputDirectory,
+    CancellationToken cancellationToken)
+{
+    var directory = Path.GetFullPath(outputDirectory);
+    Directory.CreateDirectory(directory);
+    var options = new JsonSerializerOptions { WriteIndented = true };
+    var files = new List<string>();
+
+    async Task WriteTextAsync(string fileName, string content)
+    {
+        var path = Path.Combine(directory, fileName);
+        await File.WriteAllTextAsync(path, content, cancellationToken)
+            .ConfigureAwait(false);
+        files.Add(path);
+    }
+
+    await WriteTextAsync(
+            "inventory.json",
+            JsonSerializer.Serialize(inventory, options))
+        .ConfigureAwait(false);
+    await WriteTextAsync("device-info.txt", inventory.Device.FormatReport())
+        .ConfigureAwait(false);
+    await WriteTextAsync(
+            "packages.json",
+            JsonSerializer.Serialize(inventory.Packages, options))
+        .ConfigureAwait(false);
+    await WriteTextAsync(
+            "launchers.json",
+            JsonSerializer.Serialize(inventory.LauncherActivities, options))
+        .ConfigureAwait(false);
+    await WriteTextAsync(
+            "accounts.json",
+            JsonSerializer.Serialize(inventory.Accounts, options))
+        .ConfigureAwait(false);
+    await WriteTextAsync(
+            "settings.json",
+            JsonSerializer.Serialize(inventory.Settings, options))
+        .ConfigureAwait(false);
+
+    return files;
+}
+
+static void WriteInventorySummary(
+    AndroidDeviceInventory inventory,
+    IReadOnlyList<string> warnings,
+    IReadOnlyList<string>? files)
+{
+    var device = inventory.Device;
+    var disabled = inventory.Packages.Count(package => !package.IsEnabled);
+    var thirdParty = inventory.Packages.Count(package => !package.IsSystem);
+
+    Console.WriteLine($"device: {device.Model ?? "unknown"} ({device.Serial})");
+    Console.WriteLine(
+        $"android: {device.AndroidVersion ?? "unknown"} / API {device.SdkVersion ?? "unknown"}");
+    Console.WriteLine(
+        $"packages: {inventory.Packages.Count} total, {thirdParty} third-party, {disabled} disabled");
+    Console.WriteLine($"launcher activities: {inventory.LauncherActivities.Count}");
+    Console.WriteLine($"configured accounts: {inventory.Accounts.AccountCount}");
+    Console.WriteLine($"privacy settings: {inventory.Settings.Values.Count}");
+
+    foreach (var warning in warnings)
+        Console.WriteLine($"warning: {warning}");
+    if (files is not null)
+    {
+        Console.WriteLine($"wrote: {files.Count} inventory files");
+        foreach (var file in files)
+            Console.WriteLine($"  {file}");
+    }
 }
 
 static object ToDevicePayload(AdbDevice device) =>

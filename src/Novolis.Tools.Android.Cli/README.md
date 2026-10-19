@@ -20,8 +20,12 @@ novolis-android logcat --package com.novolis.readaloud
 novolis-android screen shot d:\evidence\readaloud.png
 novolis-android ui dump d:\evidence\readaloud.xml
 novolis-android diagnostics collect d:\evidence\readaloud --package com.novolis.readaloud
+novolis-android inventory d:\evidence\android-inventory --serial R58M12ABCDE
 ```
 
 Use `--json` for automation. Destructive actions require `--yes`, and
 diagnostic output is redacted by default. The `info` command also redacts
-device identifiers; use `--raw` only for local troubleshooting.
+device identifiers; use `--raw` only for local troubleshooting. The
+`inventory` command writes `inventory.json`, `device-info.txt`,
+`packages.json`, `launchers.json`, `accounts.json`, and `settings.json`;
+transport and hardware identifiers are redacted unless `--raw` is supplied.
