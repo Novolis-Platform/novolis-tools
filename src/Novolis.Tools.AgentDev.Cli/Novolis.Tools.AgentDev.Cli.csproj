@@ -1,0 +1,21 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+    <PackageId>Novolis.Tools.AgentDev.Cli</PackageId>
+    <Description>dotnet tool novolis-agent-dev — MCP and stdio host for the development agent profile.</Description>
+    <IsPackable>true</IsPackable>
+    <PackAsTool>true</PackAsTool>
+    <ToolCommandName>novolis-agent-dev</ToolCommandName>
+    <RootNamespace>Novolis.Tools.AgentDev.Cli</RootNamespace>
+    <GenerateDocumentationFile>false</GenerateDocumentationFile>
+    <PackageTags>novolis;agent;mcp;cli;dotnet-tool</PackageTags>
+    <PackageReadmeFile>README.md</PackageReadmeFile>
+  </PropertyGroup>
+  <ItemGroup>
+    <PackageReference Include="System.CommandLine" />
+    <ProjectReference Include="..\Novolis.Tools.AgentDev\Novolis.Tools.AgentDev.csproj" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="README.md" Pack="true" PackagePath="\" />
+  </ItemGroup>
+</Project>

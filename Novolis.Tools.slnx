@@ -14,6 +14,8 @@
     <Project Path="src/Novolis.Tools.CanvasHtml/Novolis.Tools.CanvasHtml.csproj" />
     <Project Path="src/Novolis.Tools.CodeLayout.Cli/Novolis.Tools.CodeLayout.Cli.csproj" />
     <Project Path="src/Novolis.Tools.CodeLayout/Novolis.Tools.CodeLayout.csproj" />
+    <Project Path="src/Novolis.Tools.AgentDev.Cli/Novolis.Tools.AgentDev.Cli.csproj" />
+    <Project Path="src/Novolis.Tools.AgentDev/Novolis.Tools.AgentDev.csproj" />
     <Project Path="src/Novolis.AssetStudio/Novolis.AssetStudio.csproj" />
     <Project Path="src/Novolis.AssetStudio.Authoring/Novolis.AssetStudio.Authoring.csproj" />
     <Project Path="src/Novolis.AssetStudio.Export/Novolis.AssetStudio.Export.csproj" />
@@ -34,6 +36,7 @@
     <Project Path="tests/Novolis.Tools.Coverage.Unit/Novolis.Tools.Coverage.Unit.csproj" />
     <Project Path="tests/Novolis.Tools.CanvasHtml.Unit/Novolis.Tools.CanvasHtml.Unit.csproj" />
     <Project Path="tests/Novolis.Tools.CodeLayout.Unit/Novolis.Tools.CodeLayout.Unit.csproj" />
+    <Project Path="tests/Novolis.Tools.AgentDev.Unit/Novolis.Tools.AgentDev.Unit.csproj" />
     <Project Path="tests/Novolis.Tools.Docs.Unit/Novolis.Tools.Docs.Unit.csproj" />
     <Project Path="tests/Novolis.Tools.Doom.Unit/Novolis.Tools.Doom.Unit.csproj" />
     <Project Path="tests/Novolis.Tools.LiteDb.Unit/Novolis.Tools.LiteDb.Unit.csproj" />
