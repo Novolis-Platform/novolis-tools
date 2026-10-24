@@ -1,4 +1,6 @@
-# novolis-agent-dev
+# Novolis.Tools.AgentDev.Cli
+
+`novolis-agent-dev` serves the development, debug, and test profile.
 
 ```powershell
 dotnet run --project d:\novolis\novolis-tools\src\Novolis.Tools.AgentDev.Cli\Novolis.Tools.AgentDev.Cli.csproj -- --root d:\work --mcp
